@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Client } from '../types';
+import { Client, Harvest } from '../types';
 import { PlusIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
+import { ClientProfile } from './ClientProfile';
 
 interface ClientManagementProps {
   clients: Client[];
   addClient: (client: Omit<Client, 'id'>) => void;
+  harvests: Harvest[];
 }
 
-export const ClientManagement: React.FC<ClientManagementProps> = ({ clients, addClient }) => {
+export const ClientManagement: React.FC<ClientManagementProps> = ({ clients, addClient, harvests }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState<Client | null>(null);
   const [newClient, setNewClient] = useState({
     name: '',
     email: '',
@@ -38,6 +41,10 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({ clients, add
     setNewClient({ name: '', email: '', phone: '', visitDates: '' });
   };
 
+  if (viewingProfile) {
+    return <ClientProfile client={viewingProfile} harvests={harvests} onBack={() => setViewingProfile(null)} />;
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -63,7 +70,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({ clients, add
             <tbody className="bg-white divide-y divide-gray-200">
               {clients.map((client) => (
                   <tr key={client.id} className={'hover:bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{client.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                       <a href="#" onClick={(e) => { e.preventDefault(); setViewingProfile(client); }} className="text-brand-primary hover:underline">
+                        {client.name}
+                       </a>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div>{client.email}</div>
                       <div>{client.phone}</div>

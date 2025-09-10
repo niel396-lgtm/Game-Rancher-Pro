@@ -92,6 +92,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     tipToTipSpread: '',
     clientId: '',
     permitId: '',
+    photoUrl: '',
   });
 
   const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
@@ -130,7 +131,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', clientId: '', permitId: '' });
+    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', clientId: '', permitId: '', photoUrl: '' });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -152,6 +153,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       if(tipToTipSpread) finalData.tipToTipSpread = parseFloat(tipToTipSpread);
       if(!finalData.clientId) delete finalData.clientId;
       if(!finalData.permitId) delete finalData.permitId;
+      if(!finalData.photoUrl) delete finalData.photoUrl;
 
       logAnimalHarvest(animalToRemove, finalData);
       handleCloseRemoveModals();
@@ -190,6 +192,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                 'Left Horn (in)': h.hornLengthL ?? '',
                 'Right Horn (in)': h.hornLengthR ?? '',
                 'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '',
+                'Photo URL': h.photoUrl ?? '',
             };
         });
         exportToCsv('harvest_log_export.csv', dataToExport);
@@ -469,6 +472,10 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                       <label htmlFor="tipToTipSpread" className="block text-sm font-medium text-gray-700">Tip-to-Tip (in)</label>
                       <input type="number" step="0.1" name="tipToTipSpread" id="tipToTipSpread" value={harvestData.tipToTipSpread} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
                   </div>
+              </div>
+               <div>
+                  <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700">Photo URL (optional)</label>
+                  <input type="url" name="photoUrl" id="photoUrl" value={harvestData.photoUrl} onChange={handleHarvestInputChange} placeholder="https://example.com/image.jpg" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
               </div>
               <div className="flex justify-end gap-4 mt-6">
                   <button type="button" onClick={handleCloseRemoveModals} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>

@@ -77,8 +77,8 @@ export const INITIAL_TASKS: Task[] = [
 
 export const INITIAL_MORTALITIES: Mortality[] = [];
 export const INITIAL_HARVESTS: Harvest[] = [
-    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', date: '2023-10-20', hunter: 'John Doe', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001' },
-    { id: 'H002', animalTagId: 'IMP-01', species: 'Impala', date: '2023-11-05', hunter: 'Jane Smith', method: 'Bow', trophyMeasurements: 'SCI Score: 60', location: 'North Pasture', hornLengthL: 22.0, hornLengthR: 21.5, tipToTipSpread: 18.0, clientId: 'C002' }
+    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', date: '2023-10-20', hunter: 'John Doe', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-13556d278a5a?q=80&w=2070&auto=format&fit=crop' },
+    { id: 'H002', animalTagId: 'IMP-01', species: 'Impala', date: '2023-11-05', hunter: 'Jane Smith', method: 'Bow', trophyMeasurements: 'SCI Score: 60', location: 'North Pasture', hornLengthL: 22.0, hornLengthR: 21.5, tipToTipSpread: 18.0, clientId: 'C002', photoUrl: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?q=80&w=2072&auto=format&fit=crop' }
 ];
 
 export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [

@@ -113,6 +113,7 @@ export interface Harvest {
   hornLengthR?: number; // Optional: Right Horn Length in inches
   tipToTipSpread?: number; // Optional: Spread measurement
   permitId?: string;
+  photoUrl?: string;
 }
 
 export interface RainfallLog {

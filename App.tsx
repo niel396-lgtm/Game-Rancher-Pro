@@ -156,7 +156,7 @@ const App: React.FC = () => {
           permits={permits}
           />;
       case View.Clients:
-        return <ClientManagement clients={clients} addClient={addClient} />;
+        return <ClientManagement clients={clients} addClient={addClient} harvests={harvests} />;
       case View.Permits:
         return <PermitManagement permits={permits} addPermit={addPermit} />;
       case View.Habitat:
