@@ -38,8 +38,8 @@ export const INITIAL_ANIMALS: Animal[] = [
 ];
 
 export const INITIAL_HABITAT_ZONES: HabitatZone[] = [
-  { id: 'H01', name: 'North Pasture', waterLevel: 'Normal', forageQuality: 'Abundant', veldCondition: 'Excellent', issues: [], carryingCapacity: 20, areaHectares: 1200, grazerLSUPer100ha: 25, browserLSUPer100ha: 5 },
-  { id: 'H02', name: 'West Ridge', waterLevel: 'High', forageQuality: 'Moderate', veldCondition: 'Good', issues: ['Fence damage on west border'], carryingCapacity: 15, areaHectares: 800, grazerLSUPer100ha: 15, browserLSUPer100ha: 20 },
+  { id: 'H01', name: 'North Pasture', waterLevel: 'Normal', forageQuality: 'Abundant', veldCondition: 'Excellent', issues: [], carryingCapacity: 20, areaHectares: 850, grazerLSUPer100ha: 10, browserLSUPer100ha: 2 },
+  { id: 'H02', name: 'West Ridge', waterLevel: 'High', forageQuality: 'Moderate', veldCondition: 'Good', issues: ['Fence damage on west border'], carryingCapacity: 15, areaHectares: 1200, grazerLSUPer100ha: 4, browserLSUPer100ha: 8 },
   { id: 'H03', name: 'South Plains', waterLevel: 'Low', forageQuality: 'Abundant', veldCondition: 'Good', issues: ['Water pump requires maintenance'], carryingCapacity: 25, areaHectares: 2000, grazerLSUPer100ha: 30, browserLSUPer100ha: 3 },
   { id: 'H04', name: 'Oak Forest', waterLevel: 'Normal', forageQuality: 'Moderate', veldCondition: 'Fair', issues: [], carryingCapacity: 10, areaHectares: 1000, grazerLSUPer100ha: 5, browserLSUPer100ha: 25 },
 ];
