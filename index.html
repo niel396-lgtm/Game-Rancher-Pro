@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Rancher Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet and Leaflet Draw CSS for Mapping Feature -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
+    <style>
+      /* Custom styles to match app theme */
+      .leaflet-draw-toolbar a {
+        background-color: white !important;
+        color: #4A5C3D !important;
+        border-color: #ddd !important;
+      }
+      .leaflet-draw-toolbar a:hover {
+        background-color: #f5f5f5 !important;
+      }
+      .leaflet-draw-actions a {
+        background-color: #4A5C3D !important;
+        color: white !important;
+      }
+       .leaflet-draw-actions a:hover {
+        background-color: #2E3B2E !important;
+      }
+    </style>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              'brand-primary': '#4A5C3D',
+              'brand-secondary': '#8A9A5B',
+              'brand-accent': '#C3B091',
+              'brand-light': '#F5F5DC',
+              'brand-dark': '#2E3B2E',
+            },
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.19.0",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "recharts": "https://aistudiocdn.com/recharts@^3.2.0",
+    "leaflet": "https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.esm.js",
+    "react-leaflet": "https://unpkg.com/react-leaflet@4.2.1/lib/index.js",
+    "leaflet-draw": "https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js",
+    "react-leaflet-draw": "https://unpkg.com/react-leaflet-draw@0.6.2/dist/react-leaflet-draw.js"
+  }
+}
+</script>
+</head>
+  <body class="bg-brand-light">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
