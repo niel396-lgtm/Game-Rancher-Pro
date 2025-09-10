@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
-import { Transaction, TransactionType, Animal, HabitatZone, InventoryItem } from '../types';
+import { Transaction, TransactionType, Animal, HabitatZone, InventoryItem, Client } from '../types';
 import { FinanceChart } from './FinanceChart';
 import { Modal } from './ui/Modal';
 import { PlusIcon } from './ui/Icons';
@@ -11,6 +11,7 @@ interface FinancialTrackerProps {
   animals: Animal[];
   habitats: HabitatZone[];
   inventory: InventoryItem[];
+  clients: Client[];
 }
 
 interface AssetSummary {
@@ -19,7 +20,7 @@ interface AssetSummary {
     expense: number;
 }
 
-export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions, addTransaction, animals, habitats, inventory }) => {
+export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions, addTransaction, animals, habitats, inventory, clients }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'transactions' | 'reports'>('transactions');
   
@@ -31,7 +32,8 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
       type: TransactionType.Expense,
       linkedAnimalId: '',
       linkedHabitatId: '',
-      linkedInventoryId: ''
+      linkedInventoryId: '',
+      clientId: ''
   };
   const [newTransaction, setNewTransaction] = useState(initialFormState);
 
@@ -54,7 +56,7 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
           return;
       }
       
-      const { linkedAnimalId, linkedHabitatId, linkedInventoryId, ...transactionData } = newTransaction;
+      const { linkedAnimalId, linkedHabitatId, linkedInventoryId, clientId, ...transactionData } = newTransaction;
 
       const finalTransaction: Omit<Transaction, 'id'> = {
         ...transactionData,
@@ -64,6 +66,7 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
       if (linkedAnimalId) finalTransaction.linkedAnimalId = linkedAnimalId;
       if (linkedHabitatId) finalTransaction.linkedHabitatId = linkedHabitatId;
       if (linkedInventoryId) finalTransaction.linkedInventoryId = linkedInventoryId;
+      if (clientId) finalTransaction.clientId = clientId;
 
       addTransaction(finalTransaction);
       setNewTransaction(initialFormState);
@@ -82,6 +85,10 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
       if (transaction.linkedInventoryId) {
           const item = inventory.find(i => i.id === transaction.linkedInventoryId);
           return item ? `Inventory: ${item.name}` : null;
+      }
+      if (transaction.clientId) {
+          const client = clients.find(c => c.id === transaction.clientId);
+          return client ? `Client: ${client.name}` : null;
       }
       return null;
   };
@@ -111,7 +118,14 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
                 key = `inventory-${t.linkedInventoryId}`;
                 name = `Inventory: ${item.name}`;
             }
+        } else if (t.clientId) {
+            const client = clients.find(c => c.id === t.clientId);
+            if (client) {
+                key = `client-${t.clientId}`;
+                name = `Client: ${client.name}`;
+            }
         }
+
 
         if (key && name) {
             if (!summary[key]) {
@@ -126,7 +140,7 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
     });
 
     return Object.values(summary);
-  }, [transactions, animals, habitats, inventory]);
+  }, [transactions, animals, habitats, inventory, clients]);
 
 
   const TabButton: React.FC<{label:string; view: 'transactions' | 'reports'}> = ({label, view}) => (
@@ -300,6 +314,13 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
                     <select name="linkedInventoryId" id="linkedInventoryId" value={newTransaction.linkedInventoryId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
                         <option value="">None</option>
                         {inventory.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+                    </select>
+                </div>
+                 <div>
+                    <label htmlFor="clientId" className="block text-sm font-medium text-gray-700">Link to Client</label>
+                    <select name="clientId" id="clientId" value={newTransaction.clientId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
+                        <option value="">None</option>
+                        {clients.map(client => <option key={client.id} value={client.id}>{client.name}</option>)}
                     </select>
                 </div>
             </div>

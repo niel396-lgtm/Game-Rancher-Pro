@@ -8,8 +8,9 @@ import { InventoryManagement } from './components/InventoryManagement';
 import { FinancialTracker } from './components/FinancialTracker';
 import { AIAssistant } from './components/AIAssistant';
 import { RanchMap } from './components/RanchMap';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS } from './constants';
+import { ClientManagement } from './components/ClientManagement';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS } from './constants';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
@@ -26,6 +27,7 @@ const App: React.FC = () => {
   const [harvests, setHarvests] = useState<Harvest[]>(INITIAL_HARVESTS);
   const [rainfallLogs, setRainfallLogs] = useState<RainfallLog[]>(INITIAL_RAINFALL_LOGS);
   const [veldAssessments, setVeldAssessments] = useState<VeldAssessment[]>(INITIAL_VELD_ASSESSMENTS);
+  const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
 
 
   const addAnimal = (animal: Omit<Animal, 'id'>) => {
@@ -35,6 +37,11 @@ const App: React.FC = () => {
 
   const removeAnimal = (animalId: string) => {
     setAnimals(prev => prev.filter(animal => animal.id !== animalId));
+  };
+  
+  const addClient = (client: Omit<Client, 'id'>) => {
+    const newClient = { ...client, id: `C${Date.now()}` };
+    setClients(prev => [...prev, newClient].sort((a,b) => a.name.localeCompare(b.name)));
   };
 
   const addTask = (text: string) => {
@@ -137,7 +144,10 @@ const App: React.FC = () => {
           harvests={harvests}
           logAnimalHarvest={logAnimalHarvest}
           transactions={transactions}
+          clients={clients}
           />;
+      case View.Clients:
+        return <ClientManagement clients={clients} addClient={addClient} />;
       case View.Habitat:
         return <HabitatManagement 
           habitats={habitats} 
@@ -154,6 +164,7 @@ const App: React.FC = () => {
           animals={animals}
           habitats={habitats}
           inventory={inventory}
+          clients={clients}
           />;
       case View.AIAssistant:
         return <AIAssistant />;

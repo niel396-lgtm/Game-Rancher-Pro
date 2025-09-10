@@ -2,6 +2,7 @@
 export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
+  Clients = 'Clients',
   Habitat = 'Habitat',
   Inventory = 'Inventory',
   Finance = 'Finance',
@@ -44,6 +45,14 @@ export enum TransactionType {
   Expense = 'Expense',
 }
 
+export interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  visitDates: string[]; // Array of strings like "YYYY-MM-DD to YYYY-MM-DD"
+}
+
 export interface Transaction {
   id: string;
   date: string;
@@ -54,6 +63,7 @@ export interface Transaction {
   linkedAnimalId?: string;
   linkedHabitatId?: string;
   linkedInventoryId?: string;
+  clientId?: string;
 }
 
 export interface Message {
@@ -83,6 +93,7 @@ export interface Harvest {
   species: string;
   date: string;
   hunter: string;
+  clientId?: string;
   method: string;
   trophyMeasurements: string; // e.g., SCI Score, Rowland Ward
   location: string;
