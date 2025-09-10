@@ -8,7 +8,8 @@ interface FinanceChartProps {
 
 export const FinanceChart: React.FC<FinanceChartProps> = ({ data }) => {
   const monthlyData = data.reduce((acc, transaction) => {
-    const date = new Date(transaction.date);
+    // Appending 'T00:00:00' ensures the date string is parsed in the user's local timezone, avoiding UTC conversion issues.
+    const date = new Date(transaction.date + 'T00:00:00');
     // Create a stable, sortable key like "2023-09" for October 2023
     const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
 
