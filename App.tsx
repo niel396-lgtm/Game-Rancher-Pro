@@ -100,6 +100,10 @@ const App: React.FC = () => {
     const newAssessment: VeldAssessment = { ...assessmentData, id: `VA${Date.now()}` };
     setVeldAssessments(prev => [newAssessment, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   }
+  
+  const updateHabitat = (updatedHabitat: HabitatZone) => {
+    setHabitats(prev => prev.map(h => h.id === updatedHabitat.id ? updatedHabitat : h));
+  };
 
   const addLandmark = (landmark: Omit<Landmark, 'id'>) => {
     const newLandmark = { ...landmark, id: `L${Date.now()}` };
@@ -164,7 +168,8 @@ const App: React.FC = () => {
           habitats={habitats} 
           animals={animals}
           veldAssessments={veldAssessments}
-          addVeldAssessment={addVeldAssessment} 
+          addVeldAssessment={addVeldAssessment}
+          updateHabitat={updateHabitat}
           />;
       case View.Inventory:
         return <InventoryManagement inventory={inventory} />;

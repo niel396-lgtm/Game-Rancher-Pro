@@ -10,6 +10,7 @@ interface HabitatManagementProps {
   animals: Animal[];
   veldAssessments: VeldAssessment[];
   addVeldAssessment: (assessment: Omit<VeldAssessment, 'id'>) => void;
+  updateHabitat: (habitat: HabitatZone) => void;
 }
 
 const getStatusColor = (status: string, type: 'water' | 'forage' | 'veld') => {
@@ -51,13 +52,33 @@ const StockingDensityBar: React.FC<{current: number; capacity: number}> = ({curr
     );
 };
 
-export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, animals, veldAssessments, addVeldAssessment }) => {
+export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, animals, veldAssessments, addVeldAssessment, updateHabitat }) => {
   const [modalZone, setModalZone] = useState<HabitatZone | null>(null);
+  
+  const [editableParams, setEditableParams] = useState({
+    areaHectares: 0,
+    grazerLSUPer100ha: 0,
+    browserLSUPer100ha: 0,
+  });
+
   const [newAssessment, setNewAssessment] = useState({
     date: new Date().toISOString().split('T')[0],
     condition: 'Good' as VeldAssessment['condition'],
     notes: ''
   });
+
+  const handleOpenModal = (zone: HabitatZone) => {
+    setModalZone(zone);
+    setEditableParams({
+      areaHectares: zone.areaHectares,
+      grazerLSUPer100ha: zone.grazerLSUPer100ha,
+      browserLSUPer100ha: zone.browserLSUPer100ha,
+    });
+  };
+
+  const handleCloseModal = () => {
+    setModalZone(null);
+  };
 
   const handleAssessmentInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -79,6 +100,24 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
     });
   };
   
+  const handleEcologicalParamChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditableParams(prev => ({
+      ...prev,
+      [name]: parseFloat(value) || 0,
+    }));
+  };
+
+  const handleEcologicalParamSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modalZone) return;
+    updateHabitat({
+      ...modalZone,
+      ...editableParams,
+    });
+    handleCloseModal();
+  };
+
   const zoneAssessments = modalZone ? veldAssessments.filter(a => a.habitatZoneId === modalZone.id) : [];
 
   return (
@@ -140,7 +179,7 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                 </div>
               )}
               <div className="mt-4 pt-4 border-t">
-                 <button onClick={() => setModalZone(zone)} className="w-full text-center px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                 <button onClick={() => handleOpenModal(zone)} className="w-full text-center px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm">
                     Manage Veld
                  </button>
               </div>
@@ -149,7 +188,7 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
         })}
       </div>
       
-      <Modal isOpen={!!modalZone} onClose={() => setModalZone(null)} title={`Veld Condition for ${modalZone?.name}`}>
+      <Modal isOpen={!!modalZone} onClose={handleCloseModal} title={`Manage Veld & Ecology for ${modalZone?.name}`}>
         <div className="space-y-6">
             <div>
               <h4 className="text-lg font-semibold text-brand-dark mb-2 flex items-center"><HistoryIcon className="w-5 h-5 mr-2"/> Assessment History</h4>
@@ -198,6 +237,31 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                         </button>
                     </div>
                 </form>
+            </div>
+            
+            <div>
+              <h4 className="text-lg font-semibold text-brand-dark mb-3 border-t pt-4">Ecological Parameters</h4>
+              <form onSubmit={handleEcologicalParamSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                          <label htmlFor="areaHectares" className="block text-sm font-medium text-gray-700">Area (Hectares)</label>
+                          <input type="number" step="0.1" name="areaHectares" id="areaHectares" value={editableParams.areaHectares} onChange={handleEcologicalParamChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                      </div>
+                      <div>
+                          <label htmlFor="grazerLSUPer100ha" className="block text-sm font-medium text-gray-700">Grazer LSU/100ha</label>
+                          <input type="number" step="0.1" name="grazerLSUPer100ha" id="grazerLSUPer100ha" value={editableParams.grazerLSUPer100ha} onChange={handleEcologicalParamChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                      </div>
+                      <div>
+                          <label htmlFor="browserLSUPer100ha" className="block text-sm font-medium text-gray-700">Browser LSU/100ha</label>
+                          <input type="number" step="0.1" name="browserLSUPer100ha" id="browserLSUPer100ha" value={editableParams.browserLSUPer100ha} onChange={handleEcologicalParamChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                      </div>
+                  </div>
+                  <div className="flex justify-end">
+                      <button type="submit" className="flex items-center px-4 py-2 bg-brand-secondary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow">
+                         Update Parameters
+                      </button>
+                  </div>
+              </form>
             </div>
         </div>
       </Modal>
