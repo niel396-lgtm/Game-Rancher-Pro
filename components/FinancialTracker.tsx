@@ -149,7 +149,7 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
             const animal = animals.find(a => a.id === t.linkedAnimalId);
             if (animal) {
                 key = `animal-${t.linkedAnimalId}`;
-                name = `Animal: ${animal.tagId} (${animal.species})`;
+                name = `Animal: ${animal.tagId} (${animal.species}, ${animal.category})`;
             }
         } else if (t.linkedHabitatId) {
             const habitat = habitats.find(h => h.id === t.linkedHabitatId);

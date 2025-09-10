@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent } from '../types';
+import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement } from '../types';
 import { PlusIcon, TrashIcon, StarIcon, ExportIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { AnimalProfile } from './AnimalProfile';
@@ -21,6 +21,8 @@ interface AnimalManagementProps {
   permits: Permit[];
   reproductiveEvents: ReproductiveEvent[];
   logReproductiveEvent: (event: Omit<ReproductiveEvent, 'id'>) => void;
+  animalMeasurements: AnimalMeasurement[];
+  addAnimalMeasurement: (measurement: Omit<AnimalMeasurement, 'id'>) => void;
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -77,7 +79,7 @@ const exportToCsv = (filename: string, rows: object[]) => {
 };
 
 
-export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits, reproductiveEvents, logReproductiveEvent }) => {
+export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits, reproductiveEvents, logReproductiveEvent, animalMeasurements, addAnimalMeasurement }) => {
   const [activeTab, setActiveTab] = useState<'active' | 'mortality' | 'harvest' | 'reproduction'>('active');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [animalToRemove, setAnimalToRemove] = useState<Animal | null>(null);
@@ -98,7 +100,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
 
   const [newAnimal, setNewAnimal] = useState({
-      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], lsuEquivalent: 0.5, sireId: '', damId: ''
+      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], lsuEquivalent: 0.5, sireId: '', damId: '', category: 'Production' as Animal['category']
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -123,7 +125,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       
       addAnimal(finalAnimal);
       setIsAddModalOpen(false);
-      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder', lsuEquivalent: 0.5, sireId: '', damId: '' });
+      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder', lsuEquivalent: 0.5, sireId: '', damId: '', category: 'Production' });
   };
   
   const handleOpenRemoveConfirmation = (animal: Animal) => {
@@ -215,7 +217,8 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
         forageType: dam.forageType,
         lsuEquivalent: dam.lsuEquivalent,
         damId: dam.id,
-        sireId: newBirth.sireId || undefined
+        sireId: newBirth.sireId || undefined,
+        category: 'Juvenile'
     };
     addAnimal(newAnimalForAdd);
 
@@ -243,7 +246,15 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   );
 
   if (viewingProfile) {
-    return <AnimalProfile animal={viewingProfile} onBack={() => setViewingProfile(null)} transactions={transactions} animals={animals} reproductiveEvents={reproductiveEvents} />;
+    return <AnimalProfile 
+        animal={viewingProfile} 
+        onBack={() => setViewingProfile(null)} 
+        transactions={transactions} 
+        animals={animals} 
+        reproductiveEvents={reproductiveEvents} 
+        animalMeasurements={animalMeasurements}
+        addAnimalMeasurement={addAnimalMeasurement}
+    />;
   }
 
   return (
@@ -429,14 +440,23 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                       <option>Female</option> <option>Male</option>
                   </select>
                 </div>
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">Management Category</label>
+                  <select name="category" id="category" value={newAnimal.category} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                      <option>Production</option>
+                      <option>Breeding Stock</option>
+                      <option>Trophy</option>
+                      <option>Juvenile</option>
+                  </select>
+                </div>
                  <div>
                   <label htmlFor="health" className="block text-sm font-medium text-gray-700">Health Status</label>
                   <select name="health" id="health" value={newAnimal.health} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                       <option>Excellent</option><option>Good</option><option>Fair</option><option>Poor</option>
                   </select>
                 </div>
-                 <div>
-                  <label htmlFor="conditionScore" className="block text-sm font-medium text-gray-700">Condition Score (1-5)</label>
+                 <div className="md:col-span-2">
+                  <label htmlFor="conditionScore" className="block text-sm font-medium text-gray-700">Condition Score ({newAnimal.conditionScore}/5)</label>
                   <input type="range" min="1" max="5" name="conditionScore" id="conditionScore" value={newAnimal.conditionScore} onChange={handleInputChange} className="mt-1 block w-full" />
                 </div>
                 <div>

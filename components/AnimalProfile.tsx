@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { Animal, Transaction, TransactionType, ReproductiveEvent } from '../types';
+import React, { useState } from 'react';
+import { Animal, Transaction, TransactionType, ReproductiveEvent, AnimalMeasurement } from '../types';
 import { Card } from './ui/Card';
-import { StarIcon } from './ui/Icons';
+import { PlusIcon, StarIcon } from './ui/Icons';
 
 interface AnimalProfileProps {
   animal: Animal;
@@ -10,6 +10,8 @@ interface AnimalProfileProps {
   transactions: Transaction[];
   animals: Animal[];
   reproductiveEvents: ReproductiveEvent[];
+  animalMeasurements: AnimalMeasurement[];
+  addAnimalMeasurement: (measurement: Omit<AnimalMeasurement, 'id'>) => void;
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -37,7 +39,7 @@ const DetailItem: React.FC<{label: string, value: React.ReactNode}> = ({label, v
 );
 
 
-export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, transactions, animals, reproductiveEvents }) => {
+export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, transactions, animals, reproductiveEvents, animalMeasurements, addAnimalMeasurement }) => {
     const animalTransactions = transactions
         .filter(t => t.linkedAnimalId === animal.id)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -47,6 +49,41 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
 
     const offspringEvents = reproductiveEvents.filter(e => e.damTagId === animal.tagId || e.sireTagId === animal.tagId)
         .sort((a, b) => new Date(b.birthDate).getTime() - new Date(a.birthDate).getTime());
+        
+    const measurements = animalMeasurements.filter(m => m.animalId === animal.id);
+
+    const initialMeasurementState = {
+        date: new Date().toISOString().split('T')[0],
+        measurementType: 'Horn Length (L)' as AnimalMeasurement['measurementType'],
+        value: 0,
+        unit: 'in' as AnimalMeasurement['unit'],
+        notes: ''
+    };
+    const [newMeasurement, setNewMeasurement] = useState(initialMeasurementState);
+
+    const handleMeasurementChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        const updatedMeasurement = {
+            ...newMeasurement,
+            [name]: name === 'value' ? parseFloat(value) : value
+        };
+        if(name === 'measurementType' && value === 'Body Weight') {
+            updatedMeasurement.unit = 'kg';
+        } else if (name === 'measurementType' && value !== 'Body Weight') {
+            updatedMeasurement.unit = 'in';
+        }
+        setNewMeasurement(updatedMeasurement);
+    };
+
+    const handleMeasurementSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if(newMeasurement.value <= 0) {
+            alert("Please enter a valid measurement value.");
+            return;
+        }
+        addAnimalMeasurement({ ...newMeasurement, animalId: animal.id });
+        setNewMeasurement(initialMeasurementState);
+    };
 
   return (
     <div>
@@ -69,6 +106,7 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     <DetailItem label="Age" value={`${animal.age} years`} />
                     <DetailItem label="Sex" value={animal.sex} />
+                    <DetailItem label="Category" value={animal.category} />
                     <DetailItem label="Current Location" value={animal.location} />
                 </div>
                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 mt-6 border-t">
@@ -95,7 +133,72 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
             </Card>
         </div>
       </div>
-      
+       <div className="mt-6">
+           <Card title="Growth & Quality Metrics">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 className="font-semibold text-brand-dark mb-2">Log New Measurement</h4>
+                        <form onSubmit={handleMeasurementSubmit} className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs font-medium text-gray-600">Date</label>
+                                    <input type="date" name="date" value={newMeasurement.date} onChange={handleMeasurementChange} className="mt-1 block w-full text-sm rounded-md border-gray-300 shadow-sm" required />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-medium text-gray-600">Type</label>
+                                    <select name="measurementType" value={newMeasurement.measurementType} onChange={handleMeasurementChange} className="mt-1 block w-full text-sm rounded-md border-gray-300 shadow-sm">
+                                        <option>Horn Length (L)</option>
+                                        <option>Horn Length (R)</option>
+                                        <option>Tip-to-Tip Spread</option>
+                                        <option>Body Weight</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-gray-600">Value ({newMeasurement.unit})</label>
+                                <input type="number" name="value" step="0.1" value={newMeasurement.value} onChange={handleMeasurementChange} className="mt-1 block w-full text-sm rounded-md border-gray-300 shadow-sm" required />
+                            </div>
+                             <div>
+                                <label className="text-xs font-medium text-gray-600">Notes</label>
+                                <textarea name="notes" value={newMeasurement.notes} onChange={handleMeasurementChange} rows={2} className="mt-1 block w-full text-sm rounded-md border-gray-300 shadow-sm" />
+                            </div>
+                            <button type="submit" className="w-full flex justify-center items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow text-sm">
+                                <PlusIcon className="w-4 h-4 mr-2" /> Log Measurement
+                            </button>
+                        </form>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-brand-dark mb-2">Measurement History</h4>
+                        {measurements.length > 0 ? (
+                           <div className="overflow-y-auto max-h-72 border rounded-lg">
+                             <table className="min-w-full divide-y divide-gray-200 text-sm">
+                               <thead className="bg-gray-50 sticky top-0">
+                                 <tr>
+                                   <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase">Date</th>
+                                   <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase">Type</th>
+                                   <th className="px-4 py-2 text-right font-medium text-gray-500 uppercase">Value</th>
+                                 </tr>
+                               </thead>
+                               <tbody className="bg-white divide-y divide-gray-200">
+                                 {measurements.map((m) => (
+                                   <tr key={m.id}>
+                                     <td className="px-4 py-2 whitespace-nowrap text-gray-600">{m.date}</td>
+                                     <td className="px-4 py-2 whitespace-nowrap text-gray-800 font-medium">{m.measurementType}</td>
+                                     <td className="px-4 py-2 whitespace-nowrap text-right text-gray-600">{m.value} {m.unit}</td>
+                                   </tr>
+                                 ))}
+                               </tbody>
+                             </table>
+                           </div>
+                         ) : (
+                           <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
+                                <p className="text-gray-500 text-sm">No measurements recorded.</p>
+                           </div>
+                         )}
+                    </div>
+                </div>
+           </Card>
+       </div>
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             <Card title="Reproductive History">
                 {offspringEvents.length > 0 ? (

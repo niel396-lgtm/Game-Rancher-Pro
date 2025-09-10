@@ -34,6 +34,7 @@ export interface Animal {
   lsuEquivalent: number; // e.g., Kudu = 0.7, Impala = 0.25
   sireId?: string; // ID of the father for genetic tracking
   damId?: string;  // ID of the mother for genetic tracking
+  category: 'Breeding Stock' | 'Juvenile' | 'Trophy' | 'Production';
 }
 
 export interface HabitatZone {
@@ -146,6 +147,16 @@ export interface ReproductiveEvent {
   sireTagId?: string;
   birthDate: string;
   sex: 'Male' | 'Female';
+  notes?: string;
+}
+
+export interface AnimalMeasurement {
+  id: string;
+  animalId: string;
+  date: string;
+  measurementType: 'Horn Length (L)' | 'Horn Length (R)' | 'Tip-to-Tip Spread' | 'Body Weight';
+  value: number;
+  unit: 'in' | 'kg';
   notes?: string;
 }
 

@@ -4,10 +4,10 @@ import { Card } from './ui/Card';
 import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit } from '../types';
+import { HerdQualityChart } from './HerdQualityChart';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement } from '../types';
 import { AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
-import { RANCH_AREA_HECTARES } from '../constants';
 
 interface DashboardProps {
     animals: Animal[];
@@ -22,6 +22,7 @@ interface DashboardProps {
     rainfallLogs: RainfallLog[];
     addRainfallLog: (log: Omit<RainfallLog, 'id'>) => void;
     permits: Permit[];
+    animalMeasurements: AnimalMeasurement[];
 }
 
 const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
@@ -38,7 +39,7 @@ const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; u
     </Card>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -69,35 +70,46 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
     }, { expiringPermits: [] as Permit[], expiredPermits: [] as Permit[] });
   }, [permits]);
   
-  // KPI Calculations
-  const costPerAnimal = useMemo(() => {
-    const animalExpenses = transactions
-        .filter(t => t.type === TransactionType.Expense && t.linkedAnimalId)
-        .reduce((sum, t) => sum + t.amount, 0);
-    return animals.length > 0 ? animalExpenses / animals.length : 0;
+  // Refined KPI Calculations
+  const { avgCostBreeding, avgCostTrophy } = useMemo(() => {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    const animalMap = new Map(animals.map(a => [a.id, a]));
+
+    const costs: Record<Animal['category'], { totalCost: number }> = {
+        'Breeding Stock': { totalCost: 0 },
+        'Trophy': { totalCost: 0 },
+        'Juvenile': { totalCost: 0 },
+        'Production': { totalCost: 0 },
+    };
+
+    transactions
+        .filter(t => 
+            t.type === TransactionType.Expense && 
+            t.linkedAnimalId && 
+            new Date(t.date) >= oneYearAgo
+        )
+        .forEach(t => {
+            const animal = animalMap.get(t.linkedAnimalId!);
+            if (animal && costs[animal.category]) {
+                costs[animal.category].totalCost += t.amount;
+            }
+        });
+    
+    const counts: Record<Animal['category'], number> = {
+        'Breeding Stock': animals.filter(a => a.category === 'Breeding Stock').length,
+        'Trophy': animals.filter(a => a.category === 'Trophy').length,
+        'Juvenile': 0, // Not calculating for these categories
+        'Production': 0,
+    };
+    
+    const avgCostBreeding = counts['Breeding Stock'] > 0 ? costs['Breeding Stock'].totalCost / counts['Breeding Stock'] : 0;
+    const avgCostTrophy = counts['Trophy'] > 0 ? costs['Trophy'].totalCost / counts['Trophy'] : 0;
+
+    return { avgCostBreeding, avgCostTrophy };
+
   }, [transactions, animals]);
-
-  const incomePerHectare = useMemo(() => {
-    return RANCH_AREA_HECTARES > 0 ? totalIncome / RANCH_AREA_HECTARES : 0;
-  }, [totalIncome]);
-
-  const trophyQualityIndex = useMemo(() => {
-    const kuduHarvests = harvests.filter(h => 
-        h.species === 'Kudu' && (typeof h.hornLengthL === 'number' || typeof h.hornLengthR === 'number')
-    );
-    if (kuduHarvests.length === 0) return 0;
-
-    const totalAverageHornLength = kuduHarvests.reduce((acc, harvest) => {
-        const hasL = typeof harvest.hornLengthL === 'number';
-        const hasR = typeof harvest.hornLengthR === 'number';
-        if (hasL && hasR) return acc + (harvest.hornLengthL! + harvest.hornLengthR!) / 2;
-        if (hasL) return acc + harvest.hornLengthL!;
-        if (hasR) return acc + harvest.hornLengthR!;
-        return acc;
-    }, 0);
-    return totalAverageHornLength / kuduHarvests.length;
-  }, [harvests]);
-
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,24 +134,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
       <h2 className="text-3xl font-bold text-brand-dark mb-6">Dashboard</h2>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           <KpiCard
               icon={<FinanceIcon className="w-6 h-6 text-red-500" />}
-              title="Avg. Cost / Animal"
-              value={`$${costPerAnimal.toFixed(2)}`}
-              unit=""
+              title="Avg Annual Cost / Breeding Stock"
+              value={`$${avgCostBreeding.toFixed(2)}`}
+              unit="/ animal"
           />
           <KpiCard
-              icon={<FinanceIcon className="w-6 h-6 text-green-500" />}
-              title="Income / Hectare"
-              value={`$${incomePerHectare.toFixed(2)}`}
-              unit=""
+              icon={<FinanceIcon className="w-6 h-6 text-red-500" />}
+              title="Avg Annual Cost / Trophy Animal"
+              value={`$${avgCostTrophy.toFixed(2)}`}
+              unit="/ animal"
           />
           <KpiCard
               icon={<TrophyIcon className="w-6 h-6 text-brand-accent" />}
-              title="Kudu Trophy Index"
-              value={trophyQualityIndex > 0 ? trophyQualityIndex.toFixed(2) : 'N/A'}
-              unit={trophyQualityIndex > 0 ? 'inches' : ''}
+              title="Total Trophy-Class Animals"
+              value={animals.filter(a => a.category === 'Trophy').length.toString()}
+              unit="animals"
           />
       </div>
 
@@ -194,9 +206,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
       
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
         <div className="lg:col-span-3">
-          <Card title="Financial Overview">
+          <Card title="Kudu Herd Quality (Age vs. Horn Length)">
               <div className="h-80">
-                  <FinanceChart data={transactions} />
+                  <HerdQualityChart animals={animals} measurements={animalMeasurements} />
               </div>
           </Card>
         </div>
