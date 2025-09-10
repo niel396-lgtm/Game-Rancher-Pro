@@ -25,6 +25,13 @@ export const ClientIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}
     </IconWrapper>
 );
 
+export const PermitIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) => (
+    <IconWrapper className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </IconWrapper>
+);
+
+
 export const HabitatIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) => (
     <IconWrapper className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 15.75l-2.52-2.52a4.5 4.5 0 00-6.36 0l-2.52 2.52M21 12l-2.25-2.25a4.5 4.5 0 00-6.36 0l-2.25 2.25m5.51 5.51l-2.52-2.52a4.5 4.5 0 00-6.36 0l-2.52 2.52m16.5-6.36l-2.25-2.25a4.5 4.5 0 00-6.36 0l-2.25 2.25m16.5 0l-2.25-2.25a4.5 4.5 0 00-6.36 0l-2.25 2.25" />

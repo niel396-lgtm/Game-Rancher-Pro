@@ -3,11 +3,22 @@ export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
   Clients = 'Clients',
+  Permits = 'Permits & Compliance',
   Habitat = 'Habitat',
   Inventory = 'Inventory',
   Finance = 'Finance',
   AIAssistant = 'AI Assistant',
   RanchMap = 'Ranch Map',
+}
+
+export interface Permit {
+  id: string;
+  permitNumber: string;
+  type: 'TOPS' | 'CITES' | 'Provincial' | 'Other';
+  issueDate: string;
+  expiryDate: string;
+  linkedSpecies: string[];
+  notes?: string;
 }
 
 export interface Animal {
@@ -64,6 +75,7 @@ export interface Transaction {
   linkedHabitatId?: string;
   linkedInventoryId?: string;
   clientId?: string;
+  permitId?: string;
 }
 
 export interface Message {
@@ -100,6 +112,7 @@ export interface Harvest {
   hornLengthL?: number; // Optional: Left Horn Length in inches
   hornLengthR?: number; // Optional: Right Horn Length in inches
   tipToTipSpread?: number; // Optional: Spread measurement
+  permitId?: string;
 }
 
 export interface RainfallLog {

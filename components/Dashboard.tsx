@@ -4,8 +4,8 @@ import { Card } from './ui/Card';
 import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest } from '../types';
-import { AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon } from './ui/Icons';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit } from '../types';
+import { AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { RANCH_AREA_HECTARES } from '../constants';
 
@@ -21,6 +21,7 @@ interface DashboardProps {
     harvests: Harvest[];
     rainfallLogs: RainfallLog[];
     addRainfallLog: (log: Omit<RainfallLog, 'id'>) => void;
+    permits: Permit[];
 }
 
 const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
@@ -37,7 +38,7 @@ const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; u
     </Card>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -50,6 +51,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
 
   const totalIncome = transactions.filter(t => t.type === TransactionType.Income).reduce((sum, t) => sum + t.amount, 0);
   const totalExpense = transactions.filter(t => t.type === TransactionType.Expense).reduce((sum, t) => sum + t.amount, 0);
+  
+  const { expiringPermits, expiredPermits } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const sixtyDaysFromNow = new Date();
+    sixtyDaysFromNow.setDate(today.getDate() + 60);
+
+    return permits.reduce((acc, permit) => {
+        const expiryDate = new Date(permit.expiryDate + 'T00:00:00');
+        if (expiryDate < today) {
+            acc.expiredPermits.push(permit);
+        } else if (expiryDate <= sixtyDaysFromNow) {
+            acc.expiringPermits.push(permit);
+        }
+        return acc;
+    }, { expiringPermits: [] as Permit[], expiredPermits: [] as Permit[] });
+  }, [permits]);
   
   // KPI Calculations
   const costPerAnimal = useMemo(() => {
@@ -245,6 +263,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
                   </li>
                 ))}
               </ul>
+          </Card>
+      </div>
+
+       <div className="mt-6">
+          <Card title="Permit Expiry Watchlist">
+            <ul className="max-h-60 overflow-y-auto">
+              {expiredPermits.length === 0 && expiringPermits.length === 0 && (
+                <p className="p-2 text-gray-500">No permits are expiring soon.</p>
+              )}
+              {expiredPermits.map(permit => (
+                <li key={permit.id} className="flex items-center p-2 border-b">
+                    <PermitIcon className="w-5 h-5 text-red-500 mr-3" />
+                    <span className="text-red-700"><strong>EXPIRED:</strong> Permit <strong>{permit.permitNumber}</strong> ({permit.type}) expired on {permit.expiryDate}.</span>
+                </li>
+              ))}
+              {expiringPermits.map(permit => (
+                <li key={permit.id} className="flex items-center p-2 border-b">
+                    <PermitIcon className="w-5 h-5 text-yellow-500 mr-3" />
+                    <span>Permit <strong>{permit.permitNumber}</strong> ({permit.type}) expires on <strong>{permit.expiryDate}</strong>.</span>
+                </li>
+              ))}
+            </ul>
           </Card>
       </div>
 

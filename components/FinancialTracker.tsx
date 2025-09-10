@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
-import { Transaction, TransactionType, Animal, HabitatZone, InventoryItem, Client } from '../types';
+import { Transaction, TransactionType, Animal, HabitatZone, InventoryItem, Client, Permit } from '../types';
 import { FinanceChart } from './FinanceChart';
 import { Modal } from './ui/Modal';
 import { PlusIcon } from './ui/Icons';
@@ -12,6 +12,7 @@ interface FinancialTrackerProps {
   habitats: HabitatZone[];
   inventory: InventoryItem[];
   clients: Client[];
+  permits: Permit[];
 }
 
 interface AssetSummary {
@@ -20,7 +21,7 @@ interface AssetSummary {
     expense: number;
 }
 
-export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions, addTransaction, animals, habitats, inventory, clients }) => {
+export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions, addTransaction, animals, habitats, inventory, clients, permits }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'transactions' | 'reports'>('transactions');
   
@@ -33,7 +34,8 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
       linkedAnimalId: '',
       linkedHabitatId: '',
       linkedInventoryId: '',
-      clientId: ''
+      clientId: '',
+      permitId: ''
   };
   const [newTransaction, setNewTransaction] = useState(initialFormState);
 
@@ -56,7 +58,7 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
           return;
       }
       
-      const { linkedAnimalId, linkedHabitatId, linkedInventoryId, clientId, ...transactionData } = newTransaction;
+      const { linkedAnimalId, linkedHabitatId, linkedInventoryId, clientId, permitId, ...transactionData } = newTransaction;
 
       const finalTransaction: Omit<Transaction, 'id'> = {
         ...transactionData,
@@ -67,6 +69,7 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
       if (linkedHabitatId) finalTransaction.linkedHabitatId = linkedHabitatId;
       if (linkedInventoryId) finalTransaction.linkedInventoryId = linkedInventoryId;
       if (clientId) finalTransaction.clientId = clientId;
+      if (permitId) finalTransaction.permitId = permitId;
 
       addTransaction(finalTransaction);
       setNewTransaction(initialFormState);
@@ -89,6 +92,10 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
       if (transaction.clientId) {
           const client = clients.find(c => c.id === transaction.clientId);
           return client ? `Client: ${client.name}` : null;
+      }
+      if (transaction.permitId) {
+          const permit = permits.find(p => p.id === transaction.permitId);
+          return permit ? `Permit: ${permit.permitNumber}` : null;
       }
       return null;
   };
@@ -321,6 +328,13 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
                     <select name="clientId" id="clientId" value={newTransaction.clientId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
                         <option value="">None</option>
                         {clients.map(client => <option key={client.id} value={client.id}>{client.name}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor="permitId" className="block text-sm font-medium text-gray-700">Link to Permit</label>
+                    <select name="permitId" id="permitId" value={newTransaction.permitId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
+                        <option value="">None</option>
+                        {permits.filter(p => new Date(p.expiryDate) >= new Date()).map(p => <option key={p.id} value={p.id}>{p.permitNumber} ({p.type})</option>)}
                     </select>
                 </div>
             </div>

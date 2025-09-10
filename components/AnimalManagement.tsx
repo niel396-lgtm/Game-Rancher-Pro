@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client } from '../types';
+import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit } from '../types';
 import { PlusIcon, TrashIcon, StarIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { AnimalProfile } from './AnimalProfile';
@@ -18,6 +18,7 @@ interface AnimalManagementProps {
   logAnimalHarvest: (animal: Animal, harvestData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'>) => void;
   transactions: Transaction[];
   clients: Client[];
+  permits: Permit[];
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -38,7 +39,7 @@ const ConditionScore: React.FC<{ score: number }> = ({ score }) => (
 );
 
 
-export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients }) => {
+export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits }) => {
   const [activeTab, setActiveTab] = useState<'active' | 'mortality' | 'harvest'>('active');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [animalToRemove, setAnimalToRemove] = useState<Animal | null>(null);
@@ -54,6 +55,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     hornLengthR: '',
     tipToTipSpread: '',
     clientId: '',
+    permitId: '',
   });
 
   const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
@@ -92,7 +94,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', clientId: '' });
+    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', clientId: '', permitId: '' });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -113,10 +115,22 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       if(hornLengthR) finalData.hornLengthR = parseFloat(hornLengthR);
       if(tipToTipSpread) finalData.tipToTipSpread = parseFloat(tipToTipSpread);
       if(!finalData.clientId) delete finalData.clientId;
+      if(!finalData.permitId) delete finalData.permitId;
 
       logAnimalHarvest(animalToRemove, finalData);
       handleCloseRemoveModals();
     }
+  };
+
+  const getValidPermitsForHarvest = (species: string) => {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      return permits.filter(p => {
+          const expiryDate = new Date(p.expiryDate + 'T00:00:00');
+          const isExpired = expiryDate < today;
+          const speciesMatch = p.linkedSpecies.length === 0 || p.linkedSpecies.includes(species);
+          return !isExpired && speciesMatch;
+      });
   };
 
   const TabButton: React.FC<{label:string; view: 'active' | 'mortality' | 'harvest'}> = ({label, view}) => (
@@ -223,13 +237,14 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tag ID</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Species</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hunter / Client</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permit #</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trophy Info</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {harvests.map((h) => {
                   const clientName = h.clientId ? clients.find(c => c.id === h.clientId)?.name : null;
+                  const permitNumber = h.permitId ? permits.find(p => p.id === h.permitId)?.permitNumber : 'N/A';
                   return (
                     <tr key={h.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.date}</td>
@@ -239,7 +254,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                         <div>{h.hunter}</div>
                         {clientName && <div className="text-xs text-gray-400">Client: {clientName}</div>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.method}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{permitNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {[
                           h.trophyMeasurements,
@@ -338,12 +353,21 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   <label htmlFor="hunter" className="block text-sm font-medium text-gray-700">Hunter Name</label>
                   <input type="text" name="hunter" id="hunter" value={harvestData.hunter} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
               </div>
-              <div>
-                  <label htmlFor="clientId" className="block text-sm font-medium text-gray-700">Link to Client (optional)</label>
-                  <select name="clientId" id="clientId" value={harvestData.clientId} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-                      <option value="">None</option>
-                      {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label htmlFor="clientId" className="block text-sm font-medium text-gray-700">Link to Client (optional)</label>
+                    <select name="clientId" id="clientId" value={harvestData.clientId} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                        <option value="">None</option>
+                        {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor="permitId" className="block text-sm font-medium text-gray-700">Permit</label>
+                    <select name="permitId" id="permitId" value={harvestData.permitId} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                        <option value="">None</option>
+                        {animalToRemove && getValidPermitsForHarvest(animalToRemove.species).map(p => <option key={p.id} value={p.id}>{p.permitNumber} ({p.type})</option>)}
+                    </select>
+                </div>
               </div>
                <div>
                   <label htmlFor="method" className="block text-sm font-medium text-gray-700">Method</label>
