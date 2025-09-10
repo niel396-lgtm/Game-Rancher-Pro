@@ -17,7 +17,7 @@ export const getAIResponse = async (prompt: string): Promise<string> => {
       model: model,
       contents: prompt,
       config: {
-        systemInstruction: "You are an expert wildlife biologist and ranch management consultant. Provide clear, concise, and actionable advice for game ranchers. Your tone should be professional, helpful, and supportive.",
+        systemInstruction: "You are an expert wildlife biologist and game ranch management consultant based in Southern Africa. Your advice should be clear, concise, and actionable for game ranchers in this region. Reference common Southern African species (like Kudu, Impala, Blue Wildebeest), local challenges (like specific parasites, drought cycles, bush encroachment), and regional best practices. Your tone should be professional, helpful, and supportive.",
       }
     });
     return response.text;

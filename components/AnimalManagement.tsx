@@ -45,7 +45,14 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const [causeOfDeath, setCauseOfDeath] = useState('');
   
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
-  const [harvestData, setHarvestData] = useState({ hunter: '', method: 'Rifle', trophyMeasurements: '' });
+  const [harvestData, setHarvestData] = useState({ 
+    hunter: '', 
+    method: 'Rifle', 
+    trophyMeasurements: '',
+    hornLengthL: '',
+    hornLengthR: '',
+    tipToTipSpread: ''
+  });
 
   const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
 
@@ -83,7 +90,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '' });
+    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '' });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -96,7 +103,15 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const handleLogHarvestSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (animalToRemove) {
-      logAnimalHarvest(animalToRemove, harvestData);
+      const { hornLengthL, hornLengthR, tipToTipSpread, ...rest } = harvestData;
+      
+      const finalData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'> = { ...rest };
+
+      if(hornLengthL) finalData.hornLengthL = parseFloat(hornLengthL);
+      if(hornLengthR) finalData.hornLengthR = parseFloat(hornLengthR);
+      if(tipToTipSpread) finalData.tipToTipSpread = parseFloat(tipToTipSpread);
+
+      logAnimalHarvest(animalToRemove, finalData);
       handleCloseRemoveModals();
     }
   };
@@ -217,7 +232,14 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.species}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.hunter}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.method}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.trophyMeasurements}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {[
+                        h.trophyMeasurements,
+                        h.hornLengthL && `L: ${h.hornLengthL}"`,
+                        h.hornLengthR && `R: ${h.hornLengthR}"`,
+                        h.tipToTipSpread && `Spread: ${h.tipToTipSpread}"`
+                      ].filter(Boolean).join(' / ')}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -317,8 +339,22 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   </select>
               </div>
               <div>
-                  <label htmlFor="trophyMeasurements" className="block text-sm font-medium text-gray-700">Trophy Measurements / Notes</label>
-                  <input type="text" name="trophyMeasurements" id="trophyMeasurements" value={harvestData.trophyMeasurements} onChange={handleHarvestInputChange} placeholder="e.g., 10 points, 150 B&C" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                  <label htmlFor="trophyMeasurements" className="block text-sm font-medium text-gray-700">Trophy Info / Score System</label>
+                  <input type="text" name="trophyMeasurements" id="trophyMeasurements" value={harvestData.trophyMeasurements} onChange={handleHarvestInputChange} placeholder="e.g., SCI Score, Rowland Ward" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                 <div>
+                      <label htmlFor="hornLengthL" className="block text-sm font-medium text-gray-700">Left Horn (in)</label>
+                      <input type="number" step="0.1" name="hornLengthL" id="hornLengthL" value={harvestData.hornLengthL} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                  </div>
+                  <div>
+                      <label htmlFor="hornLengthR" className="block text-sm font-medium text-gray-700">Right Horn (in)</label>
+                      <input type="number" step="0.1" name="hornLengthR" id="hornLengthR" value={harvestData.hornLengthR} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                  </div>
+                  <div>
+                      <label htmlFor="tipToTipSpread" className="block text-sm font-medium text-gray-700">Tip-to-Tip (in)</label>
+                      <input type="number" step="0.1" name="tipToTipSpread" id="tipToTipSpread" value={harvestData.tipToTipSpread} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                  </div>
               </div>
               <div className="flex justify-end gap-4 mt-6">
                   <button type="button" onClick={handleCloseRemoveModals} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>

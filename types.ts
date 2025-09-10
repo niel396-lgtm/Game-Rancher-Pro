@@ -84,8 +84,11 @@ export interface Harvest {
   date: string;
   hunter: string;
   method: string;
-  trophyMeasurements: string;
+  trophyMeasurements: string; // e.g., SCI Score, Rowland Ward
   location: string;
+  hornLengthL?: number; // Optional: Left Horn Length in inches
+  hornLengthR?: number; // Optional: Right Horn Length in inches
+  tipToTipSpread?: number; // Optional: Spread measurement
 }
 
 export interface RainfallLog {
