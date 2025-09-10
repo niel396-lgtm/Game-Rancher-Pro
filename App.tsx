@@ -105,6 +105,11 @@ const App: React.FC = () => {
     }
   };
 
+  const addTransaction = (transactionData: Omit<Transaction, 'id'>) => {
+    const newTransaction: Transaction = { ...transactionData, id: `T${Date.now()}` };
+    setTransactions(prev => [newTransaction, ...prev]);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -141,7 +146,13 @@ const App: React.FC = () => {
       case View.Inventory:
         return <InventoryManagement inventory={inventory} />;
       case View.Finance:
-        return <FinancialTracker transactions={transactions} />;
+        return <FinancialTracker 
+          transactions={transactions} 
+          addTransaction={addTransaction}
+          animals={animals}
+          habitats={habitats}
+          inventory={inventory}
+          />;
       case View.AIAssistant:
         return <AIAssistant />;
       case View.RanchMap:

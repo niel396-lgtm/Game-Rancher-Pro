@@ -51,6 +51,9 @@ export interface Transaction {
   category: string;
   amount: number;
   type: TransactionType;
+  linkedAnimalId?: string;
+  linkedHabitatId?: string;
+  linkedInventoryId?: string;
 }
 
 export interface Message {
