@@ -119,7 +119,10 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
           alert('Please fill all required fields');
           return;
       }
-      const finalAnimal: Omit<Animal, 'id'> = {...newAnimal};
+      const finalAnimal: Omit<Animal, 'id'> = {
+          ...newAnimal,
+          lsuConsumptionRate: newAnimal.lsuEquivalent * 3650,
+      };
       if (!finalAnimal.sireId) delete finalAnimal.sireId;
       if (!finalAnimal.damId) delete finalAnimal.damId;
       
@@ -216,6 +219,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
         location: dam.location,
         forageType: dam.forageType,
         lsuEquivalent: dam.lsuEquivalent,
+        lsuConsumptionRate: dam.lsuEquivalent * 3650,
         damId: dam.id,
         sireId: newBirth.sireId || undefined,
         category: 'Juvenile'

@@ -32,6 +32,7 @@ export interface Animal {
   tagId: string;
   forageType: 'Grazer' | 'Browser' | 'Mixed-Feeder';
   lsuEquivalent: number; // e.g., Kudu = 0.7, Impala = 0.25
+  lsuConsumptionRate: number; // kg of dry matter consumed per year
   sireId?: string; // ID of the father for genetic tracking
   damId?: string;  // ID of the mother for genetic tracking
   category: 'Breeding Stock' | 'Juvenile' | 'Trophy' | 'Production';

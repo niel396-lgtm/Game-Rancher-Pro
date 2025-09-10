@@ -46,8 +46,8 @@ const getVeldConditionFactor = (assessment: VeldAssessment | undefined): number 
 
 
 const StockingDensityBar: React.FC<{current: string; capacity: string}> = ({current, capacity}) => {
-    const currentNum = parseFloat(current);
-    const capacityNum = parseFloat(capacity);
+    const currentNum = parseFloat(current.replace(/,/g, ''));
+    const capacityNum = parseFloat(capacity.replace(/,/g, ''));
     const percentage = capacityNum > 0 ? (currentNum / capacityNum) * 100 : 0;
     let barColor = 'bg-green-500';
     if (percentage > 90) barColor = 'bg-red-500';
@@ -56,7 +56,7 @@ const StockingDensityBar: React.FC<{current: string; capacity: string}> = ({curr
     return (
         <div>
              <div className="flex justify-end mb-1">
-                <span className="text-sm font-medium text-gray-500">{current} / {capacity} LSU</span>
+                <span className="text-sm font-medium text-gray-500">{current} / {capacity} kg</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div className={`${barColor} h-2.5 rounded-full`} style={{ width: `${Math.min(percentage, 100)}%`}}></div>
@@ -154,34 +154,28 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
           const totalForageProductionKG = annualRainfallMM * zone.forageProductionFactor * zone.areaHectares;
           const availableForageKG = totalForageProductionKG * 0.25; // 25% sustainable utilization rate
 
-          const availableGrazerForageKG = availableForageKG * zone.grassToBrowseRatio;
-          const availableBrowserForageKG = availableForageKG * (1 - zone.grassToBrowseRatio);
-          
-          const LSU_CONSUMPTION_PER_YEAR = 10 * 365; // Assumes 1 LSU eats 10kg Dry Matter per day
-
-          const calculatedGrazerCapacityLSU = availableGrazerForageKG / LSU_CONSUMPTION_PER_YEAR;
-          const calculatedBrowserCapacityLSU = availableBrowserForageKG / LSU_CONSUMPTION_PER_YEAR;
-
           const latestAssessment = veldAssessments
             .filter(a => a.habitatZoneId === zone.id)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
           
           const veldFactor = getVeldConditionFactor(latestAssessment);
           
-          const actualGrazerCapacityLSU = calculatedGrazerCapacityLSU * veldFactor;
-          const actualBrowserCapacityLSU = calculatedBrowserCapacityLSU * veldFactor;
+          const actualAvailableGrazerForageKG = (availableForageKG * zone.grassToBrowseRatio) * veldFactor;
+          const actualAvailableBrowserForageKG = (availableForageKG * (1 - zone.grassToBrowseRatio)) * veldFactor;
 
-          const currentStocking = animalsInZone.reduce((acc, animal) => {
+          const currentDemands = animalsInZone.reduce((acc, animal) => {
+            const consumption = animal.lsuConsumptionRate; // This is annual consumption in KG
             if (animal.forageType === 'Grazer') {
-              acc.grazerLSU += animal.lsuEquivalent;
+              acc.grazerDemand += consumption;
             } else if (animal.forageType === 'Browser') {
-              acc.browserLSU += animal.lsuEquivalent;
+              acc.browserDemand += consumption;
             } else if (animal.forageType === 'Mixed-Feeder') {
-              acc.grazerLSU += animal.lsuEquivalent * 0.5;
-              acc.browserLSU += animal.lsuEquivalent * 0.5;
+              // Assuming 50/50 split for mixed feeders
+              acc.grazerDemand += consumption * 0.5;
+              acc.browserDemand += consumption * 0.5;
             }
             return acc;
-          }, { grazerLSU: 0, browserLSU: 0 });
+          }, { grazerDemand: 0, browserDemand: 0 });
 
           return (
             <Card key={zone.id} title={zone.name} className="flex flex-col">
@@ -210,17 +204,17 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                  <div className="pt-2">
                     <p className="text-sm font-medium text-brand-dark">Grazing Capacity</p>
                     <StockingDensityBar
-                      current={currentStocking.grazerLSU.toFixed(2)}
-                      capacity={actualGrazerCapacityLSU.toFixed(2)}
+                      current={currentDemands.grazerDemand.toLocaleString('default', { maximumFractionDigits: 0 })}
+                      capacity={actualAvailableGrazerForageKG.toLocaleString('default', { maximumFractionDigits: 0 })}
                     />
-                    <p className="text-xs text-gray-500 mt-1">Currently stocked at {currentStocking.grazerLSU.toFixed(2)} LSU</p>
+                    <p className="text-xs text-gray-500 mt-1">Current Demand: {currentDemands.grazerDemand.toLocaleString('default', { maximumFractionDigits: 0 })} kg / year</p>
 
                     <p className="text-sm font-medium text-brand-dark mt-4">Browsing Capacity</p>
                     <StockingDensityBar
-                      current={currentStocking.browserLSU.toFixed(2)}
-                      capacity={actualBrowserCapacityLSU.toFixed(2)}
+                      current={currentDemands.browserDemand.toLocaleString('default', { maximumFractionDigits: 0 })}
+                      capacity={actualAvailableBrowserForageKG.toLocaleString('default', { maximumFractionDigits: 0 })}
                     />
-                    <p className="text-xs text-gray-500 mt-1">Currently stocked at {currentStocking.browserLSU.toFixed(2)} LSU</p>
+                    <p className="text-xs text-gray-500 mt-1">Current Demand: {currentDemands.browserDemand.toLocaleString('default', { maximumFractionDigits: 0 })} kg / year</p>
                 </div>
               </div>
               
