@@ -2,6 +2,7 @@
 
 
 
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -16,7 +17,7 @@ import { PermitManagement } from './components/PermitManagement';
 import { GeneticAnalysis } from './components/GeneticAnalysis';
 import { HarvestPlanning } from './components/HarvestPlanning';
 import { PopulationSurveys } from './components/PopulationSurveys';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey } from './types';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle } from './types';
 import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
@@ -29,6 +30,7 @@ const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: n
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
+  const [managementStyle, setManagementStyle] = useState<ManagementStyle>('Intensive');
 
   // Lifted state for global management
   const [animals, setAnimals] = useState<Animal[]>(INITIAL_ANIMALS);
@@ -48,6 +50,10 @@ const App: React.FC = () => {
   const [animalMeasurements, setAnimalMeasurements] = useState<AnimalMeasurement[]>(INITIAL_ANIMAL_MEASUREMENTS);
   const [populationSurveys, setPopulationSurveys] = useState<PopulationSurvey[]>(INITIAL_POPULATION_SURVEYS);
 
+  const handleManagementStyleChange = (style: ManagementStyle) => {
+    setManagementStyle(style);
+    setCurrentView(View.Dashboard); // Reset to a safe, common view
+  };
 
   const addAnimal = (animal: Omit<Animal, 'id'>) => {
     const newAnimal = { ...animal, id: `A${Date.now()}` };
@@ -229,6 +235,7 @@ const App: React.FC = () => {
           reproductiveEvents={reproductiveEvents}
           animalMeasurements={animalMeasurements}
           populationSurveys={populationSurveys}
+          managementStyle={managementStyle}
           />;
       case View.Clients:
         return <ClientManagement clients={clients} addClient={addClient} harvests={harvests} />;
@@ -286,7 +293,12 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-brand-light text-brand-dark font-sans">
-      <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
+      <Sidebar 
+        currentView={currentView} 
+        setCurrentView={setCurrentView}
+        managementStyle={managementStyle}
+        setManagementStyle={handleManagementStyleChange} 
+      />
       <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
         {renderView()}
       </main>

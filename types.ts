@@ -15,6 +15,8 @@ export enum View {
   HarvestPlanning = 'Harvest Planning',
 }
 
+export type ManagementStyle = 'Intensive' | 'Extensive';
+
 export interface Permit {
   id: string;
   permitNumber: string;

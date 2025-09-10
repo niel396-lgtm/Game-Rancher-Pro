@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card } from './ui/Card';
-import { Animal, ReproductiveEvent, AnimalMeasurement, PopulationSurvey } from '../types';
+import { Animal, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle } from '../types';
 import { SPECIES_PARAMETERS, SPECIES_BENCHMARKS } from '../constants';
 
 interface HarvestPlanningProps {
@@ -9,6 +9,7 @@ interface HarvestPlanningProps {
   reproductiveEvents: ReproductiveEvent[];
   animalMeasurements: AnimalMeasurement[];
   populationSurveys: PopulationSurvey[];
+  managementStyle: ManagementStyle;
 }
 
 interface HarvestCandidate {
@@ -75,15 +76,6 @@ const ReasonBadge: React.FC<{ reason: { text: string; severity: 'High' | 'Medium
         </span>
     );
 };
-
-const TabButton: React.FC<{label:string; view: 'individual' | 'quota', activeTab: string, setActiveTab: (view: 'individual' | 'quota') => void}> = ({label, view, activeTab, setActiveTab}) => (
-      <button 
-        onClick={() => setActiveTab(view)}
-        className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === view ? 'bg-white border-b-0 border-t border-x text-brand-primary' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-      >
-        {label}
-      </button>
-  );
 
 const IndividualCullingPlanner: React.FC<Pick<HarvestPlanningProps, 'animals' | 'reproductiveEvents' | 'animalMeasurements'>> = ({ animals, reproductiveEvents, animalMeasurements }) => {
     const [speciesFilter, setSpeciesFilter] = useState('All');
@@ -177,7 +169,7 @@ const IndividualCullingPlanner: React.FC<Pick<HarvestPlanningProps, 'animals' | 
     const allSpecies = useMemo(() => ['All', ...Array.from(new Set(animals.map(a => a.species)))], [animals]);
 
     return (
-        <Card className="rounded-t-none">
+        <Card>
             <div className="flex justify-end p-4">
                  <div>
                     <label htmlFor="species-filter" className="text-sm font-medium text-gray-700 mr-2">Filter by Species:</label>
@@ -303,7 +295,7 @@ const StrategicQuotaCalculator: React.FC<Pick<HarvestPlanningProps, 'populationS
 
 
     return (
-        <Card className="rounded-t-none">
+        <Card>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                     <h3 className="text-xl font-semibold text-brand-dark">Calculator Inputs</h3>
@@ -364,22 +356,30 @@ const StrategicQuotaCalculator: React.FC<Pick<HarvestPlanningProps, 'populationS
 
 
 export const HarvestPlanning: React.FC<HarvestPlanningProps> = (props) => {
-    const { animals, reproductiveEvents, animalMeasurements, populationSurveys } = props;
-    const [activeTab, setActiveTab] = useState<'individual' | 'quota'>('individual');
+    const { animals, reproductiveEvents, animalMeasurements, populationSurveys, managementStyle } = props;
     
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-3xl font-bold text-brand-dark">Harvest Planning</h2>
+                 <h2 className="text-3xl font-bold text-brand-dark">
+                    {managementStyle === 'Intensive' 
+                        ? 'Harvest Planning: Individual Culling' 
+                        : 'Harvest Planning: Strategic Quota'
+                    }
+                 </h2>
             </div>
 
-            <div className="-mb-px flex">
-              <TabButton label="Individual Culling" view="individual" activeTab={activeTab} setActiveTab={setActiveTab} />
-              <TabButton label="Strategic Quota" view="quota" activeTab={activeTab} setActiveTab={setActiveTab} />
-            </div>
-
-            {activeTab === 'individual' && <IndividualCullingPlanner animals={animals} reproductiveEvents={reproductiveEvents} animalMeasurements={animalMeasurements} />}
-            {activeTab === 'quota' && <StrategicQuotaCalculator populationSurveys={populationSurveys} />}
+            {managementStyle === 'Intensive' ? (
+                <IndividualCullingPlanner 
+                    animals={animals} 
+                    reproductiveEvents={reproductiveEvents} 
+                    animalMeasurements={animalMeasurements} 
+                />
+            ) : (
+                <StrategicQuotaCalculator 
+                    populationSurveys={populationSurveys} 
+                />
+            )}
         </div>
     );
 };
