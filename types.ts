@@ -41,10 +41,9 @@ export interface HabitatZone {
   forageQuality: 'Abundant' | 'Moderate' | 'Scarce';
   veldCondition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
   issues: string[];
-  carryingCapacity: number; // Max animals
   areaHectares: number;
-  grazerLSUPer100ha: number; // Recommended stocking rate for grazers
-  browserLSUPer100ha: number; // Recommended stocking rate for browsers
+  forageProductionFactor: number; // kg dry matter per ha per mm rain
+  grassToBrowseRatio: number; // 0.0 to 1.0, proportion of forage for grazers
 }
 
 export interface InventoryItem {
@@ -131,6 +130,9 @@ export interface VeldAssessment {
   id: string;
   habitatZoneId: string;
   date: string;
+  speciesComposition: number; // Score out of 10
+  basalCover: number; // Score out of 10
+  soilErosion: number; // Score out of 5
   condition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
   notes?: string;
 }

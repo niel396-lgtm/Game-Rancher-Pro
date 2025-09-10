@@ -13,6 +13,14 @@ import { PermitManagement } from './components/PermitManagement';
 import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit } from './types';
 import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS } from './constants';
 
+const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
+    const totalScore = scores.speciesComposition + scores.basalCover;
+    if (totalScore >= 18) return 'Excellent';
+    if (totalScore >= 14) return 'Good';
+    if (totalScore >= 8) return 'Fair';
+    return 'Poor';
+};
+
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
 
@@ -96,10 +104,22 @@ const App: React.FC = () => {
       setRainfallLogs(prev => [newLog, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   };
   
-  const addVeldAssessment = (assessmentData: Omit<VeldAssessment, 'id'>) => {
-    const newAssessment: VeldAssessment = { ...assessmentData, id: `VA${Date.now()}` };
+  const addVeldAssessment = (assessmentData: Omit<VeldAssessment, 'id' | 'condition'>) => {
+    const condition = deriveVeldCondition(assessmentData);
+    const newAssessment: VeldAssessment = { ...assessmentData, id: `VA${Date.now()}`, condition };
+    
     setVeldAssessments(prev => [newAssessment, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-  }
+    
+    setHabitats(prevHabitats => prevHabitats.map(habitat => {
+      if (habitat.id === assessmentData.habitatZoneId) {
+        // After adding the assessment, find the latest one for this habitat to determine its current condition
+        const allAssessmentsForHabitat = [newAssessment, ...veldAssessments.filter(va => va.habitatZoneId === habitat.id)];
+        const latestAssessment = allAssessmentsForHabitat.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        return { ...habitat, veldCondition: latestAssessment.condition };
+      }
+      return habitat;
+    }));
+  };
   
   const updateHabitat = (updatedHabitat: HabitatZone) => {
     setHabitats(prev => prev.map(h => h.id === updatedHabitat.id ? updatedHabitat : h));
@@ -170,6 +190,7 @@ const App: React.FC = () => {
           veldAssessments={veldAssessments}
           addVeldAssessment={addVeldAssessment}
           updateHabitat={updateHabitat}
+          rainfallLogs={rainfallLogs}
           />;
       case View.Inventory:
         return <InventoryManagement inventory={inventory} />;

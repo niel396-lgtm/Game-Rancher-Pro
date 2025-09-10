@@ -38,11 +38,12 @@ export const INITIAL_ANIMALS: Animal[] = [
 ];
 
 export const INITIAL_HABITAT_ZONES: HabitatZone[] = [
-  { id: 'H01', name: 'North Pasture', waterLevel: 'Normal', forageQuality: 'Abundant', veldCondition: 'Excellent', issues: [], carryingCapacity: 20, areaHectares: 850, grazerLSUPer100ha: 10, browserLSUPer100ha: 2 },
-  { id: 'H02', name: 'West Ridge', waterLevel: 'High', forageQuality: 'Moderate', veldCondition: 'Good', issues: ['Fence damage on west border'], carryingCapacity: 15, areaHectares: 1200, grazerLSUPer100ha: 4, browserLSUPer100ha: 8 },
-  { id: 'H03', name: 'South Plains', waterLevel: 'Low', forageQuality: 'Abundant', veldCondition: 'Good', issues: ['Water pump requires maintenance'], carryingCapacity: 25, areaHectares: 2000, grazerLSUPer100ha: 30, browserLSUPer100ha: 3 },
-  { id: 'H04', name: 'Oak Forest', waterLevel: 'Normal', forageQuality: 'Moderate', veldCondition: 'Fair', issues: [], carryingCapacity: 10, areaHectares: 1000, grazerLSUPer100ha: 5, browserLSUPer100ha: 25 },
+  { id: 'H01', name: 'North Pasture', waterLevel: 'Normal', forageQuality: 'Abundant', veldCondition: 'Excellent', issues: [], areaHectares: 850, forageProductionFactor: 3.0, grassToBrowseRatio: 0.9 },
+  { id: 'H02', name: 'West Ridge', waterLevel: 'High', forageQuality: 'Moderate', veldCondition: 'Good', issues: ['Fence damage on west border'], areaHectares: 1200, forageProductionFactor: 2.2, grassToBrowseRatio: 0.4 },
+  { id: 'H03', name: 'South Plains', waterLevel: 'Low', forageQuality: 'Abundant', veldCondition: 'Good', issues: ['Water pump requires maintenance'], areaHectares: 2000, forageProductionFactor: 2.8, grassToBrowseRatio: 0.8 },
+  { id: 'H04', name: 'Oak Forest', waterLevel: 'Normal', forageQuality: 'Moderate', veldCondition: 'Fair', issues: [], areaHectares: 1000, forageProductionFactor: 2.0, grassToBrowseRatio: 0.2 },
 ];
+
 
 export const INITIAL_INVENTORY: InventoryItem[] = [
   { id: 'I001', name: 'High-Protein Feed Pellets', category: 'Feed', quantity: 45, reorderLevel: 50, supplier: 'Feed Co.' },
@@ -87,8 +88,8 @@ export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
 ];
 
 export const INITIAL_VELD_ASSESSMENTS: VeldAssessment[] = [
-    { id: 'VA01', habitatZoneId: 'H04', date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], condition: 'Good', notes: 'Post-rain recovery looks good.'},
-    { id: 'VA02', habitatZoneId: 'H04', date: new Date().toISOString().split('T')[0], condition: 'Fair', notes: 'Showing signs of grazing pressure.'},
+    { id: 'VA01', habitatZoneId: 'H04', date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], speciesComposition: 8, basalCover: 7, soilErosion: 2, condition: 'Good', notes: 'Post-rain recovery looks good.'},
+    { id: 'VA02', habitatZoneId: 'H04', date: new Date().toISOString().split('T')[0], speciesComposition: 6, basalCover: 5, soilErosion: 3, condition: 'Fair', notes: 'Showing signs of grazing pressure.'},
 ];
 
 
