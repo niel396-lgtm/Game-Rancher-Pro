@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { Modal } from './ui/Modal';
 import { HabitatZone, Animal, VeldAssessment, RainfallLog } from '../types';
@@ -79,6 +80,9 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
     speciesComposition: 7,
     basalCover: 7,
     soilErosion: 2,
+    forageUtilization: 'Moderate' as VeldAssessment['forageUtilization'],
+    isFixedPointSite: false,
+    photoUrl: '',
     notes: ''
   });
 
@@ -96,8 +100,13 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
   };
 
   const handleAssessmentInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewAssessment(prev => ({ ...prev, [name]: name === 'notes' ? value : parseInt(value, 10) }));
+    const { name, value, type } = e.target;
+     if (type === 'checkbox') {
+        const { checked } = e.target as HTMLInputElement;
+        setNewAssessment(prev => ({ ...prev, [name]: checked }));
+    } else {
+        setNewAssessment(prev => ({ ...prev, [name]: name.match(/composition|cover|erosion/i) ? parseInt(value, 10) : value }));
+    }
   };
 
   const handleAssessmentSubmit = (e: React.FormEvent) => {
@@ -113,6 +122,9 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
       speciesComposition: 7,
       basalCover: 7,
       soilErosion: 2,
+      forageUtilization: 'Moderate',
+      isFixedPointSite: false,
+      photoUrl: '',
       notes: ''
     });
   };
@@ -136,6 +148,27 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
   };
 
   const zoneAssessments = modalZone ? veldAssessments.filter(a => a.habitatZoneId === modalZone.id) : [];
+
+  const fixedPointAssessments = zoneAssessments.filter(a => a.isFixedPointSite && a.photoUrl);
+  const latestFPAssessment = fixedPointAssessments.length > 0 ? fixedPointAssessments[0] : null;
+
+  const lastYearPhoto = useMemo(() => {
+    if (!latestFPAssessment) return null;
+
+    const latestDate = new Date(latestFPAssessment.date);
+    const targetLastYear = new Date(new Date(latestFPAssessment.date).setFullYear(latestDate.getFullYear() - 1));
+
+    const otherFPs = fixedPointAssessments.filter(a => a.id !== latestFPAssessment.id);
+    if (otherFPs.length === 0) return null;
+
+    // Find the closest one to the target date
+    return otherFPs.reduce((prev, curr) => {
+        const prevDiff = Math.abs(new Date(prev.date).getTime() - targetLastYear.getTime());
+        const currDiff = Math.abs(new Date(curr.date).getTime() - targetLastYear.getTime());
+        return currDiff < prevDiff ? curr : prev;
+    });
+  }, [latestFPAssessment, fixedPointAssessments]);
+
 
   return (
     <div>
@@ -243,15 +276,38 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
       
       <Modal isOpen={!!modalZone} onClose={handleCloseModal} title={`Manage Veld & Ecology for ${modalZone?.name}`}>
         <div className="space-y-6">
+            {latestFPAssessment && (
+                <div>
+                    <h4 className="text-lg font-semibold text-brand-dark mb-2">Fixed-Point Photo Monitoring</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                        <div>
+                            <p className="font-semibold text-center text-sm mb-1">This Year ({latestFPAssessment.date})</p>
+                            <img src={latestFPAssessment.photoUrl} alt={`Fixed point on ${latestFPAssessment.date}`} className="rounded-lg shadow-md w-full h-48 object-cover" />
+                        </div>
+                        <div>
+                            {lastYearPhoto ? (
+                                <>
+                                    <p className="font-semibold text-center text-sm mb-1">Last Year ({lastYearPhoto.date})</p>
+                                    <img src={lastYearPhoto.photoUrl} alt={`Fixed point on ${lastYearPhoto.date}`} className="rounded-lg shadow-md w-full h-48 object-cover" />
+                                </>
+                            ) : (
+                                <div className="h-48 flex items-center justify-center bg-gray-100 rounded-lg">
+                                    <p className="text-gray-500 text-sm text-center">No comparable photo from last year found.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
             <div>
-              <h4 className="text-lg font-semibold text-brand-dark mb-2 flex items-center"><HistoryIcon className="w-5 h-5 mr-2"/> Assessment History</h4>
+              <h4 className="text-lg font-semibold text-brand-dark mb-2 border-t pt-4"><HistoryIcon className="w-5 h-5 mr-2 inline-block"/> Assessment History</h4>
               <div className="max-h-48 overflow-y-auto border rounded-lg p-2 bg-gray-50">
                 {zoneAssessments.length > 0 ? (
                   <ul className="divide-y divide-gray-200">
                     {zoneAssessments.map(assessment => (
                       <li key={assessment.id} className="py-2">
                         <div className="flex justify-between items-center">
-                           <p className="font-semibold text-sm">{assessment.date}: <span className={getStatusColor(assessment.condition, 'veld')}>{assessment.condition}</span></p>
+                           <p className="font-semibold text-sm">{assessment.date}: <span className={getStatusColor(assessment.condition, 'veld')}>{assessment.condition}</span> (Util: {assessment.forageUtilization})</p>
                         </div>
                         {assessment.notes && <p className="text-xs text-gray-600 mt-1 pl-2 border-l-2 border-gray-200">{assessment.notes}</p>}
                       </li>
@@ -265,10 +321,19 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                <h4 className="text-lg font-semibold text-brand-dark mb-3 border-t pt-4">Log New Scientific Assessment</h4>
                 <form onSubmit={handleAssessmentSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                          <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
-                          <input type="date" name="date" id="date" value={newAssessment.date} onChange={handleAssessmentInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
-                      </div>
+                        <div>
+                            <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" name="date" id="date" value={newAssessment.date} onChange={handleAssessmentInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                        </div>
+                        <div>
+                            <label htmlFor="forageUtilization" className="block text-sm font-medium text-gray-700">Forage Utilization</label>
+                            <select name="forageUtilization" id="forageUtilization" value={newAssessment.forageUtilization} onChange={handleAssessmentInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                                <option>Light</option>
+                                <option>Moderate</option>
+                                <option>Heavy</option>
+                                <option>Severe</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                       <label htmlFor="speciesComposition" className="block text-sm font-medium text-gray-700">Species Composition ({newAssessment.speciesComposition}/10)</label>
@@ -281,6 +346,18 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                      <div>
                       <label htmlFor="soilErosion" className="block text-sm font-medium text-gray-700">Soil Erosion ({newAssessment.soilErosion}/5)</label>
                       <input type="range" min="1" max="5" name="soilErosion" id="soilErosion" value={newAssessment.soilErosion} onChange={handleAssessmentInputChange} className="mt-1 block w-full" />
+                    </div>
+                    <div className="space-y-2 pt-2 border-t">
+                        <div className="flex items-center">
+                            <input type="checkbox" name="isFixedPointSite" id="isFixedPointSite" checked={newAssessment.isFixedPointSite} onChange={handleAssessmentInputChange} className="h-4 w-4 rounded border-gray-300 text-brand-primary focus:ring-brand-secondary"/>
+                            <label htmlFor="isFixedPointSite" className="ml-2 block text-sm font-medium text-gray-700">Is this a fixed-point monitoring site?</label>
+                        </div>
+                        {newAssessment.isFixedPointSite && (
+                             <div>
+                                <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700">Photo URL</label>
+                                <input type="url" name="photoUrl" id="photoUrl" value={newAssessment.photoUrl} onChange={handleAssessmentInputChange} placeholder="https://example.com/image.jpg" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                            </div>
+                        )}
                     </div>
                      <div>
                         <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (optional)</label>

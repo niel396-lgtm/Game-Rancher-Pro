@@ -189,6 +189,7 @@ const App: React.FC = () => {
           permits={permits}
           animalMeasurements={animalMeasurements}
           populationSurveys={populationSurveys}
+          veldAssessments={veldAssessments}
           />;
       case View.Animals:
         return <AnimalManagement 
@@ -276,6 +277,7 @@ const App: React.FC = () => {
           permits={permits}
           animalMeasurements={animalMeasurements}
           populationSurveys={populationSurveys}
+          veldAssessments={veldAssessments}
           />;
     }
   };

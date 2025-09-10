@@ -89,8 +89,9 @@ export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
 ];
 
 export const INITIAL_VELD_ASSESSMENTS: VeldAssessment[] = [
-    { id: 'VA01', habitatZoneId: 'H04', date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], speciesComposition: 8, basalCover: 7, soilErosion: 2, condition: 'Good', notes: 'Post-rain recovery looks good.'},
-    { id: 'VA02', habitatZoneId: 'H04', date: new Date().toISOString().split('T')[0], speciesComposition: 6, basalCover: 5, soilErosion: 3, condition: 'Fair', notes: 'Showing signs of grazing pressure.'},
+    { id: 'VA01', habitatZoneId: 'H04', date: new Date(Date.now() - 86400000 * 365).toISOString().split('T')[0], speciesComposition: 8, basalCover: 7, soilErosion: 2, condition: 'Good', forageUtilization: 'Moderate', notes: 'Post-rain recovery looks good.', isFixedPointSite: true, photoUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000&auto=format&fit=crop'},
+    { id: 'VA02', habitatZoneId: 'H04', date: new Date().toISOString().split('T')[0], speciesComposition: 6, basalCover: 5, soilErosion: 3, condition: 'Fair', forageUtilization: 'Heavy', notes: 'Showing signs of grazing pressure.', isFixedPointSite: true, photoUrl: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2070&auto=format&fit=crop'},
+    { id: 'VA03', habitatZoneId: 'H01', date: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0], speciesComposition: 9, basalCover: 9, soilErosion: 1, condition: 'Excellent', forageUtilization: 'Light', notes: 'Excellent condition.' },
 ];
 
 export const INITIAL_REPRODUCTIVE_EVENTS: ReproductiveEvent[] = [

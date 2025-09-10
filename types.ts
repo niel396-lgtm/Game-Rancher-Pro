@@ -142,6 +142,9 @@ export interface VeldAssessment {
   basalCover: number; // Score out of 10
   soilErosion: number; // Score out of 5
   condition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  forageUtilization: 'Light' | 'Moderate' | 'Heavy' | 'Severe';
+  isFixedPointSite?: boolean;
+  photoUrl?: string;
   notes?: string;
 }
 

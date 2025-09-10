@@ -6,7 +6,7 @@ import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
 import { HerdQualityChart } from './HerdQualityChart';
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey } from '../types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey, VeldAssessment } from '../types';
 import { PopulationIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 
@@ -25,6 +25,7 @@ interface DashboardProps {
     permits: Permit[];
     animalMeasurements: AnimalMeasurement[];
     populationSurveys: PopulationSurvey[];
+    veldAssessments: VeldAssessment[];
 }
 
 const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
@@ -41,7 +42,7 @@ const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; u
     </Card>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys, veldAssessments }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -91,6 +92,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
     }, { expiringPermits: [] as Permit[], expiredPermits: [] as Permit[] });
   }, [permits]);
   
+    const highGrazingPressureAlerts = useMemo(() => {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const latestAssessmentsByZone = habitats.map(habitat => {
+            return veldAssessments
+                .filter(va => va.habitatZoneId === habitat.id)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        }).filter(Boolean);
+
+        return latestAssessmentsByZone
+            .filter(assessment => {
+                const assessmentDate = new Date(assessment.date);
+                return assessmentDate >= thirtyDaysAgo && (assessment.forageUtilization === 'Heavy' || assessment.forageUtilization === 'Severe');
+            });
+    }, [veldAssessments, habitats]);
+
   // Refined KPI Calculations
   const { avgCostBreeding, avgCostTrophy } = useMemo(() => {
     const oneYearAgo = new Date();
@@ -248,6 +266,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <Card title="Recent Alerts">
               <ul className="max-h-60 overflow-y-auto">
+                  {highGrazingPressureAlerts.map(assessment => {
+                      const habitatName = habitats.find(h => h.id === assessment.habitatZoneId)?.name;
+                      return (
+                          <li key={`graze-${assessment.id}`} className="flex items-center p-2 border-b">
+                              <IssueIcon className="w-5 h-5 text-yellow-500 mr-3" />
+                              <span>High grazing pressure in <strong>{habitatName}</strong>: Utilization rated '{assessment.forageUtilization}'.</span>
+                          </li>
+                      );
+                  })}
                   {inventory.filter(item => item.quantity < item.reorderLevel).map(item => (
                       <li key={item.id} className="flex items-center p-2 border-b">
                           <InventoryIcon className="w-5 h-5 text-yellow-500 mr-3" />
@@ -260,7 +287,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
                           <span>Habitat issue in <strong>{item.name}</strong>: {item.issue}.</span>
                       </li>
                    ))}
-                   {(!inventory.some(i => i.quantity < i.reorderLevel) && !habitats.some(h => h.issues.length > 0)) && <p className="p-2 text-gray-500">No active alerts.</p>}
+                   {(highGrazingPressureAlerts.length === 0 && !inventory.some(i => i.quantity < i.reorderLevel) && !habitats.some(h => h.issues.length > 0)) && <p className="p-2 text-gray-500">No active alerts.</p>}
               </ul>
           </Card>
           <Card title="Operational Tasks" titleClassName="flex justify-between items-center">
