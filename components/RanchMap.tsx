@@ -1,18 +1,69 @@
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Polygon, Marker, Popup, FeatureGroup } from 'react-leaflet';
-import { EditControl } from 'react-leaflet-draw';
+import React, { useState, useRef, useEffect } from 'react';
+import { MapContainer, TileLayer, Polygon, Marker, Popup, FeatureGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet-draw';
 import { Landmark, Boundary, Coords, CoordsPath, LandmarkType } from '../types';
 import { Modal } from './ui/Modal';
 import { Card } from './ui/Card';
 
-// Fix for default icon issue with webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// Fix for default icon issue with modern bundlers
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
+
+interface DrawControlProps {
+    onCreated: (e: any) => void;
+    onDeleted: (e: any) => void;
+}
+
+const DrawControl: React.FC<DrawControlProps> = ({ onCreated, onDeleted }) => {
+    const map = useMap();
+    const featureGroupRef = useRef<L.FeatureGroup>(new L.FeatureGroup());
+
+    useEffect(() => {
+        // Add the featureGroup to the map to make layers editable
+        map.addLayer(featureGroupRef.current);
+
+        const drawControl = new L.Control.Draw({
+            position: 'topright',
+            draw: {
+                rectangle: false,
+                circle: false,
+                circlemarker: false,
+                polyline: false,
+                marker: { icon: new L.Icon.Default() },
+                polygon: {
+                  shapeOptions: { color: '#8A9A5B' }
+                }
+            },
+            edit: {
+                featureGroup: featureGroupRef.current,
+            },
+        });
+
+        map.addControl(drawControl);
+
+        // Custom function to forward layers to the main feature group used for display
+        const handleCreated = (e: any) => {
+            featureGroupRef.current.addLayer(e.layer);
+            onCreated(e);
+        };
+        
+        map.on(L.Draw.Event.CREATED, handleCreated);
+        map.on(L.Draw.Event.DELETED, onDeleted);
+
+        return () => {
+            map.removeControl(drawControl);
+            map.removeLayer(featureGroupRef.current);
+            map.off(L.Draw.Event.CREATED, handleCreated);
+            map.off(L.Draw.Event.DELETED, onDeleted);
+        };
+    }, [map, onCreated, onDeleted]);
+
+    return null;
+};
 
 interface RanchMapProps {
   landmarks: Landmark[];
@@ -55,12 +106,16 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
   const [newFeature, setNewFeature] = useState<NewFeatureData | null>(null);
   const [name, setName] = useState('');
   const [landmarkType, setLandmarkType] = useState<LandmarkType>(LandmarkType.Other);
+  const [drawnLayer, setDrawnLayer] = useState<L.Layer | null>(null);
+  
+  const featureGroupRef = useRef<L.FeatureGroup>(null);
 
   const RANCH_CENTER: Coords = [30.51, -98.39];
   const RANCH_ZOOM = 14;
 
   const handleCreate = (e: any) => {
     const { layerType, layer } = e;
+    setDrawnLayer(layer); // Keep track of the imperatively added layer
     if (layerType === 'marker') {
       const { lat, lng } = layer.getLatLng();
       setNewFeature({ type: 'landmark', data: [lat, lng] });
@@ -74,7 +129,6 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
   
   const handleDelete = (e: any) => {
     e.layers.eachLayer((layer: any) => {
-        // Look for our custom, non-conflicting property on the layer instance
         const customId = (layer as any).myCustomId;
         if (customId) {
             removeFeature(customId);
@@ -97,10 +151,20 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
   };
 
   const resetModal = () => {
+    // When modal is closed (saved or cancelled), remove the temporary drawn layer.
+    // React will then take over and render the permanent layer from state.
+    if (drawnLayer && featureGroupRef.current) {
+        try {
+            featureGroupRef.current.removeLayer(drawnLayer);
+        } catch(err) {
+            // Ignore error if layer is already removed
+        }
+    }
     setIsModalOpen(false);
     setNewFeature(null);
     setName('');
     setLandmarkType(LandmarkType.Other);
+    setDrawnLayer(null);
   };
 
   return (
@@ -112,22 +176,9 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
             attribution='&copy; <a href="https://www.esri.com/en-us/home">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           />
-          <FeatureGroup>
-            <EditControl
-              position="topright"
-              onCreated={handleCreate}
-              onDeleted={handleDelete}
-              draw={{
-                rectangle: false,
-                circle: false,
-                circlemarker: false,
-                polyline: false,
-                marker: { icon: new L.Icon.Default() },
-                polygon: {
-                  shapeOptions: { color: '#8A9A5B' }
-                }
-              }}
-            />
+          <FeatureGroup ref={featureGroupRef}>
+            {/* Replace broken EditControl with custom component */}
+            <DrawControl onCreated={handleCreate} onDeleted={handleDelete} />
 
             {boundaries.map(boundary => (
               <Polygon 
@@ -135,10 +186,7 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
                 positions={boundary.positions} 
                 pathOptions={{ color: '#C3B091' }}
                 eventHandlers={{
-                  add: (e) => { 
-                    // Attach a custom ID directly to the layer object, avoiding the 'options' property
-                    (e.target as any).myCustomId = boundary.id;
-                  }
+                  add: (e) => { (e.target as any).myCustomId = boundary.id; }
                 }}
               >
                 <Popup><strong>{boundary.name}</strong></Popup>
@@ -151,10 +199,7 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
                 position={landmark.position} 
                 icon={getLandmarkIcon(landmark.type)} 
                 eventHandlers={{
-                  add: (e) => { 
-                    // Attach a custom ID directly to the layer object, avoiding the 'options' property
-                    (e.target as any).myCustomId = landmark.id;
-                  }
+                  add: (e) => { (e.target as any).myCustomId = landmark.id; }
                 }}>
                 <Popup>
                     <strong>{landmark.name}</strong><br/>
@@ -188,7 +233,6 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
               </div>
           </form>
       </Modal>
-
     </div>
   );
 };
