@@ -122,6 +122,7 @@ const App: React.FC = () => {
           addTask={addTask}
           toggleTask={toggleTask}
           removeTask={removeTask}
+          harvests={harvests}
           rainfallLogs={rainfallLogs}
           addRainfallLog={addRainfallLog}
           />;
@@ -168,6 +169,7 @@ const App: React.FC = () => {
           addTask={addTask}
           toggleTask={toggleTask}
           removeTask={removeTask}
+          harvests={harvests}
           rainfallLogs={rainfallLogs}
           addRainfallLog={addRainfallLog}
           />;

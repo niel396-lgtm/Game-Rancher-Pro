@@ -1,5 +1,6 @@
-
 import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest } from './types';
+
+export const RANCH_AREA_HECTARES = 5000;
 
 export const INITIAL_ANIMALS: Animal[] = [
   { id: 'A001', species: 'Impala', age: 3, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-01' },
@@ -28,7 +29,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
 
 export const INITIAL_TRANSACTIONS: Transaction[] = [
     { id: 'T001', date: '2023-10-01', description: 'Hunting Lease - Group A', category: 'Leases', amount: 5000, type: TransactionType.Income },
-    { id: 'T002', date: '2023-10-05', description: 'Vet Visit - Kudu #KDU-07', category: 'Veterinary', amount: 350, type: TransactionType.Expense },
+    { id: 'T002', date: '2023-10-05', description: 'Vet Visit - Kudu #KDU-07', category: 'Veterinary', amount: 350, type: TransactionType.Expense, linkedAnimalId: 'A002' },
     { id: 'T003', date: '2023-10-10', description: 'Feed Order', category: 'Feed', amount: 1200, type: TransactionType.Expense },
     { id: 'T004', date: '2023-10-15', description: 'Equipment Repair', category: 'Maintenance', amount: 250, type: TransactionType.Expense },
     { id: 'T005', date: '2023-11-02', description: 'Hunting Lease - Group B', category: 'Leases', amount: 7500, type: TransactionType.Income },
@@ -50,7 +51,10 @@ export const INITIAL_TASKS: Task[] = [
 ];
 
 export const INITIAL_MORTALITIES: Mortality[] = [];
-export const INITIAL_HARVESTS: Harvest[] = [];
+export const INITIAL_HARVESTS: Harvest[] = [
+    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', date: '2023-10-20', hunter: 'John Doe', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0 },
+    { id: 'H002', animalTagId: 'IMP-01', species: 'Impala', date: '2023-11-05', hunter: 'Jane Smith', method: 'Bow', trophyMeasurements: 'SCI Score: 60', location: 'North Pasture', hornLengthL: 22.0, hornLengthR: 21.5, tipToTipSpread: 18.0 }
+];
 
 export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
     { id: 'R01', date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], amount: 15 },

@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog } from '../types';
-import { AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon } from './ui/Icons';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest } from '../types';
+import { AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
+import { RANCH_AREA_HECTARES } from '../constants';
 
 interface DashboardProps {
     animals: Animal[];
@@ -17,11 +18,26 @@ interface DashboardProps {
     addTask: (text: string) => void;
     toggleTask: (id: string) => void;
     removeTask: (id: string) => void;
+    harvests: Harvest[];
     rainfallLogs: RainfallLog[];
     addRainfallLog: (log: Omit<RainfallLog, 'id'>) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, rainfallLogs, addRainfallLog }) => {
+const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
+    <Card>
+        <div className="flex items-center">
+            <div className="p-3 bg-white rounded-full shadow mr-4">{icon}</div>
+            <div>
+                <p className="text-sm text-gray-500">{title}</p>
+                <p className="text-2xl font-bold text-brand-dark">
+                    {value} <span className="text-lg font-medium text-gray-600">{unit}</span>
+                </p>
+            </div>
+        </div>
+    </Card>
+);
+
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -35,6 +51,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
   const totalIncome = transactions.filter(t => t.type === TransactionType.Income).reduce((sum, t) => sum + t.amount, 0);
   const totalExpense = transactions.filter(t => t.type === TransactionType.Expense).reduce((sum, t) => sum + t.amount, 0);
   
+  // KPI Calculations
+  const costPerAnimal = useMemo(() => {
+    const animalExpenses = transactions
+        .filter(t => t.type === TransactionType.Expense && t.linkedAnimalId)
+        .reduce((sum, t) => sum + t.amount, 0);
+    return animals.length > 0 ? animalExpenses / animals.length : 0;
+  }, [transactions, animals]);
+
+  const incomePerHectare = useMemo(() => {
+    return RANCH_AREA_HECTARES > 0 ? totalIncome / RANCH_AREA_HECTARES : 0;
+  }, [totalIncome]);
+
+  const trophyQualityIndex = useMemo(() => {
+    const kuduHarvests = harvests.filter(h => 
+        h.species === 'Kudu' && (typeof h.hornLengthL === 'number' || typeof h.hornLengthR === 'number')
+    );
+    if (kuduHarvests.length === 0) return 0;
+
+    const totalAverageHornLength = kuduHarvests.reduce((acc, harvest) => {
+        const hasL = typeof harvest.hornLengthL === 'number';
+        const hasR = typeof harvest.hornLengthR === 'number';
+        if (hasL && hasR) return acc + (harvest.hornLengthL! + harvest.hornLengthR!) / 2;
+        if (hasL) return acc + harvest.hornLengthL!;
+        if (hasR) return acc + harvest.hornLengthR!;
+        return acc;
+    }, 0);
+    return totalAverageHornLength / kuduHarvests.length;
+  }, [harvests]);
+
+
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     addTask(newTaskText);
@@ -56,6 +102,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
   return (
     <div>
       <h2 className="text-3xl font-bold text-brand-dark mb-6">Dashboard</h2>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <KpiCard
+              icon={<FinanceIcon className="w-6 h-6 text-red-500" />}
+              title="Avg. Cost / Animal"
+              value={`$${costPerAnimal.toFixed(2)}`}
+              unit=""
+          />
+          <KpiCard
+              icon={<FinanceIcon className="w-6 h-6 text-green-500" />}
+              title="Income / Hectare"
+              value={`$${incomePerHectare.toFixed(2)}`}
+              unit=""
+          />
+          <KpiCard
+              icon={<TrophyIcon className="w-6 h-6 text-brand-accent" />}
+              title="Kudu Trophy Index"
+              value={trophyQualityIndex > 0 ? trophyQualityIndex.toFixed(2) : 'N/A'}
+              unit={trophyQualityIndex > 0 ? 'inches' : ''}
+          />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-green-100 to-green-200">
             <div className="flex items-center">
