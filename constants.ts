@@ -1,4 +1,3 @@
-
 import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
@@ -135,3 +134,10 @@ export const INITIAL_BOUNDARIES: Boundary[] = [
         positions: [ [30.521, -98.391], [30.522, -98.380], [30.513, -98.381], [30.512, -98.392], [30.521, -98.391] ]
     }
 ];
+
+export const SPECIES_BENCHMARKS = {
+  "Kudu": {
+    "TrophyLine": [ { age: 2, hornLength: 20 }, { age: 3, hornLength: 35 }, { age: 5, hornLength: 48 }, { age: 7, hornLength: 55 } ],
+    "AverageLine": [ { age: 2, hornLength: 15 }, { age: 3, hornLength: 30 }, { age: 5, hornLength: 42 }, { age: 7, hornLength: 48 } ]
+  }
+};

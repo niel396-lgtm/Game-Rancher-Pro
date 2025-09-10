@@ -1,7 +1,7 @@
-
 import React, { useMemo } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ZAxis } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ZAxis, Line } from 'recharts';
 import { Animal, AnimalMeasurement } from '../types';
+import { SPECIES_BENCHMARKS } from '../constants';
 
 interface HerdQualityChartProps {
   animals: Animal[];
@@ -52,6 +52,8 @@ export const HerdQualityChart: React.FC<HerdQualityChartProps> = ({ animals, mea
       return <div className="flex items-center justify-center h-full text-gray-500">No Kudu horn measurements logged.</div>
   }
 
+  const kuduBenchmarks = SPECIES_BENCHMARKS.Kudu;
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ScatterChart
@@ -63,11 +65,32 @@ export const HerdQualityChart: React.FC<HerdQualityChartProps> = ({ animals, mea
         }}
       >
         <CartesianGrid />
-        <XAxis type="number" dataKey="age" name="Age" unit=" yrs" />
+        <XAxis type="number" dataKey="age" name="Age" unit=" yrs" domain={['dataMin - 1', 'dataMax + 1']} />
         <YAxis type="number" dataKey="hornLength" name="Horn Length" unit=" in" />
         <ZAxis dataKey="tagId" name="Tag ID" />
         <Tooltip cursor={{ strokeDasharray: '3 3' }} />
         <Legend />
+        <Line 
+            type="monotone"
+            data={kuduBenchmarks.AverageLine}
+            dataKey="hornLength"
+            name="Regional Average"
+            stroke="#8884d8"
+            strokeWidth={2}
+            dot={false}
+            activeDot={false}
+        />
+        <Line 
+            type="monotone"
+            data={kuduBenchmarks.TrophyLine}
+            dataKey="hornLength"
+            name="Trophy Benchmark"
+            stroke="#ffc658"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            dot={false}
+            activeDot={false}
+        />
         <Scatter name="Kudu Bulls" data={chartData} fill="#4A5C3D" />
       </ScatterChart>
     </ResponsiveContainer>
