@@ -53,10 +53,11 @@ const getLandmarkIcon = (type: LandmarkType) => {
 
 const getSpeciesColor = (species: string): string => {
     const colors: { [key: string]: string } = {
-        'White-tailed Deer': '#8B4513', // SaddleBrown
-        'Elk': '#6B4226',
-        'Bison': '#3D2B1F',
-        'Wild Turkey': '#4B0082'
+        'Impala': '#D2B48C', // Tan
+        'Kudu': '#8B4513', // SaddleBrown
+        'Blue Wildebeest': '#4682B4', // SteelBlue
+        'Warthog': '#696969', // DimGray
+        'Blesbok': '#A0522D', // Sienna
     };
     return colors[species] || '#708090'; // SlateGray for others
 };
@@ -75,6 +76,7 @@ const getAnimalIcon = (species: string) => {
 };
 
 // This component manages the Leaflet Draw control lifecycle.
+// It is defined outside the main component to prevent re-creation on every render.
 const DrawControl = ({ featureGroupRef, onCreated, onDeleted }: any) => {
   const map = useMap();
 
@@ -150,14 +152,23 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, anima
     setIsModalOpen(true);
   }, []);
   
+  // Use a ref to hold the latest removeFeature function.
+  // This allows handleDelete to be stable (memoized with an empty dependency array),
+  // which in turn stabilizes the onDeleted prop for DrawControl, preventing the effect from re-running.
+  const removeFeatureRef = useRef(removeFeature);
+  useEffect(() => {
+    removeFeatureRef.current = removeFeature;
+  }, [removeFeature]);
+
   const handleDelete = useCallback((e: any) => {
     e.layers.eachLayer((layer: any) => {
         const customId = (layer as any).myCustomId;
         if (customId) {
-            removeFeature(customId);
+            removeFeatureRef.current(customId);
         }
     });
-  }, [removeFeature]);
+  }, []); // Empty dependency array makes this callback stable.
+
 
   const handleModalSubmit = (e: React.FormEvent) => {
     e.preventDefault();

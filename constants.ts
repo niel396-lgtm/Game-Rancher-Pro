@@ -2,13 +2,13 @@
 import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest } from './types';
 
 export const INITIAL_ANIMALS: Animal[] = [
-  { id: 'A001', species: 'White-tailed Deer', age: 4, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'WT-101' },
-  { id: 'A002', species: 'Elk', age: 6, sex: 'Male', health: 'Good', conditionScore: 4, location: 'West Ridge', tagId: 'ELK-203' },
-  { id: 'A003', species: 'Bison', age: 8, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'South Plains', tagId: 'BSN-50' },
-  { id: 'A004', species: 'Wild Turkey', age: 2, sex: 'Female', health: 'Good', conditionScore: 4, location: 'Oak Forest', tagId: 'TRK-31' },
-  { id: 'A005', species: 'White-tailed Deer', age: 3, sex: 'Male', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'WT-102' },
-  { id: 'A006', species: 'Elk', age: 5, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'West Ridge', tagId: 'ELK-204' },
-  { id: 'A007', species: 'White-tailed Deer', age: 5, sex: 'Female', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'WT-103' },
+  { id: 'A001', species: 'Impala', age: 3, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-01' },
+  { id: 'A002', species: 'Kudu', age: 5, sex: 'Male', health: 'Good', conditionScore: 4, location: 'West Ridge', tagId: 'KDU-07' },
+  { id: 'A003', species: 'Blue Wildebeest', age: 6, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'South Plains', tagId: 'BWB-15' },
+  { id: 'A004', species: 'Warthog', age: 2, sex: 'Female', health: 'Good', conditionScore: 4, location: 'Oak Forest', tagId: 'WHG-21' },
+  { id: 'A005', species: 'Blesbok', age: 4, sex: 'Male', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'BLK-11' },
+  { id: 'A006', species: 'Kudu', age: 7, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'West Ridge', tagId: 'KDU-08' },
+  { id: 'A007', species: 'Impala', age: 4, sex: 'Female', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'IMP-02' },
 ];
 
 export const INITIAL_HABITAT_ZONES: HabitatZone[] = [
@@ -28,12 +28,12 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
 
 export const INITIAL_TRANSACTIONS: Transaction[] = [
     { id: 'T001', date: '2023-10-01', description: 'Hunting Lease - Group A', category: 'Leases', amount: 5000, type: TransactionType.Income },
-    { id: 'T002', date: '2023-10-05', description: 'Vet Visit - Elk #203', category: 'Veterinary', amount: 350, type: TransactionType.Expense },
+    { id: 'T002', date: '2023-10-05', description: 'Vet Visit - Kudu #KDU-07', category: 'Veterinary', amount: 350, type: TransactionType.Expense },
     { id: 'T003', date: '2023-10-10', description: 'Feed Order', category: 'Feed', amount: 1200, type: TransactionType.Expense },
     { id: 'T004', date: '2023-10-15', description: 'Equipment Repair', category: 'Maintenance', amount: 250, type: TransactionType.Expense },
     { id: 'T005', date: '2023-11-02', description: 'Hunting Lease - Group B', category: 'Leases', amount: 7500, type: TransactionType.Income },
     { id: 'T006', date: '2023-11-08', description: 'Fuel for Vehicles', category: 'Operations', amount: 400, type: TransactionType.Expense },
-    { id: 'T007', date: '2023-11-12', description: 'Sale of 2 Deer', category: 'Sales', amount: 1800, type: TransactionType.Income },
+    { id: 'T007', date: '2023-11-12', description: 'Sale of 2 Impala', category: 'Sales', amount: 1800, type: TransactionType.Income },
     { id: 'T008', date: '2023-11-20', description: 'Fence Supplies', category: 'Maintenance', amount: 600, type: TransactionType.Expense },
     { id: 'T009', date: '2023-12-01', description: 'Winter Feed Stock Up', category: 'Feed', amount: 2500, type: TransactionType.Expense },
     { id: 'T010', date: '2023-12-15', description: 'Annual Insurance', category: 'Admin', amount: 3000, type: TransactionType.Expense },
