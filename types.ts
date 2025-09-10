@@ -1,4 +1,5 @@
 
+
 export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
@@ -10,6 +11,7 @@ export enum View {
   AIAssistant = 'AI Assistant',
   RanchMap = 'Ranch Map',
   GeneticAnalysis = 'Genetic Analysis',
+  HarvestPlanning = 'Harvest Planning',
 }
 
 export interface Permit {

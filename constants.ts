@@ -27,15 +27,15 @@ export const INITIAL_CLIENTS: Client[] = [
 ];
 
 export const INITIAL_ANIMALS: Animal[] = [
-  { id: 'A001', species: 'Impala', age: 3, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-01', forageType: 'Mixed-Feeder', lsuEquivalent: 0.25, lsuConsumptionRate: 912.5, category: 'Breeding Stock' },
+  { id: 'A001', species: 'Impala', age: 9, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-01', forageType: 'Mixed-Feeder', lsuEquivalent: 0.25, lsuConsumptionRate: 912.5, category: 'Breeding Stock' },
   { id: 'A002', species: 'Kudu', age: 5, sex: 'Male', health: 'Good', conditionScore: 4, location: 'West Ridge', tagId: 'KDU-07', forageType: 'Browser', lsuEquivalent: 0.7, lsuConsumptionRate: 2555, category: 'Trophy' },
   { id: 'A003', species: 'Blue Wildebeest', age: 6, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'South Plains', tagId: 'BWB-15', forageType: 'Grazer', lsuEquivalent: 0.8, lsuConsumptionRate: 2920, category: 'Production' },
   { id: 'A004', species: 'Warthog', age: 2, sex: 'Female', health: 'Good', conditionScore: 4, location: 'Oak Forest', tagId: 'WHG-21', forageType: 'Mixed-Feeder', lsuEquivalent: 0.2, lsuConsumptionRate: 730, category: 'Production' },
   { id: 'A005', species: 'Blesbok', age: 4, sex: 'Male', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'BLK-11', forageType: 'Grazer', lsuEquivalent: 0.4, lsuConsumptionRate: 1460, category: 'Production' },
-  { id: 'A006', species: 'Kudu', age: 7, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'West Ridge', tagId: 'KDU-08', forageType: 'Browser', lsuEquivalent: 0.7, lsuConsumptionRate: 2555, category: 'Breeding Stock' },
+  { id: 'A006', species: 'Kudu', age: 10, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'West Ridge', tagId: 'KDU-08', forageType: 'Browser', lsuEquivalent: 0.7, lsuConsumptionRate: 2555, category: 'Breeding Stock' },
   { id: 'A007', species: 'Impala', age: 4, sex: 'Female', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'IMP-02', forageType: 'Mixed-Feeder', lsuEquivalent: 0.25, lsuConsumptionRate: 912.5, damId: 'A001', sireId: 'A009', category: 'Breeding Stock' },
   { id: 'A008', species: 'Sable Antelope', age: 5, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'South Plains', tagId: 'SBL-01', forageType: 'Grazer', lsuEquivalent: 0.7, lsuConsumptionRate: 2555, category: 'Breeding Stock' },
-  { id: 'A009', species: 'Impala', age: 5, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-M1', forageType: 'Mixed-Feeder', lsuEquivalent: 0.3, lsuConsumptionRate: 1095, category: 'Breeding Stock' },
+  { id: 'A009', species: 'Impala', age: 5, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-M1', forageType: 'Mixed-Feeder', lsuEquivalent: 0.3, lsuConsumptionRate: 1095, category: 'Breeding Stock', sireId: 'A009' /* Example of inbreeding */ },
 ];
 
 export const INITIAL_HABITAT_ZONES: HabitatZone[] = [
@@ -94,7 +94,10 @@ export const INITIAL_VELD_ASSESSMENTS: VeldAssessment[] = [
 ];
 
 export const INITIAL_REPRODUCTIVE_EVENTS: ReproductiveEvent[] = [
-    { id: 'RE001', offspringTagId: 'IMP-02', damTagId: 'IMP-01', sireTagId: 'IMP-M1', birthDate: getPastDate(1460), sex: 'Female', notes: 'Healthy birth, normal weight.' }
+    { id: 'RE001', offspringTagId: 'IMP-02', damTagId: 'IMP-01', sireTagId: 'IMP-M1', birthDate: getPastDate(1460), sex: 'Female', notes: 'Healthy birth, normal weight.' },
+    { id: 'RE002', offspringTagId: 'KDU-J1', damTagId: 'KDU-08', sireTagId: 'KDU-07', birthDate: getPastDate(730), sex: 'Male', notes: 'Healthy.' },
+    { id: 'RE003', offspringTagId: 'KDU-J2', damTagId: 'KDU-08', sireTagId: 'KDU-07', birthDate: getPastDate(30), sex: 'Female', notes: 'Healthy.' },
+
 ];
 
 export const INITIAL_ANIMAL_MEASUREMENTS: AnimalMeasurement[] = [
@@ -102,6 +105,8 @@ export const INITIAL_ANIMAL_MEASUREMENTS: AnimalMeasurement[] = [
     { id: 'AM002', animalId: 'A002', date: getPastDate(365), measurementType: 'Horn Length (R)', value: 49.0, unit: 'in', notes: 'Annual checkup, age 4.' },
     { id: 'AM003', animalId: 'A002', date: getPastDate(10), measurementType: 'Horn Length (L)', value: 52.0, unit: 'in', notes: 'Pre-season measurement, age 5.' },
     { id: 'AM004', animalId: 'A002', date: getPastDate(10), measurementType: 'Horn Length (R)', value: 52.5, unit: 'in', notes: 'Pre-season measurement, age 5.' },
+    { id: 'AM005', animalId: 'A009', date: getPastDate(730), measurementType: 'Horn Length (L)', value: 15.0, unit: 'in' },
+    { id: 'AM006', animalId: 'A009', date: getPastDate(365), measurementType: 'Horn Length (L)', value: 18.0, unit: 'in' },
 ];
 
 // Initial data for the mapping feature
@@ -139,5 +144,42 @@ export const SPECIES_BENCHMARKS = {
   "Kudu": {
     "TrophyLine": [ { age: 2, hornLength: 20 }, { age: 3, hornLength: 35 }, { age: 5, hornLength: 48 }, { age: 7, hornLength: 55 } ],
     "AverageLine": [ { age: 2, hornLength: 15 }, { age: 3, hornLength: 30 }, { age: 5, hornLength: 42 }, { age: 7, hornLength: 48 } ]
+  },
+  "Impala": {
+    "TrophyLine": [ { age: 2, hornLength: 18 }, { age: 4, hornLength: 22 }, { age: 6, hornLength: 24 } ],
+    "AverageLine": [ { age: 2, hornLength: 15 }, { age: 4, hornLength: 19 }, { age: 6, hornLength: 21 } ]
+  }
+};
+
+export const SPECIES_PARAMETERS = {
+  "Kudu": {
+    maxAge: 15,
+    primeReproductiveAge: [4, 9], // years
+    idealCalvingInterval: 380, // days
+  },
+  "Impala": {
+    maxAge: 12,
+    primeReproductiveAge: [3, 8],
+    idealCalvingInterval: 380, // days
+  },
+  "Sable Antelope": {
+    maxAge: 18,
+    primeReproductiveAge: [4, 12],
+    idealCalvingInterval: 380, // days
+  },
+  "Blue Wildebeest": {
+    maxAge: 20,
+    primeReproductiveAge: [3, 16],
+    idealCalvingInterval: 380
+  },
+  "Blesbok": {
+    maxAge: 12,
+    primeReproductiveAge: [2, 8],
+    idealCalvingInterval: 380
+  },
+  "Warthog": {
+    maxAge: 15,
+    primeReproductiveAge: [2, 10],
+    idealCalvingInterval: 365
   }
 };
