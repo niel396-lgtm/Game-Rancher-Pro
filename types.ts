@@ -80,6 +80,14 @@ export interface RainfallLog {
   amount: number; // in mm
 }
 
+export interface VeldAssessment {
+  id: string;
+  habitatZoneId: string;
+  date: string;
+  condition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  notes?: string;
+}
+
 
 // Types for the new mapping feature
 export type Coords = [number, number];

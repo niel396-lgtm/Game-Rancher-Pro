@@ -1,12 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { HabitatZone, Animal } from '../types';
-import { WaterIcon, ForageIcon, IssueIcon, VeldIcon } from './ui/Icons';
+import { Modal } from './ui/Modal';
+import { HabitatZone, Animal, VeldAssessment } from '../types';
+import { WaterIcon, ForageIcon, IssueIcon, VeldIcon, HistoryIcon, PlusIcon } from './ui/Icons';
 
 interface HabitatManagementProps {
   habitats: HabitatZone[];
   animals: Animal[];
+  veldAssessments: VeldAssessment[];
+  addVeldAssessment: (assessment: Omit<VeldAssessment, 'id'>) => void;
 }
 
 const getStatusColor = (status: string, type: 'water' | 'forage' | 'veld') => {
@@ -48,13 +51,51 @@ const StockingDensityBar: React.FC<{current: number; capacity: number}> = ({curr
     );
 };
 
-export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, animals }) => {
+export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, animals, veldAssessments, addVeldAssessment }) => {
+  const [modalZone, setModalZone] = useState<HabitatZone | null>(null);
+  const [newAssessment, setNewAssessment] = useState({
+    date: new Date().toISOString().split('T')[0],
+    condition: 'Good' as VeldAssessment['condition'],
+    notes: ''
+  });
+
+  const handleAssessmentInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewAssessment(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAssessmentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modalZone) return;
+    addVeldAssessment({
+      ...newAssessment,
+      habitatZoneId: modalZone.id,
+    });
+    // Reset form
+    setNewAssessment({
+      date: new Date().toISOString().split('T')[0],
+      condition: 'Good',
+      notes: ''
+    });
+  };
+  
+  const zoneAssessments = modalZone ? veldAssessments.filter(a => a.habitatZoneId === modalZone.id) : [];
+
   return (
     <div>
       <h2 className="text-3xl font-bold text-brand-dark mb-6">Habitat Management</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {habitats.map((zone) => {
-          const animalsInZone = animals.filter(a => a.location === zone.name).length;
+          const animalsInZone = animals.filter(a => a.location === zone.name);
+          const speciesSummary = animalsInZone
+            .reduce((acc, animal) => {
+              acc[animal.species] = (acc[animal.species] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+          const speciesSummaryString = Object.entries(speciesSummary)
+            .map(([species, count]) => `${count} ${species}`)
+            .join(', ') || 'No animals present';
+
           return (
             <Card key={zone.id} title={zone.name} className="flex flex-col">
               <div className="space-y-4 flex-grow">
@@ -80,9 +121,11 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                   </div>
                 </div>
                  <div className="pt-2">
-                    <StockingDensityBar current={animalsInZone} capacity={zone.carryingCapacity} />
+                    <StockingDensityBar current={animalsInZone.length} capacity={zone.carryingCapacity} />
+                    <p className="text-xs text-gray-500 mt-1 truncate" title={speciesSummaryString}>{speciesSummaryString}</p>
                 </div>
               </div>
+              
               {zone.issues.length > 0 && (
                 <div className="mt-4 pt-4 border-t">
                   <h4 className="font-semibold text-sm flex items-center mb-2">
@@ -96,10 +139,69 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                   </ul>
                 </div>
               )}
+              <div className="mt-4 pt-4 border-t">
+                 <button onClick={() => setModalZone(zone)} className="w-full text-center px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                    Manage Veld
+                 </button>
+              </div>
             </Card>
           );
         })}
       </div>
+      
+      <Modal isOpen={!!modalZone} onClose={() => setModalZone(null)} title={`Veld Condition for ${modalZone?.name}`}>
+        <div className="space-y-6">
+            <div>
+              <h4 className="text-lg font-semibold text-brand-dark mb-2 flex items-center"><HistoryIcon className="w-5 h-5 mr-2"/> Assessment History</h4>
+              <div className="max-h-48 overflow-y-auto border rounded-lg p-2 bg-gray-50">
+                {zoneAssessments.length > 0 ? (
+                  <ul className="divide-y divide-gray-200">
+                    {zoneAssessments.map(assessment => (
+                      <li key={assessment.id} className="py-2">
+                        <div className="flex justify-between items-center">
+                           <p className="font-semibold text-sm">{assessment.date}: <span className={getStatusColor(assessment.condition, 'veld')}>{assessment.condition}</span></p>
+                        </div>
+                        {assessment.notes && <p className="text-xs text-gray-600 mt-1 pl-2 border-l-2 border-gray-200">{assessment.notes}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : <p className="text-sm text-gray-500 text-center py-4">No assessments logged yet.</p>}
+              </div>
+            </div>
+
+            <div>
+               <h4 className="text-lg font-semibold text-brand-dark mb-3 border-t pt-4">Log New Assessment</h4>
+                <form onSubmit={handleAssessmentSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" name="date" id="date" value={newAssessment.date} onChange={handleAssessmentInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                        </div>
+                        <div>
+                            <label htmlFor="condition" className="block text-sm font-medium text-gray-700">Condition</label>
+                            <select name="condition" id="condition" value={newAssessment.condition} onChange={handleAssessmentInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                                <option>Excellent</option>
+                                <option>Good</option>
+                                <option>Fair</option>
+                                <option>Poor</option>
+                            </select>
+                        </div>
+                    </div>
+                     <div>
+                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (optional)</label>
+                        <textarea name="notes" id="notes" value={newAssessment.notes} onChange={handleAssessmentInputChange} rows={2} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea>
+                    </div>
+                    <div className="flex justify-end">
+                        <button type="submit" className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow">
+                           <PlusIcon className="w-5 h-5 mr-2" />
+                           Log Assessment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </Modal>
+
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment } from './types';
 
 export const INITIAL_ANIMALS: Animal[] = [
   { id: 'A001', species: 'White-tailed Deer', age: 4, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'WT-101' },
@@ -54,6 +54,11 @@ export const INITIAL_MORTALITIES: Mortality[] = [];
 export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
     { id: 'R01', date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], amount: 15 },
     { id: 'R02', date: new Date(Date.now() - 86400000).toISOString().split('T')[0], amount: 5 },
+];
+
+export const INITIAL_VELD_ASSESSMENTS: VeldAssessment[] = [
+    { id: 'VA01', habitatZoneId: 'H04', date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], condition: 'Good', notes: 'Post-rain recovery looks good.'},
+    { id: 'VA02', habitatZoneId: 'H04', date: new Date().toISOString().split('T')[0], condition: 'Fair', notes: 'Showing signs of grazing pressure.'},
 ];
 
 

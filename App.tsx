@@ -8,8 +8,8 @@ import { InventoryManagement } from './components/InventoryManagement';
 import { FinancialTracker } from './components/FinancialTracker';
 import { AIAssistant } from './components/AIAssistant';
 import { RanchMap } from './components/RanchMap';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS } from './constants';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS } from './constants';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
@@ -24,6 +24,7 @@ const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [mortalities, setMortalities] = useState<Mortality[]>(INITIAL_MORTALITIES);
   const [rainfallLogs, setRainfallLogs] = useState<RainfallLog[]>(INITIAL_RAINFALL_LOGS);
+  const [veldAssessments, setVeldAssessments] = useState<VeldAssessment[]>(INITIAL_VELD_ASSESSMENTS);
 
 
   const addAnimal = (animal: Omit<Animal, 'id'>) => {
@@ -66,6 +67,11 @@ const App: React.FC = () => {
       const newLog: RainfallLog = { ...logData, id: `R${Date.now()}` };
       setRainfallLogs(prev => [newLog, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   };
+  
+  const addVeldAssessment = (assessmentData: Omit<VeldAssessment, 'id'>) => {
+    const newAssessment: VeldAssessment = { ...assessmentData, id: `VA${Date.now()}` };
+    setVeldAssessments(prev => [newAssessment, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  }
 
   const addLandmark = (landmark: Omit<Landmark, 'id'>) => {
     const newLandmark = { ...landmark, id: `L${Date.now()}` };
@@ -110,7 +116,12 @@ const App: React.FC = () => {
           logAnimalMortality={logAnimalMortality}
           />;
       case View.Habitat:
-        return <HabitatManagement habitats={habitats} animals={animals} />;
+        return <HabitatManagement 
+          habitats={habitats} 
+          animals={animals}
+          veldAssessments={veldAssessments}
+          addVeldAssessment={addVeldAssessment} 
+          />;
       case View.Inventory:
         return <InventoryManagement inventory={inventory} />;
       case View.Finance:
