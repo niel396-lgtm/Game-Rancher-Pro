@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -227,6 +228,7 @@ const App: React.FC = () => {
           animals={animals}
           reproductiveEvents={reproductiveEvents}
           animalMeasurements={animalMeasurements}
+          populationSurveys={populationSurveys}
           />;
       case View.Clients:
         return <ClientManagement clients={clients} addClient={addClient} harvests={harvests} />;

@@ -165,30 +165,36 @@ export const SPECIES_PARAMETERS = {
     maxAge: 15,
     primeReproductiveAge: [4, 9], // years
     idealCalvingInterval: 380, // days
+    growthRateLambda: 1.20,
   },
   "Impala": {
     maxAge: 12,
     primeReproductiveAge: [3, 8],
     idealCalvingInterval: 380, // days
+    growthRateLambda: 1.30,
   },
   "Sable Antelope": {
     maxAge: 18,
     primeReproductiveAge: [4, 12],
     idealCalvingInterval: 380, // days
+    growthRateLambda: 1.15,
   },
   "Blue Wildebeest": {
     maxAge: 20,
     primeReproductiveAge: [3, 16],
-    idealCalvingInterval: 380
+    idealCalvingInterval: 380,
+    growthRateLambda: 1.25,
   },
   "Blesbok": {
     maxAge: 12,
     primeReproductiveAge: [2, 8],
-    idealCalvingInterval: 380
+    idealCalvingInterval: 380,
+    growthRateLambda: 1.30,
   },
   "Warthog": {
     maxAge: 15,
     primeReproductiveAge: [2, 10],
-    idealCalvingInterval: 365
+    idealCalvingInterval: 365,
+    growthRateLambda: 1.40,
   }
 };

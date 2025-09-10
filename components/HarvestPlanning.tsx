@@ -1,13 +1,14 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card } from './ui/Card';
-import { Animal, ReproductiveEvent, AnimalMeasurement } from '../types';
+import { Animal, ReproductiveEvent, AnimalMeasurement, PopulationSurvey } from '../types';
 import { SPECIES_PARAMETERS, SPECIES_BENCHMARKS } from '../constants';
 
 interface HarvestPlanningProps {
   animals: Animal[];
   reproductiveEvents: ReproductiveEvent[];
   animalMeasurements: AnimalMeasurement[];
+  populationSurveys: PopulationSurvey[];
 }
 
 interface HarvestCandidate {
@@ -75,7 +76,16 @@ const ReasonBadge: React.FC<{ reason: { text: string; severity: 'High' | 'Medium
     );
 };
 
-export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, reproductiveEvents, animalMeasurements }) => {
+const TabButton: React.FC<{label:string; view: 'individual' | 'quota', activeTab: string, setActiveTab: (view: 'individual' | 'quota') => void}> = ({label, view, activeTab, setActiveTab}) => (
+      <button 
+        onClick={() => setActiveTab(view)}
+        className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === view ? 'bg-white border-b-0 border-t border-x text-brand-primary' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+      >
+        {label}
+      </button>
+  );
+
+const IndividualCullingPlanner: React.FC<Pick<HarvestPlanningProps, 'animals' | 'reproductiveEvents' | 'animalMeasurements'>> = ({ animals, reproductiveEvents, animalMeasurements }) => {
     const [speciesFilter, setSpeciesFilter] = useState('All');
 
     const harvestCandidates = useMemo((): HarvestCandidate[] => {
@@ -88,14 +98,12 @@ export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, repro
             const speciesParams = (SPECIES_PARAMETERS as any)[animal.species];
             const speciesBenchmarks = (SPECIES_BENCHMARKS as any)[animal.species];
 
-            // 1. Age Score
             if (speciesParams && animal.age > speciesParams.primeReproductiveAge[1]) {
                 const ageFactor = (animal.age - speciesParams.primeReproductiveAge[1]) / (speciesParams.maxAge - speciesParams.primeReproductiveAge[1]);
                 score += Math.min(ageFactor * 30, 30);
                 reasons.push({ text: `Past Prime Age (${animal.age} yrs)`, severity: 'High' });
             }
 
-            // 2. Genetic Performance Score
             if (speciesBenchmarks && animal.sex === 'Male') {
                 const animalMeasurementsForType = animalMeasurements.filter(m => m.animalId === animal.id && (m.measurementType.includes('Horn')));
                 if (animalMeasurementsForType.length > 0) {
@@ -124,7 +132,6 @@ export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, repro
                 }
             }
 
-            // 3. Reproductive Performance Score
             if (animal.sex === 'Female' && speciesParams) {
                 const births = reproductiveEvents.filter(e => e.damTagId === animal.tagId).sort((a, b) => new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime());
                 if (births.length > 1) {
@@ -143,7 +150,6 @@ export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, repro
                 }
             }
             
-            // 4. Inbreeding Score
             if (animal.sireId && animal.damId) {
                 const sire = animalMap.get(animal.sireId);
                 const dam = animalMap.get(animal.damId);
@@ -162,7 +168,7 @@ export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, repro
         return candidates.filter(c => c.score > 0).sort((a, b) => b.score - a.score);
 
     }, [animals, reproductiveEvents, animalMeasurements]);
-    
+
     const filteredCandidates = useMemo(() => {
         if (speciesFilter === 'All') return harvestCandidates;
         return harvestCandidates.filter(c => c.animal.species === speciesFilter);
@@ -171,9 +177,8 @@ export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, repro
     const allSpecies = useMemo(() => ['All', ...Array.from(new Set(animals.map(a => a.species)))], [animals]);
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-3xl font-bold text-brand-dark">Harvest Planning</h2>
+        <Card className="rounded-t-none">
+            <div className="flex justify-end p-4">
                  <div>
                     <label htmlFor="species-filter" className="text-sm font-medium text-gray-700 mr-2">Filter by Species:</label>
                      <select 
@@ -186,8 +191,7 @@ export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, repro
                      </select>
                  </div>
             </div>
-            <Card>
-                <div className="overflow-x-auto">
+            <div className="overflow-x-auto">
                      <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -225,7 +229,157 @@ export const HarvestPlanning: React.FC<HarvestPlanningProps> = ({ animals, repro
                         </tbody>
                     </table>
                 </div>
-            </Card>
+        </Card>
+    );
+}
+
+const StrategicQuotaCalculator: React.FC<Pick<HarvestPlanningProps, 'populationSurveys'>> = ({ populationSurveys }) => {
+    const [selectedSpecies, setSelectedSpecies] = useState('');
+    const [targetPopulation, setTargetPopulation] = useState(0);
+    const [growthRate, setGrowthRate] = useState(0);
+    const [targetRatioMale, setTargetRatioMale] = useState(1);
+    const [targetRatioFemale, setTargetRatioFemale] = useState(3);
+
+    const surveySpecies = useMemo(() => Array.from(new Set(populationSurveys.map(s => s.species))).sort(), [populationSurveys]);
+    
+    const latestSurvey = useMemo(() => {
+        if (!selectedSpecies) return null;
+        return populationSurveys
+            .filter(s => s.species === selectedSpecies)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+    }, [selectedSpecies, populationSurveys]);
+
+    useEffect(() => {
+        if (latestSurvey) {
+            setTargetPopulation(latestSurvey.estimatedCount);
+            const speciesParams = (SPECIES_PARAMETERS as any)[latestSurvey.species];
+            if (speciesParams) {
+                setGrowthRate(speciesParams.growthRateLambda);
+            } else {
+                setGrowthRate(1.1); // Default
+            }
+        } else {
+            setTargetPopulation(0);
+            setGrowthRate(0);
+        }
+    }, [latestSurvey]);
+
+    const calculatedQuota = useMemo(() => {
+        if (!latestSurvey || growthRate <= 0 || targetPopulation < 0) return { total: 0, males: 0, females: 0 };
+        
+        const N_t = latestSurvey.estimatedCount;
+        const lambda = growthRate;
+        const K = targetPopulation;
+
+        const H = Math.round(N_t * lambda - K);
+        if (H <= 0) return { total: 0, males: 0, females: 0 };
+
+        const N_m = latestSurvey.maleCount || 0;
+        const N_f = latestSurvey.femaleCount || 0;
+
+        if (N_m === 0 || N_f === 0 || targetRatioMale <= 0 || targetRatioFemale <= 0) {
+            return { total: H, males: 'N/A', females: 'N/A' };
+        }
+
+        const R = targetRatioFemale / targetRatioMale;
+        
+        let H_m = (R * N_m - N_f + H) / (1 + R);
+        H_m = Math.round(Math.max(0, Math.min(N_m, H_m)));
+        
+        let H_f = H - H_m;
+        if (H_f < 0) {
+            H_f = 0;
+            H_m = H;
+        }
+        if (H_f > N_f) {
+            H_f = N_f;
+            H_m = H - N_f;
+        }
+        H_m = Math.max(0, Math.min(N_m, H_m));
+
+        return { total: H, males: H_m, females: H_f };
+
+    }, [latestSurvey, targetPopulation, growthRate, targetRatioMale, targetRatioFemale]);
+
+
+    return (
+        <Card className="rounded-t-none">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    <h3 className="text-xl font-semibold text-brand-dark">Calculator Inputs</h3>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Species</label>
+                        <select value={selectedSpecies} onChange={e => setSelectedSpecies(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            <option value="">Select a species...</option>
+                            {surveySpecies.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Estimated Current Population (Nₜ)</label>
+                        <input type="number" value={latestSurvey?.estimatedCount || 0} className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readOnly/>
+                        <p className="text-xs text-gray-500 mt-1">From latest survey on {latestSurvey?.date || 'N/A'}</p>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700">Target Population / Carrying Capacity (K)</label>
+                        <input type="number" value={targetPopulation} onChange={e => setTargetPopulation(Number(e.target.value))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700">Annual Growth Rate (λ)</label>
+                        <input type="number" step="0.01" value={growthRate} onChange={e => setGrowthRate(Number(e.target.value))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                    </div>
+                </div>
+
+                <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+                    <h3 className="text-xl font-semibold text-brand-dark">Recommended Quota</h3>
+                    <div className="text-center py-6 border-y">
+                        <p className="text-lg text-gray-600">Total Harvestable Surplus</p>
+                        <p className="text-6xl font-bold text-brand-primary">{calculatedQuota.total}</p>
+                        <p className="text-lg text-gray-600">animals</p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-gray-800">Harvest Breakdown</h4>
+                        <p className="text-sm text-gray-500 mb-2">Set a target post-harvest sex ratio to get a recommended breakdown.</p>
+                        <div className="flex items-center gap-2">
+                             <input type="number" value={targetRatioMale} onChange={e => setTargetRatioMale(Math.max(1, Number(e.target.value)))} className="w-16 p-1 text-center border-gray-300 rounded"/>
+                             <span className="font-semibold">Bulls to</span>
+                             <input type="number" value={targetRatioFemale} onChange={e => setTargetRatioFemale(Math.max(1, Number(e.target.value)))} className="w-16 p-1 text-center border-gray-300 rounded"/>
+                             <span className="font-semibold">Cows</span>
+                        </div>
+                        <div className="mt-4 space-y-2 text-center">
+                            <div className="p-3 bg-blue-100 rounded-md">
+                                <p className="text-sm text-blue-800">Harvest Males</p>
+                                <p className="text-2xl font-bold text-blue-900">{calculatedQuota.males}</p>
+                            </div>
+                            <div className="p-3 bg-pink-100 rounded-md">
+                                <p className="text-sm text-pink-800">Harvest Females</p>
+                                <p className="text-2xl font-bold text-pink-900">{calculatedQuota.females}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Card>
+    );
+}
+
+
+export const HarvestPlanning: React.FC<HarvestPlanningProps> = (props) => {
+    const { animals, reproductiveEvents, animalMeasurements, populationSurveys } = props;
+    const [activeTab, setActiveTab] = useState<'individual' | 'quota'>('individual');
+    
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+                 <h2 className="text-3xl font-bold text-brand-dark">Harvest Planning</h2>
+            </div>
+
+            <div className="-mb-px flex">
+              <TabButton label="Individual Culling" view="individual" activeTab={activeTab} setActiveTab={setActiveTab} />
+              <TabButton label="Strategic Quota" view="quota" activeTab={activeTab} setActiveTab={setActiveTab} />
+            </div>
+
+            {activeTab === 'individual' && <IndividualCullingPlanner animals={animals} reproductiveEvents={reproductiveEvents} animalMeasurements={animalMeasurements} />}
+            {activeTab === 'quota' && <StrategicQuotaCalculator populationSurveys={populationSurveys} />}
         </div>
     );
 };
