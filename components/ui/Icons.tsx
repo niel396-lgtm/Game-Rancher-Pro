@@ -158,3 +158,9 @@ export const TrophyIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}
          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9a9 9 0 119 0zM16.5 18.75a9 9 0 00-9 0m9 0v-4.5m-9 4.5v-4.5m0-6.75h9m-9 0a9 9 0 019 0" />
     </IconWrapper>
 );
+
+export const ExportIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) => (
+    <IconWrapper className={className}>
+         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+    </IconWrapper>
+);

@@ -1,9 +1,10 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { Transaction, TransactionType, Animal, HabitatZone, InventoryItem, Client, Permit } from '../types';
 import { FinanceChart } from './FinanceChart';
 import { Modal } from './ui/Modal';
-import { PlusIcon } from './ui/Icons';
+import { PlusIcon, ExportIcon } from './ui/Icons';
 
 interface FinancialTrackerProps {
   transactions: Transaction[];
@@ -20,6 +21,43 @@ interface AssetSummary {
     income: number;
     expense: number;
 }
+
+// Utility function to handle CSV export
+const exportToCsv = (filename: string, rows: object[]) => {
+    if (!rows || !rows.length) {
+        return;
+    }
+    const separator = ',';
+    const keys = Object.keys(rows[0]);
+    const csvContent =
+        keys.join(separator) +
+        '\n' +
+        rows.map(row => {
+            return keys.map(k => {
+                let cell = (row as any)[k] === null || (row as any)[k] === undefined ? '' : (row as any)[k];
+                cell = cell instanceof Date
+                    ? cell.toLocaleString()
+                    : cell.toString().replace(/"/g, '""');
+                if (cell.search(/("|,|\n)/g) >= 0) {
+                    cell = `"${cell}"`;
+                }
+                return cell;
+            }).join(separator);
+        }).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
+
 
 export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions, addTransaction, animals, habitats, inventory, clients, permits }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -148,6 +186,16 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
 
     return Object.values(summary);
   }, [transactions, animals, habitats, inventory, clients]);
+  
+  const handleExportAssetReport = () => {
+    const dataToExport = assetSummaryReport.map(asset => ({
+        'Asset': asset.name,
+        'Total Income': asset.income,
+        'Total Expense': asset.expense,
+        'Net Profit/Loss': asset.income - asset.expense,
+    }));
+    exportToCsv('financial_asset_report.csv', dataToExport);
+  };
 
 
   const TabButton: React.FC<{label:string; view: 'transactions' | 'reports'}> = ({label, view}) => (
@@ -164,13 +212,24 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-brand-dark">Financial Tracker</h2>
-        <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
-        >
-            <PlusIcon className="w-5 h-5 mr-2" />
-            Add Transaction
-        </button>
+        <div className="flex items-center gap-4">
+            {activeTab === 'reports' && (
+                 <button
+                    onClick={handleExportAssetReport}
+                    className="flex items-center px-4 py-2 bg-brand-secondary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
+                >
+                    <ExportIcon className="w-5 h-5 mr-2" />
+                    Export Report
+                </button>
+            )}
+            <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
+            >
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Add Transaction
+            </button>
+        </div>
       </div>
 
       <div className="-mb-px flex">

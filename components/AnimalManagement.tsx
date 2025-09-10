@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit } from '../types';
-import { PlusIcon, TrashIcon, StarIcon } from './ui/Icons';
+import { PlusIcon, TrashIcon, StarIcon, ExportIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { AnimalProfile } from './AnimalProfile';
 
@@ -37,6 +37,42 @@ const ConditionScore: React.FC<{ score: number }> = ({ score }) => (
     ))}
   </div>
 );
+
+// Utility function to handle CSV export
+const exportToCsv = (filename: string, rows: object[]) => {
+    if (!rows || !rows.length) {
+        return;
+    }
+    const separator = ',';
+    const keys = Object.keys(rows[0]);
+    const csvContent =
+        keys.join(separator) +
+        '\n' +
+        rows.map(row => {
+            return keys.map(k => {
+                let cell = (row as any)[k] === null || (row as any)[k] === undefined ? '' : (row as any)[k];
+                cell = cell instanceof Date
+                    ? cell.toLocaleString()
+                    : cell.toString().replace(/"/g, '""');
+                if (cell.search(/("|,|\n)/g) >= 0) {
+                    cell = `"${cell}"`;
+                }
+                return cell;
+            }).join(separator);
+        }).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
 
 
 export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits }) => {
@@ -133,6 +169,33 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       });
   };
 
+  const handleExport = () => {
+    if (activeTab === 'active') {
+        const dataToExport = animals.map(({ id, ...rest }) => rest);
+        exportToCsv('active_herd_export.csv', dataToExport);
+    } else if (activeTab === 'harvest') {
+        const dataToExport = harvests.map(h => {
+            const clientName = h.clientId ? clients.find(c => c.id === h.clientId)?.name : 'N/A';
+            const permitNumber = h.permitId ? permits.find(p => p.id === h.permitId)?.permitNumber : 'N/A';
+            return {
+                'Date': h.date,
+                'Tag ID': h.animalTagId,
+                'Species': h.species,
+                'Hunter': h.hunter,
+                'Client': clientName,
+                'Permit #': permitNumber,
+                'Method': h.method,
+                'Trophy Measurements': h.trophyMeasurements,
+                'Location': h.location,
+                'Left Horn (in)': h.hornLengthL ?? '',
+                'Right Horn (in)': h.hornLengthR ?? '',
+                'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '',
+            };
+        });
+        exportToCsv('harvest_log_export.csv', dataToExport);
+    }
+  };
+
   const TabButton: React.FC<{label:string; view: 'active' | 'mortality' | 'harvest'}> = ({label, view}) => (
       <button 
         onClick={() => setActiveTab(view)}
@@ -150,13 +213,24 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-brand-dark">Animal Management</h2>
-        <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
-        >
-            <PlusIcon className="w-5 h-5 mr-2" />
-            Add Animal
-        </button>
+        <div className="flex items-center gap-4">
+            {(activeTab === 'active' || activeTab === 'harvest') && (
+                <button
+                    onClick={handleExport}
+                    className="flex items-center px-4 py-2 bg-brand-secondary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
+                >
+                    <ExportIcon className="w-5 h-5 mr-2" />
+                    Export CSV
+                </button>
+            )}
+            <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
+            >
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Add Animal
+            </button>
+        </div>
       </div>
 
       <div className="-mb-px flex">
