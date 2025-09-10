@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { Transaction, TransactionType, Animal, HabitatZone, InventoryItem } from '../types';
 import { FinanceChart } from './FinanceChart';
@@ -14,8 +13,16 @@ interface FinancialTrackerProps {
   inventory: InventoryItem[];
 }
 
+interface AssetSummary {
+    name: string;
+    income: number;
+    expense: number;
+}
+
 export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions, addTransaction, animals, habitats, inventory }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'transactions' | 'reports'>('transactions');
+  
   const initialFormState = {
       date: new Date().toISOString().split('T')[0],
       description: '',
@@ -79,6 +86,58 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
       return null;
   };
 
+  const assetSummaryReport = useMemo(() => {
+    const summary: Record<string, AssetSummary> = {};
+
+    transactions.forEach(t => {
+        let key: string | null = null;
+        let name: string | null = null;
+
+        if (t.linkedAnimalId) {
+            const animal = animals.find(a => a.id === t.linkedAnimalId);
+            if (animal) {
+                key = `animal-${t.linkedAnimalId}`;
+                name = `Animal: ${animal.tagId} (${animal.species})`;
+            }
+        } else if (t.linkedHabitatId) {
+            const habitat = habitats.find(h => h.id === t.linkedHabitatId);
+            if (habitat) {
+                key = `habitat-${t.linkedHabitatId}`;
+                name = `Habitat: ${habitat.name}`;
+            }
+        } else if (t.linkedInventoryId) {
+            const item = inventory.find(i => i.id === t.linkedInventoryId);
+            if (item) {
+                key = `inventory-${t.linkedInventoryId}`;
+                name = `Inventory: ${item.name}`;
+            }
+        }
+
+        if (key && name) {
+            if (!summary[key]) {
+                summary[key] = { name, income: 0, expense: 0 };
+            }
+            if (t.type === TransactionType.Income) {
+                summary[key].income += t.amount;
+            } else {
+                summary[key].expense += t.amount;
+            }
+        }
+    });
+
+    return Object.values(summary);
+  }, [transactions, animals, habitats, inventory]);
+
+
+  const TabButton: React.FC<{label:string; view: 'transactions' | 'reports'}> = ({label, view}) => (
+      <button 
+        onClick={() => setActiveTab(view)}
+        className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === view ? 'bg-white border-b-0 border-t border-x text-brand-primary' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+      >
+        {label}
+      </button>
+  );
+
 
   return (
     <div>
@@ -92,57 +151,103 @@ export const FinancialTracker: React.FC<FinancialTrackerProps> = ({ transactions
             Add Transaction
         </button>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card title="Total Income" className="text-center bg-green-50">
-            <p className="text-3xl font-bold text-green-600">${totalIncome.toLocaleString()}</p>
-        </Card>
-        <Card title="Total Expense" className="text-center bg-red-50">
-            <p className="text-3xl font-bold text-red-600">${totalExpense.toLocaleString()}</p>
-        </Card>
-        <Card title="Net Balance" className="text-center bg-blue-50">
-            <p className={`text-3xl font-bold ${netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-              ${netBalance.toLocaleString()}
-            </p>
-        </Card>
+
+      <div className="-mb-px flex">
+          <TabButton label="Transactions" view="transactions" />
+          <TabButton label="Reports" view="reports" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Transaction History">
-          <div className="max-h-96 overflow-y-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {[...transactions].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t) => (
-                  <tr key={t.id}>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {t.description}
-                       {getLinkedItemName(t) && (
-                          <span className="block text-xs text-gray-500 italic">{getLinkedItemName(t)}</span>
-                      )}
-                    </td>
-                    <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-semibold ${t.type === TransactionType.Income ? 'text-green-600' : 'text-red-600'}`}>
-                      {t.type === TransactionType.Income ? '+' : '-'}${t.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {activeTab === 'transactions' && (
+        <div className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <Card title="Total Income" className="text-center bg-green-50">
+                <p className="text-3xl font-bold text-green-600">${totalIncome.toLocaleString()}</p>
+            </Card>
+            <Card title="Total Expense" className="text-center bg-red-50">
+                <p className="text-3xl font-bold text-red-600">${totalExpense.toLocaleString()}</p>
+            </Card>
+            <Card title="Net Balance" className="text-center bg-blue-50">
+                <p className={`text-3xl font-bold ${netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  ${netBalance.toLocaleString()}
+                </p>
+            </Card>
           </div>
-        </Card>
-        <Card title="Monthly Summary">
-            <div className="h-96">
-                <FinanceChart data={transactions} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card title="Transaction History">
+              <div className="max-h-96 overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {[...transactions].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t) => (
+                      <tr key={t.id}>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {t.description}
+                          {getLinkedItemName(t) && (
+                              <span className="block text-xs text-gray-500 italic">{getLinkedItemName(t)}</span>
+                          )}
+                        </td>
+                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-semibold ${t.type === TransactionType.Income ? 'text-green-600' : 'text-red-600'}`}>
+                          {t.type === TransactionType.Income ? '+' : '-'}${t.amount.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+            <Card title="Monthly Summary">
+                <div className="h-96">
+                    <FinanceChart data={transactions} />
+                </div>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'reports' && (
+        <Card title="Financial Summary by Asset" className="rounded-t-none">
+            <div className="overflow-x-auto">
+                 <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Income</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Expense</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Net Profit/Loss</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                       {assetSummaryReport.map((asset) => {
+                           const net = asset.income - asset.expense;
+                           return (
+                            <tr key={asset.name} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{asset.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600">${asset.income.toLocaleString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600">${asset.expense.toLocaleString()}</td>
+                                <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${net >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                    {net < 0 ? '-' : ''}${Math.abs(net).toLocaleString()}
+                                </td>
+                            </tr>
+                           )
+                       })}
+                       {assetSummaryReport.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className="text-center py-10 text-gray-500">No transactions linked to assets yet.</td>
+                            </tr>
+                        )}
+                    </tbody>
+                 </table>
             </div>
         </Card>
-      </div>
+      )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Transaction">
         <form onSubmit={handleSubmit} className="space-y-4">
