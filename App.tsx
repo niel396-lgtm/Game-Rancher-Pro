@@ -156,7 +156,7 @@ const App: React.FC = () => {
       case View.AIAssistant:
         return <AIAssistant />;
       case View.RanchMap:
-        return <RanchMap landmarks={landmarks} boundaries={boundaries} addLandmark={addLandmark} addBoundary={addBoundary} removeFeature={removeMapFeature} />;
+        return <RanchMap landmarks={landmarks} boundaries={boundaries} animals={animals} addLandmark={addLandmark} addBoundary={addBoundary} removeFeature={removeMapFeature} />;
       default:
         return <Dashboard 
           animals={animals} 

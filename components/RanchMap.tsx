@@ -1,9 +1,9 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, FeatureGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet-draw';
-import { Landmark, Boundary, Coords, CoordsPath, LandmarkType } from '../types';
+import { Landmark, Boundary, Coords, CoordsPath, LandmarkType, Animal } from '../types';
 import { Modal } from './ui/Modal';
 import { Card } from './ui/Card';
 
@@ -17,6 +17,7 @@ L.Icon.Default.mergeOptions({
 interface RanchMapProps {
   landmarks: Landmark[];
   boundaries: Boundary[];
+  animals: Animal[];
   addLandmark: (landmark: Omit<Landmark, 'id'>) => void;
   addBoundary: (boundary: Omit<Boundary, 'id'>) => void;
   removeFeature: (id: string) => void;
@@ -50,7 +51,70 @@ const getLandmarkIcon = (type: LandmarkType) => {
     });
 };
 
-export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLandmark, addBoundary, removeFeature }) => {
+const getSpeciesColor = (species: string): string => {
+    const colors: { [key: string]: string } = {
+        'White-tailed Deer': '#8B4513', // SaddleBrown
+        'Elk': '#6B4226',
+        'Bison': '#3D2B1F',
+        'Wild Turkey': '#4B0082'
+    };
+    return colors[species] || '#708090'; // SlateGray for others
+};
+
+const getAnimalIcon = (species: string) => {
+    const speciesColor = getSpeciesColor(species);
+    const initial = species.charAt(0).toUpperCase();
+    return L.divIcon({
+        html: `<div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md border-2 border-white" style="background-color: ${speciesColor};">
+                 ${initial}
+               </div>`,
+        className: 'bg-transparent border-0',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+    });
+};
+
+// This component manages the Leaflet Draw control lifecycle.
+const DrawControl = ({ featureGroupRef, onCreated, onDeleted }: any) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!featureGroupRef.current) return;
+    const featureGroup = featureGroupRef.current;
+
+    const drawControl = new L.Control.Draw({
+      position: 'topright',
+      draw: {
+        rectangle: false,
+        circle: false,
+        circlemarker: false,
+        polyline: false,
+        marker: { icon: new L.Icon.Default() },
+        polygon: {
+          shapeOptions: { color: '#8A9A5B' }
+        }
+      },
+      edit: {
+        featureGroup: featureGroup,
+      },
+    });
+
+    map.addControl(drawControl);
+    map.on(L.Draw.Event.CREATED, onCreated);
+    map.on(L.Draw.Event.DELETED, onDeleted);
+
+    return () => {
+      map.removeControl(drawControl);
+      map.off(L.Draw.Event.CREATED, onCreated);
+      map.off(L.Draw.Event.DELETED, onDeleted);
+    };
+  }, [map, featureGroupRef, onCreated, onDeleted]);
+
+  return null;
+};
+
+
+export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, animals, addLandmark, addBoundary, removeFeature }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFeature, setNewFeature] = useState<NewFeatureData | null>(null);
   const [name, setName] = useState('');
@@ -61,11 +125,18 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
 
   const RANCH_CENTER: Coords = [30.51, -98.39];
   const RANCH_ZOOM = 14;
+  
+  const locationCenters = useMemo(() => {
+    const centers = new Map<string, Coords>();
+    boundaries.forEach(boundary => {
+        const center = L.polygon(boundary.positions).getBounds().getCenter();
+        centers.set(boundary.name, [center.lat, center.lng]);
+    });
+    return centers;
+  }, [boundaries]);
 
-  const handleCreate = (e: any) => {
+  const handleCreate = useCallback((e: any) => {
     const { layerType, layer } = e;
-    // The layer is automatically added to the map by leaflet-draw.
-    // Keep a reference to it so we can remove it after saving or cancelling.
     setDrawnLayer(layer); 
     
     if (layerType === 'marker') {
@@ -74,19 +145,19 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
     }
     if (layerType === 'polygon') {
       const latlngs = layer.getLatLngs()[0].map((p: L.LatLng) => [p.lat, p.lng]);
-      setNewFeature({ type: 'boundary', data: [...latlngs, latlngs[0]] }); // Close the polygon
+      setNewFeature({ type: 'boundary', data: [...latlngs, latlngs[0]] });
     }
     setIsModalOpen(true);
-  };
+  }, []);
   
-  const handleDelete = (e: any) => {
+  const handleDelete = useCallback((e: any) => {
     e.layers.eachLayer((layer: any) => {
         const customId = (layer as any).myCustomId;
         if (customId) {
             removeFeature(customId);
         }
     });
-  }
+  }, [removeFeature]);
 
   const handleModalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +176,7 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
   const resetModal = () => {
     if (drawnLayer) {
        // @ts-ignore
-      if (drawnLayer._map) { // Check if layer is on a map
+      if (drawnLayer._map) {
           drawnLayer.remove();
       }
     }
@@ -116,46 +187,6 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
     setDrawnLayer(null);
   };
   
-  // Component to manage the Leaflet Draw control
-  const DrawManager = () => {
-    const map = useMap();
-
-    useEffect(() => {
-      if (!featureGroupRef.current) return;
-
-      const drawControl = new L.Control.Draw({
-        position: 'topright',
-        draw: {
-          rectangle: false,
-          circle: false,
-          circlemarker: false,
-          polyline: false,
-          marker: { icon: new L.Icon.Default() },
-          polygon: {
-            shapeOptions: { color: '#8A9A5B' }
-          }
-        },
-        edit: {
-          featureGroup: featureGroupRef.current, // Crucially, use the React-managed feature group
-        },
-      });
-
-      map.addControl(drawControl);
-
-      map.on(L.Draw.Event.CREATED, handleCreate);
-      map.on(L.Draw.Event.DELETED, handleDelete);
-
-      return () => {
-        map.removeControl(drawControl);
-        map.off(L.Draw.Event.CREATED, handleCreate);
-        map.off(L.Draw.Event.DELETED, handleDelete);
-      };
-    }, [map]); // Only depends on map instance
-
-    return null;
-  };
-
-
   return (
     <div className="h-full flex flex-col">
       <h2 className="text-3xl font-bold text-brand-dark mb-6">Ranch Map</h2>
@@ -166,13 +197,17 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           />
           <FeatureGroup ref={featureGroupRef}>
-             <DrawManager />
+            <DrawControl
+              featureGroupRef={featureGroupRef}
+              onCreated={handleCreate}
+              onDeleted={handleDelete}
+            />
 
             {boundaries.map(boundary => (
               <Polygon 
                 key={boundary.id} 
                 positions={boundary.positions} 
-                pathOptions={{ color: '#C3B091' }}
+                pathOptions={{ color: '#C3B091', weight: 2, fillOpacity: 0.1 }}
                 eventHandlers={{
                   add: (e) => { (e.target as any).myCustomId = boundary.id; }
                 }}
@@ -196,6 +231,30 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
               </Marker>
             ))}
           </FeatureGroup>
+          
+          {/* Animal Markers */}
+          {animals.map(animal => {
+            const center = locationCenters.get(animal.location);
+            if (!center) return null;
+
+            // Add a small random offset to avoid perfect overlap
+            const position: Coords = [center[0] + (Math.random() - 0.5) * 0.002, center[1] + (Math.random() - 0.5) * 0.002];
+
+            return (
+                <Marker
+                    key={animal.id}
+                    position={position}
+                    icon={getAnimalIcon(animal.species)}
+                >
+                    <Popup>
+                        <strong>Tag ID: {animal.tagId}</strong><br/>
+                        Species: {animal.species}<br/>
+                        Health: {animal.health}
+                    </Popup>
+                </Marker>
+            );
+          })}
+
         </MapContainer>
       </Card>
       
