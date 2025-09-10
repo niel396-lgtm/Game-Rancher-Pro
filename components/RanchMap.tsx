@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, FeatureGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -12,58 +13,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
-
-interface DrawControlProps {
-    onCreated: (e: any) => void;
-    onDeleted: (e: any) => void;
-}
-
-const DrawControl: React.FC<DrawControlProps> = ({ onCreated, onDeleted }) => {
-    const map = useMap();
-    const featureGroupRef = useRef<L.FeatureGroup>(new L.FeatureGroup());
-
-    useEffect(() => {
-        // Add the featureGroup to the map to make layers editable
-        map.addLayer(featureGroupRef.current);
-
-        const drawControl = new L.Control.Draw({
-            position: 'topright',
-            draw: {
-                rectangle: false,
-                circle: false,
-                circlemarker: false,
-                polyline: false,
-                marker: { icon: new L.Icon.Default() },
-                polygon: {
-                  shapeOptions: { color: '#8A9A5B' }
-                }
-            },
-            edit: {
-                featureGroup: featureGroupRef.current,
-            },
-        });
-
-        map.addControl(drawControl);
-
-        // Custom function to forward layers to the main feature group used for display
-        const handleCreated = (e: any) => {
-            featureGroupRef.current.addLayer(e.layer);
-            onCreated(e);
-        };
-        
-        map.on(L.Draw.Event.CREATED, handleCreated);
-        map.on(L.Draw.Event.DELETED, onDeleted);
-
-        return () => {
-            map.removeControl(drawControl);
-            map.removeLayer(featureGroupRef.current);
-            map.off(L.Draw.Event.CREATED, handleCreated);
-            map.off(L.Draw.Event.DELETED, onDeleted);
-        };
-    }, [map, onCreated, onDeleted]);
-
-    return null;
-};
 
 interface RanchMapProps {
   landmarks: Landmark[];
@@ -115,7 +64,10 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
 
   const handleCreate = (e: any) => {
     const { layerType, layer } = e;
-    setDrawnLayer(layer); // Keep track of the imperatively added layer
+    // The layer is automatically added to the map by leaflet-draw.
+    // Keep a reference to it so we can remove it after saving or cancelling.
+    setDrawnLayer(layer); 
+    
     if (layerType === 'marker') {
       const { lat, lng } = layer.getLatLng();
       setNewFeature({ type: 'landmark', data: [lat, lng] });
@@ -151,14 +103,11 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
   };
 
   const resetModal = () => {
-    // When modal is closed (saved or cancelled), remove the temporary drawn layer.
-    // React will then take over and render the permanent layer from state.
-    if (drawnLayer && featureGroupRef.current) {
-        try {
-            featureGroupRef.current.removeLayer(drawnLayer);
-        } catch(err) {
-            // Ignore error if layer is already removed
-        }
+    if (drawnLayer) {
+       // @ts-ignore
+      if (drawnLayer._map) { // Check if layer is on a map
+          drawnLayer.remove();
+      }
     }
     setIsModalOpen(false);
     setNewFeature(null);
@@ -166,6 +115,46 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
     setLandmarkType(LandmarkType.Other);
     setDrawnLayer(null);
   };
+  
+  // Component to manage the Leaflet Draw control
+  const DrawManager = () => {
+    const map = useMap();
+
+    useEffect(() => {
+      if (!featureGroupRef.current) return;
+
+      const drawControl = new L.Control.Draw({
+        position: 'topright',
+        draw: {
+          rectangle: false,
+          circle: false,
+          circlemarker: false,
+          polyline: false,
+          marker: { icon: new L.Icon.Default() },
+          polygon: {
+            shapeOptions: { color: '#8A9A5B' }
+          }
+        },
+        edit: {
+          featureGroup: featureGroupRef.current, // Crucially, use the React-managed feature group
+        },
+      });
+
+      map.addControl(drawControl);
+
+      map.on(L.Draw.Event.CREATED, handleCreate);
+      map.on(L.Draw.Event.DELETED, handleDelete);
+
+      return () => {
+        map.removeControl(drawControl);
+        map.off(L.Draw.Event.CREATED, handleCreate);
+        map.off(L.Draw.Event.DELETED, handleDelete);
+      };
+    }, [map]); // Only depends on map instance
+
+    return null;
+  };
+
 
   return (
     <div className="h-full flex flex-col">
@@ -177,8 +166,7 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, addLa
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           />
           <FeatureGroup ref={featureGroupRef}>
-            {/* Replace broken EditControl with custom component */}
-            <DrawControl onCreated={handleCreate} onDeleted={handleDelete} />
+             <DrawManager />
 
             {boundaries.map(boundary => (
               <Polygon 

@@ -1,5 +1,5 @@
 
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest } from './types';
 
 export const INITIAL_ANIMALS: Animal[] = [
   { id: 'A001', species: 'White-tailed Deer', age: 4, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'WT-101' },
@@ -50,6 +50,7 @@ export const INITIAL_TASKS: Task[] = [
 ];
 
 export const INITIAL_MORTALITIES: Mortality[] = [];
+export const INITIAL_HARVESTS: Harvest[] = [];
 
 export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
     { id: 'R01', date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], amount: 15 },

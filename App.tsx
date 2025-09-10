@@ -8,8 +8,8 @@ import { InventoryManagement } from './components/InventoryManagement';
 import { FinancialTracker } from './components/FinancialTracker';
 import { AIAssistant } from './components/AIAssistant';
 import { RanchMap } from './components/RanchMap';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS } from './constants';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS } from './constants';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [boundaries, setBoundaries] = useState<Boundary[]>(INITIAL_BOUNDARIES);
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [mortalities, setMortalities] = useState<Mortality[]>(INITIAL_MORTALITIES);
+  const [harvests, setHarvests] = useState<Harvest[]>(INITIAL_HARVESTS);
   const [rainfallLogs, setRainfallLogs] = useState<RainfallLog[]>(INITIAL_RAINFALL_LOGS);
   const [veldAssessments, setVeldAssessments] = useState<VeldAssessment[]>(INITIAL_VELD_ASSESSMENTS);
 
@@ -63,6 +64,19 @@ const App: React.FC = () => {
       removeAnimal(animal.id);
   };
   
+  const logAnimalHarvest = (animal: Animal, harvestData: Omit<Harvest, 'id' | 'animalTagId' | 'species' | 'date' | 'location'>) => {
+    const newHarvest: Harvest = {
+        id: `H${Date.now()}`,
+        animalTagId: animal.tagId,
+        species: animal.species,
+        date: new Date().toISOString().split('T')[0],
+        location: animal.location,
+        ...harvestData,
+    };
+    setHarvests(prev => [newHarvest, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    removeAnimal(animal.id);
+  };
+
   const addRainfallLog = (logData: Omit<RainfallLog, 'id'>) => {
       const newLog: RainfallLog = { ...logData, id: `R${Date.now()}` };
       setRainfallLogs(prev => [newLog, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
@@ -114,6 +128,8 @@ const App: React.FC = () => {
           removeAnimal={removeAnimal} 
           mortalities={mortalities}
           logAnimalMortality={logAnimalMortality}
+          harvests={harvests}
+          logAnimalHarvest={logAnimalHarvest}
           />;
       case View.Habitat:
         return <HabitatManagement 

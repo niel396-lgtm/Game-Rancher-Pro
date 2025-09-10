@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Animal, HabitatZone, Mortality } from '../types';
+import { Animal, HabitatZone, Mortality, Harvest } from '../types';
 import { PlusIcon, TrashIcon, StarIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
+import { AnimalProfile } from './AnimalProfile';
+
 
 interface AnimalManagementProps {
   animals: Animal[];
@@ -12,6 +14,8 @@ interface AnimalManagementProps {
   removeAnimal: (id: string) => void;
   mortalities: Mortality[];
   logAnimalMortality: (animal: Animal, cause: string) => void;
+  harvests: Harvest[];
+  logAnimalHarvest: (animal: Animal, harvestData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'>) => void;
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -32,12 +36,17 @@ const ConditionScore: React.FC<{ score: number }> = ({ score }) => (
 );
 
 
-export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality }) => {
-  const [activeTab, setActiveTab] = useState<'active' | 'mortality'>('active');
+export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest }) => {
+  const [activeTab, setActiveTab] = useState<'active' | 'mortality' | 'harvest'>('active');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [animalToRemove, setAnimalToRemove] = useState<Animal | null>(null);
   const [isLogMortalityOpen, setIsLogMortalityOpen] = useState(false);
   const [causeOfDeath, setCauseOfDeath] = useState('');
+  
+  const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
+  const [harvestData, setHarvestData] = useState({ hunter: '', method: 'Rifle', trophyMeasurements: '' });
+
+  const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
 
   const [newAnimal, setNewAnimal] = useState({
       tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || ''
@@ -46,6 +55,11 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
       setNewAnimal(prev => ({ ...prev, [name]: name === 'age' || name === 'conditionScore' ? parseInt(value, 10) : value }));
+  };
+  
+  const handleHarvestInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setHarvestData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleAddAnimal = (e: React.FormEvent) => {
@@ -66,7 +80,9 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const handleCloseRemoveModals = () => {
     setAnimalToRemove(null);
     setIsLogMortalityOpen(false);
+    setIsLogHarvestOpen(false);
     setCauseOfDeath('');
+    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '' });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -76,7 +92,15 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     }
   };
 
-  const TabButton: React.FC<{label:string; view: 'active' | 'mortality'}> = ({label, view}) => (
+  const handleLogHarvestSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (animalToRemove) {
+      logAnimalHarvest(animalToRemove, harvestData);
+      handleCloseRemoveModals();
+    }
+  };
+
+  const TabButton: React.FC<{label:string; view: 'active' | 'mortality' | 'harvest'}> = ({label, view}) => (
       <button 
         onClick={() => setActiveTab(view)}
         className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === view ? 'bg-white border-b-0 border-t border-x text-brand-primary' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
@@ -84,6 +108,10 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
         {label}
       </button>
   );
+
+  if (viewingProfile) {
+    return <AnimalProfile animal={viewingProfile} onBack={() => setViewingProfile(null)} />;
+  }
 
   return (
     <div>
@@ -101,6 +129,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       <div className="-mb-px flex">
           <TabButton label="Active Herd" view="active" />
           <TabButton label="Mortality Register" view="mortality" />
+          <TabButton label="Harvest Log" view="harvest" />
       </div>
 
       <Card className="rounded-t-none">
@@ -122,7 +151,9 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
               <tbody className="bg-white divide-y divide-gray-200">
                 {animals.map((animal) => (
                   <tr key={animal.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.tagId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <a href="#" onClick={(e) => { e.preventDefault(); setViewingProfile(animal); }} className="text-brand-primary hover:underline">{animal.tagId}</a>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.species}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.age}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.sex}</td>
@@ -142,7 +173,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                 ))}
               </tbody>
             </table>
-          ) : (
+          ) : activeTab === 'mortality' ? (
              <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -161,6 +192,31 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{m.species}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{m.location}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{m.cause}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tag ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Species</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hunter</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trophy Info</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {harvests.map((h) => (
+                  <tr key={h.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{h.animalTagId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.species}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.hunter}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.method}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.trophyMeasurements}</td>
                   </tr>
                 ))}
               </tbody>
@@ -215,11 +271,12 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
           </form>
       </Modal>
 
-      <Modal isOpen={!!animalToRemove && !isLogMortalityOpen} onClose={handleCloseRemoveModals} title="Remove Animal">
+      <Modal isOpen={!!animalToRemove && !isLogMortalityOpen && !isLogHarvestOpen} onClose={handleCloseRemoveModals} title="Remove Animal">
           <p>How would you like to remove animal with Tag ID <strong>{animalToRemove?.tagId}</strong>?</p>
           <div className="flex justify-end gap-4 mt-6">
               <button type="button" onClick={handleCloseRemoveModals} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
               <button type="button" onClick={() => { if(animalToRemove) removeAnimal(animalToRemove.id); handleCloseRemoveModals(); }} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Remove without Log</button>
+              <button type="button" onClick={() => setIsLogHarvestOpen(true)} className="px-4 py-2 bg-brand-secondary text-white rounded-lg hover:bg-brand-dark">Log Harvest</button>
               <button type="button" onClick={() => setIsLogMortalityOpen(true)} className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Log Mortality</button>
           </div>
       </Modal>
@@ -241,6 +298,32 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
               <button type="button" onClick={handleCloseRemoveModals} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
               <button type="button" onClick={handleLogMortalitySubmit} className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Submit Log</button>
           </div>
+      </Modal>
+
+       <Modal isOpen={isLogHarvestOpen} onClose={handleCloseRemoveModals} title={`Log Harvest for ${animalToRemove?.tagId}`}>
+          <form onSubmit={handleLogHarvestSubmit} className="space-y-4">
+              <div>
+                  <label htmlFor="hunter" className="block text-sm font-medium text-gray-700">Hunter Name</label>
+                  <input type="text" name="hunter" id="hunter" value={harvestData.hunter} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+              </div>
+               <div>
+                  <label htmlFor="method" className="block text-sm font-medium text-gray-700">Method</label>
+                  <select name="method" id="method" value={harvestData.method} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                      <option>Rifle</option>
+                      <option>Bow</option>
+                      <option>Crossbow</option>
+                      <option>Other</option>
+                  </select>
+              </div>
+              <div>
+                  <label htmlFor="trophyMeasurements" className="block text-sm font-medium text-gray-700">Trophy Measurements / Notes</label>
+                  <input type="text" name="trophyMeasurements" id="trophyMeasurements" value={harvestData.trophyMeasurements} onChange={handleHarvestInputChange} placeholder="e.g., 10 points, 150 B&C" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+              </div>
+              <div className="flex justify-end gap-4 mt-6">
+                  <button type="button" onClick={handleCloseRemoveModals} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Submit Harvest Log</button>
+              </div>
+          </form>
       </Modal>
     </div>
   );

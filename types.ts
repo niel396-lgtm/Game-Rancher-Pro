@@ -74,6 +74,17 @@ export interface Mortality {
   location: string;
 }
 
+export interface Harvest {
+  id: string;
+  animalTagId: string;
+  species: string;
+  date: string;
+  hunter: string;
+  method: string;
+  trophyMeasurements: string;
+  location: string;
+}
+
 export interface RainfallLog {
   id: string;
   date: string;
