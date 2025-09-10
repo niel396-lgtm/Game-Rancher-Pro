@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Animal } from '../types';
+import { Animal, Transaction, TransactionType } from '../types';
 import { Card } from './ui/Card';
 import { StarIcon } from './ui/Icons';
 
 interface AnimalProfileProps {
   animal: Animal;
   onBack: () => void;
+  transactions: Transaction[];
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -34,7 +35,11 @@ const DetailItem: React.FC<{label: string, value: React.ReactNode}> = ({label, v
 );
 
 
-export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack }) => {
+export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, transactions }) => {
+    const animalTransactions = transactions
+        .filter(t => t.linkedAnimalId === animal.id)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -74,9 +79,36 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack }) 
         </Card>
       </div>
 
-       <Card title="History (Placeholder)" className="mt-6">
-            <p className="text-gray-500">Future enhancements will show a detailed history of health checks, location logs, and offspring records here.</p>
-       </Card>
+       <Card title="Financial History" className="mt-6">
+            {animalTransactions.length > 0 ? (
+              <div className="overflow-x-auto max-h-96">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {animalTransactions.map((t) => (
+                      <tr key={t.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{t.description}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.category}</td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${t.type === TransactionType.Income ? 'text-green-600' : 'text-red-600'}`}>
+                          {t.type === TransactionType.Income ? '+' : '-'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500">No financial history recorded for this animal.</p>
+            )}
+          </Card>
 
     </div>
   );

@@ -135,6 +135,7 @@ const App: React.FC = () => {
           logAnimalMortality={logAnimalMortality}
           harvests={harvests}
           logAnimalHarvest={logAnimalHarvest}
+          transactions={transactions}
           />;
       case View.Habitat:
         return <HabitatManagement 

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Animal, HabitatZone, Mortality, Harvest } from '../types';
+import { Animal, HabitatZone, Mortality, Harvest, Transaction } from '../types';
 import { PlusIcon, TrashIcon, StarIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { AnimalProfile } from './AnimalProfile';
@@ -16,6 +16,7 @@ interface AnimalManagementProps {
   logAnimalMortality: (animal: Animal, cause: string) => void;
   harvests: Harvest[];
   logAnimalHarvest: (animal: Animal, harvestData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'>) => void;
+  transactions: Transaction[];
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -36,7 +37,7 @@ const ConditionScore: React.FC<{ score: number }> = ({ score }) => (
 );
 
 
-export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest }) => {
+export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions }) => {
   const [activeTab, setActiveTab] = useState<'active' | 'mortality' | 'harvest'>('active');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [animalToRemove, setAnimalToRemove] = useState<Animal | null>(null);
@@ -110,7 +111,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   );
 
   if (viewingProfile) {
-    return <AnimalProfile animal={viewingProfile} onBack={() => setViewingProfile(null)} />;
+    return <AnimalProfile animal={viewingProfile} onBack={() => setViewingProfile(null)} transactions={transactions} />;
   }
 
   return (
