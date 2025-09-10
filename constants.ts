@@ -1,4 +1,4 @@
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 
@@ -107,6 +107,14 @@ export const INITIAL_ANIMAL_MEASUREMENTS: AnimalMeasurement[] = [
     { id: 'AM004', animalId: 'A002', date: getPastDate(10), measurementType: 'Horn Length (R)', value: 52.5, unit: 'in', notes: 'Pre-season measurement, age 5.' },
     { id: 'AM005', animalId: 'A009', date: getPastDate(730), measurementType: 'Horn Length (L)', value: 15.0, unit: 'in' },
     { id: 'AM006', animalId: 'A009', date: getPastDate(365), measurementType: 'Horn Length (L)', value: 18.0, unit: 'in' },
+];
+
+export const INITIAL_POPULATION_SURVEYS: PopulationSurvey[] = [
+  { id: 'PS001', date: getPastDate(180), species: 'Kudu', method: 'Aerial Count (Sample)', estimatedCount: 150, maleCount: 40, femaleCount: 90, juvenileCount: 20, confidence: 'Medium', notes: 'Drought conditions may have concentrated animals near water.' },
+  { id: 'PS002', date: getPastDate(180), species: 'Impala', method: 'Ground Count', estimatedCount: 400, maleCount: 120, femaleCount: 250, juvenileCount: 30, confidence: 'High', habitatZoneId: 'H01' },
+  { id: 'PS003', date: getPastDate(10), species: 'Kudu', method: 'Aerial Count (Sample)', estimatedCount: 165, maleCount: 45, femaleCount: 100, juvenileCount: 20, confidence: 'High', notes: 'Good post-rain conditions, herd looks healthy.' },
+  { id: 'PS004', date: getPastDate(10), species: 'Impala', method: 'Ground Count', estimatedCount: 420, maleCount: 130, femaleCount: 260, juvenileCount: 30, confidence: 'High', habitatZoneId: 'H01' },
+  { id: 'PS005', date: getPastDate(90), species: 'Blue Wildebeest', method: 'Aerial Count (Total)', estimatedCount: 80, maleCount: 30, femaleCount: 50, confidence: 'Medium' },
 ];
 
 // Initial data for the mapping feature

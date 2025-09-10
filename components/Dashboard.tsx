@@ -1,12 +1,13 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
 import { HerdQualityChart } from './HerdQualityChart';
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement } from '../types';
-import { AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey } from '../types';
+import { PopulationIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 
 interface DashboardProps {
@@ -23,6 +24,7 @@ interface DashboardProps {
     addRainfallLog: (log: Omit<RainfallLog, 'id'>) => void;
     permits: Permit[];
     animalMeasurements: AnimalMeasurement[];
+    populationSurveys: PopulationSurvey[];
 }
 
 const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
@@ -39,14 +41,33 @@ const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; u
     </Card>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
   const [newRainfallDate, setNewRainfallDate] = useState(new Date().toISOString().split('T')[0]);
   const [newRainfallAmount, setNewRainfallAmount] = useState('');
 
-  const totalAnimals = animals.length;
+  const { estimatedTotalPopulation, estimatedMaleCount, estimatedFemaleCount } = useMemo(() => {
+    const latestSurveys: { [species: string]: PopulationSurvey } = {};
+    for (const survey of populationSurveys) {
+        if (!latestSurveys[survey.species] || new Date(survey.date) > new Date(latestSurveys[survey.species].date)) {
+            latestSurveys[survey.species] = survey;
+        }
+    }
+
+    let total = 0;
+    let males = 0;
+    let females = 0;
+    for (const species in latestSurveys) {
+        total += latestSurveys[species].estimatedCount;
+        males += latestSurveys[species].maleCount || 0;
+        females += latestSurveys[species].femaleCount || 0;
+    }
+
+    return { estimatedTotalPopulation: total, estimatedMaleCount: males, estimatedFemaleCount: females };
+  }, [populationSurveys]);
+
   const lowStockItems = inventory.filter(item => item.quantity < item.reorderLevel).length;
   const habitatIssues = habitats.reduce((acc, zone) => acc + zone.issues.length, 0);
 
@@ -159,11 +180,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
         <Card className="bg-gradient-to-br from-green-100 to-green-200">
             <div className="flex items-center">
                 <div className="p-3 bg-white rounded-full shadow">
-                    <AnimalIcon className="w-8 h-8 text-brand-primary"/>
+                    <PopulationIcon className="w-8 h-8 text-brand-primary"/>
                 </div>
                 <div className="ml-4">
-                    <p className="text-gray-500">Total Animals</p>
-                    <p className="text-3xl font-bold text-brand-dark">{totalAnimals}</p>
+                    <p className="text-gray-500">Estimated Population</p>
+                    <p className="text-3xl font-bold text-brand-dark">{estimatedTotalPopulation}</p>
                 </div>
             </div>
         </Card>
@@ -213,12 +234,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
           </Card>
         </div>
         <div className="lg:col-span-2">
-            <Card title="Animal Demographics">
+            <Card title="Population Demographics">
                 <div className="h-40">
                     <AnimalChart data={animals} />
                 </div>
                 <div className="h-40">
-                    <SexRatioChart data={animals} />
+                    <SexRatioChart maleCount={estimatedMaleCount} femaleCount={estimatedFemaleCount} />
                 </div>
             </Card>
         </div>

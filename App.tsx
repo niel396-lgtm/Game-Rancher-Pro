@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -13,8 +14,9 @@ import { ClientManagement } from './components/ClientManagement';
 import { PermitManagement } from './components/PermitManagement';
 import { GeneticAnalysis } from './components/GeneticAnalysis';
 import { HarvestPlanning } from './components/HarvestPlanning';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS } from './constants';
+import { PopulationSurveys } from './components/PopulationSurveys';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -43,6 +45,7 @@ const App: React.FC = () => {
   const [permits, setPermits] = useState<Permit[]>(INITIAL_PERMITS);
   const [reproductiveEvents, setReproductiveEvents] = useState<ReproductiveEvent[]>(INITIAL_REPRODUCTIVE_EVENTS);
   const [animalMeasurements, setAnimalMeasurements] = useState<AnimalMeasurement[]>(INITIAL_ANIMAL_MEASUREMENTS);
+  const [populationSurveys, setPopulationSurveys] = useState<PopulationSurvey[]>(INITIAL_POPULATION_SURVEYS);
 
 
   const addAnimal = (animal: Omit<Animal, 'id'>) => {
@@ -163,6 +166,11 @@ const App: React.FC = () => {
     setAnimalMeasurements(prev => [newMeasurement, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   };
 
+  const addPopulationSurvey = (survey: Omit<PopulationSurvey, 'id'>) => {
+    const newSurvey = { ...survey, id: `PS${Date.now()}` };
+    setPopulationSurveys(prev => [newSurvey, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -180,6 +188,7 @@ const App: React.FC = () => {
           addRainfallLog={addRainfallLog}
           permits={permits}
           animalMeasurements={animalMeasurements}
+          populationSurveys={populationSurveys}
           />;
       case View.Animals:
         return <AnimalManagement 
@@ -199,6 +208,13 @@ const App: React.FC = () => {
           animalMeasurements={animalMeasurements}
           addAnimalMeasurement={addAnimalMeasurement}
           />;
+      case View.PopulationSurveys:
+        return <PopulationSurveys
+            surveys={populationSurveys}
+            addSurvey={addPopulationSurvey}
+            habitats={habitats}
+            animals={animals}
+        />;
       case View.GeneticAnalysis:
         return <GeneticAnalysis 
           animals={animals} 
@@ -259,6 +275,7 @@ const App: React.FC = () => {
           addRainfallLog={addRainfallLog}
           permits={permits}
           animalMeasurements={animalMeasurements}
+          populationSurveys={populationSurveys}
           />;
     }
   };

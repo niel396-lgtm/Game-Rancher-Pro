@@ -1,8 +1,9 @@
 
 
+
 import React from 'react';
 import { View } from '../types';
-import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, GeneticsIcon, HarvestPlanningIcon } from './ui/Icons';
+import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, GeneticsIcon, HarvestPlanningIcon, PopulationIcon } from './ui/Icons';
 
 interface SidebarProps {
   currentView: View;
@@ -32,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView })
   const navItems = [
     { view: View.Dashboard, icon: <DashboardIcon /> },
     { view: View.Animals, icon: <AnimalIcon /> },
+    { view: View.PopulationSurveys, icon: <PopulationIcon /> },
     { view: View.GeneticAnalysis, icon: <GeneticsIcon /> },
     { view: View.HarvestPlanning, icon: <HarvestPlanningIcon /> },
     { view: View.Clients, icon: <ClientIcon /> },

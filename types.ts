@@ -3,6 +3,7 @@
 export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
+  PopulationSurveys = 'Population Surveys',
   Clients = 'Clients',
   Permits = 'Permits & Compliance',
   Habitat = 'Habitat',
@@ -161,6 +162,20 @@ export interface AnimalMeasurement {
   measurementType: 'Horn Length (L)' | 'Horn Length (R)' | 'Tip-to-Tip Spread' | 'Body Weight';
   value: number;
   unit: 'in' | 'kg';
+  notes?: string;
+}
+
+export interface PopulationSurvey {
+  id: string;
+  date: string;
+  habitatZoneId?: string; // Optional: can be a ranch-wide survey
+  species: string;
+  method: 'Aerial Count (Total)' | 'Aerial Count (Sample)' | 'Ground Count' | 'Camera Trap Estimate' | 'Dung/Spore Count';
+  estimatedCount: number;
+  maleCount?: number;
+  femaleCount?: number;
+  juvenileCount?: number;
+  confidence: 'High' | 'Medium' | 'Low';
   notes?: string;
 }
 

@@ -1,27 +1,17 @@
 
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Animal } from '../types';
 
 interface SexRatioChartProps {
-  data: Animal[];
+  maleCount: number;
+  femaleCount: number;
 }
 
-export const SexRatioChart: React.FC<SexRatioChartProps> = ({ data }) => {
-  const sexCounts = data.reduce(
-    (acc, animal) => {
-      if (animal.sex === 'Male') {
-        acc.male += 1;
-      } else {
-        acc.female += 1;
-      }
-      return acc;
-    },
-    { male: 0, female: 0 }
-  );
-
+export const SexRatioChart: React.FC<SexRatioChartProps> = ({ maleCount, femaleCount }) => {
   const chartData = [
-    { name: 'Sex Ratio', Male: sexCounts.male, Female: sexCounts.female },
+    { name: 'Sex Ratio', Male: maleCount, Female: femaleCount },
   ];
 
   return (
