@@ -33,20 +33,31 @@ const getStatusColor = (status: string, type: 'water' | 'forage' | 'veld') => {
   return 'text-gray-500';
 };
 
-const StockingDensityBar: React.FC<{current: number; capacity: number}> = ({current, capacity}) => {
-    const percentage = capacity > 0 ? (current / capacity) * 100 : 0;
+const getVeldConditionFactor = (condition: HabitatZone['veldCondition']): number => {
+  switch (condition) {
+    case 'Excellent': return 1.2;
+    case 'Good': return 1.0;
+    case 'Fair': return 0.75;
+    case 'Poor': return 0.5;
+    default: return 1.0;
+  }
+};
+
+const StockingDensityBar: React.FC<{current: string; capacity: string}> = ({current, capacity}) => {
+    const currentNum = parseFloat(current);
+    const capacityNum = parseFloat(capacity);
+    const percentage = capacityNum > 0 ? (currentNum / capacityNum) * 100 : 0;
     let barColor = 'bg-green-500';
     if (percentage > 90) barColor = 'bg-red-500';
     else if (percentage > 75) barColor = 'bg-yellow-500';
 
     return (
         <div>
-            <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium text-brand-dark">Stocking Density</span>
-                <span className="text-sm font-medium text-gray-500">{current} / {capacity}</span>
+             <div className="flex justify-end mb-1">
+                <span className="text-sm font-medium text-gray-500">{current} / {capacity} LSU</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div className={`${barColor} h-2.5 rounded-full`} style={{ width: `${percentage}%`}}></div>
+                <div className={`${barColor} h-2.5 rounded-full`} style={{ width: `${Math.min(percentage, 100)}%`}}></div>
             </div>
         </div>
     );
@@ -126,14 +137,24 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {habitats.map((zone) => {
           const animalsInZone = animals.filter(a => a.location === zone.name);
-          const speciesSummary = animalsInZone
-            .reduce((acc, animal) => {
-              acc[animal.species] = (acc[animal.species] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
-          const speciesSummaryString = Object.entries(speciesSummary)
-            .map(([species, count]) => `${count} ${species}`)
-            .join(', ') || 'No animals present';
+          
+          const veldFactor = getVeldConditionFactor(zone.veldCondition);
+
+          const actualGrazerCapacityLSU = (zone.areaHectares / 100) * zone.grazerLSUPer100ha * veldFactor;
+          const actualBrowserCapacityLSU = (zone.areaHectares / 100) * zone.browserLSUPer100ha * veldFactor;
+          
+          const currentStocking = animalsInZone.reduce((acc, animal) => {
+            if (animal.forageType === 'Grazer') {
+              acc.grazerLSU += animal.lsuEquivalent;
+            } else if (animal.forageType === 'Browser') {
+              acc.browserLSU += animal.lsuEquivalent;
+            } else if (animal.forageType === 'Mixed-Feeder') {
+              // Split the LSU impact 50/50 between grazing and browsing
+              acc.grazerLSU += animal.lsuEquivalent * 0.5;
+              acc.browserLSU += animal.lsuEquivalent * 0.5;
+            }
+            return acc;
+          }, { grazerLSU: 0, browserLSU: 0 });
 
           return (
             <Card key={zone.id} title={zone.name} className="flex flex-col">
@@ -160,8 +181,21 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
                   </div>
                 </div>
                  <div className="pt-2">
-                    <StockingDensityBar current={animalsInZone.length} capacity={zone.carryingCapacity} />
-                    <p className="text-xs text-gray-500 mt-1 truncate" title={speciesSummaryString}>{speciesSummaryString}</p>
+                    {/* Grazing Capacity */}
+                    <p className="text-sm font-medium text-brand-dark">Grazing Capacity</p>
+                    <StockingDensityBar
+                      current={currentStocking.grazerLSU.toFixed(2)}
+                      capacity={actualGrazerCapacityLSU.toFixed(2)}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Currently stocked at {currentStocking.grazerLSU.toFixed(2)} LSU</p>
+
+                    {/* Browsing Capacity */}
+                    <p className="text-sm font-medium text-brand-dark mt-4">Browsing Capacity</p>
+                    <StockingDensityBar
+                      current={currentStocking.browserLSU.toFixed(2)}
+                      capacity={actualBrowserCapacityLSU.toFixed(2)}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Currently stocked at {currentStocking.browserLSU.toFixed(2)} LSU</p>
                 </div>
               </div>
               
