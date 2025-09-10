@@ -9,6 +9,7 @@ export enum View {
   Finance = 'Finance',
   AIAssistant = 'AI Assistant',
   RanchMap = 'Ranch Map',
+  GeneticAnalysis = 'Genetic Analysis',
 }
 
 export interface Permit {

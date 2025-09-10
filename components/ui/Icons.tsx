@@ -64,6 +64,13 @@ export const MapIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) =
     </IconWrapper>
 );
 
+export const GeneticsIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) => (
+    <IconWrapper className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+    </IconWrapper>
+);
+
+
 export const WaterIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) => (
     <IconWrapper className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75v10.5M12 21a8.25 8.25 0 100-16.5 8.25 8.25 0 000 16.5z" />

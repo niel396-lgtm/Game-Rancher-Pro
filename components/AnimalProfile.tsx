@@ -38,6 +38,58 @@ const DetailItem: React.FC<{label: string, value: React.ReactNode}> = ({label, v
     </div>
 );
 
+const PedigreeChart: React.FC<{animal: Animal, allAnimals: Animal[]}> = ({ animal, allAnimals }) => {
+    const animalMap = new Map(allAnimals.map(a => [a.id, a]));
+
+    const getParent = (id?: string) => id ? animalMap.get(id) : undefined;
+
+    const sire = getParent(animal.sireId);
+    const dam = getParent(animal.damId);
+
+    const paternalGrandsire = sire ? getParent(sire.sireId) : undefined;
+    const paternalGranddam = sire ? getParent(sire.damId) : undefined;
+
+    const maternalGrandsire = dam ? getParent(dam.sireId) : undefined;
+    const maternalGranddam = dam ? getParent(dam.damId) : undefined;
+
+    const Node: React.FC<{ a?: Animal, role: string, gender: 'male' | 'female' | 'neutral' }> = ({ a, role, gender }) => {
+        const bgColor = gender === 'male' ? 'bg-blue-50' : gender === 'female' ? 'bg-pink-50' : 'bg-gray-100';
+        const borderColor = gender === 'male' ? 'border-blue-200' : gender === 'female' ? 'border-pink-200' : 'border-gray-200';
+        return (
+            <div className={`p-2 rounded-md border ${bgColor} ${borderColor}`}>
+                <p className="text-xs font-semibold text-gray-500">{role}</p>
+                <p className="text-sm font-bold text-brand-dark">{a?.tagId || 'Unknown'}</p>
+                {a && <p className="text-xs text-gray-500">{a.species}</p>}
+            </div>
+        );
+    };
+
+    return (
+        <div className="flex items-center justify-center space-x-4">
+            {/* Generation 3: Grandparents */}
+            <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-2">
+                    <Node a={paternalGrandsire} role="Grandsire" gender="male" />
+                    <Node a={paternalGranddam} role="Granddam" gender="female" />
+                </div>
+                <div className="flex flex-col space-y-2">
+                    <Node a={maternalGrandsire} role="Grandsire" gender="male" />
+                    <Node a={maternalGranddam} role="Granddam" gender="female" />
+                </div>
+            </div>
+            {/* Generation 2: Parents */}
+            <div className="flex flex-col justify-around">
+                <Node a={sire} role="Sire" gender="male" />
+                <Node a={dam} role="Dam" gender="female" />
+            </div>
+            {/* Generation 1: Animal */}
+            <div className="flex items-center">
+                 <Node a={animal} role="Subject" gender="neutral" />
+            </div>
+        </div>
+    );
+};
+
 
 export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, transactions, animals, reproductiveEvents, animalMeasurements, addAnimalMeasurement }) => {
     const animalTransactions = transactions
@@ -109,11 +161,6 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
                     <DetailItem label="Category" value={animal.category} />
                     <DetailItem label="Current Location" value={animal.location} />
                 </div>
-                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 mt-6 border-t">
-                     <h4 className="col-span-full text-sm font-semibold text-gray-500 mb-[-1rem]">Lineage</h4>
-                    <DetailItem label="Dam (Mother)" value={dam ? `${dam.tagId} (${dam.species})` : 'Unknown'} />
-                    <DetailItem label="Sire (Father)" value={sire ? `${sire.tagId} (${sire.species})` : 'Unknown'} />
-                </div>
             </Card>
         </div>
         <div className="lg:col-span-1">
@@ -133,6 +180,11 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
             </Card>
         </div>
       </div>
+       <div className="mt-6">
+            <Card title="Pedigree">
+                <PedigreeChart animal={animal} allAnimals={animals} />
+            </Card>
+       </div>
        <div className="mt-6">
            <Card title="Growth & Quality Metrics">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

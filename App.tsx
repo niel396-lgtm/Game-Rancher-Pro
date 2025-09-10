@@ -11,6 +11,7 @@ import { AIAssistant } from './components/AIAssistant';
 import { RanchMap } from './components/RanchMap';
 import { ClientManagement } from './components/ClientManagement';
 import { PermitManagement } from './components/PermitManagement';
+import { GeneticAnalysis } from './components/GeneticAnalysis';
 import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement } from './types';
 import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS } from './constants';
 
@@ -196,6 +197,12 @@ const App: React.FC = () => {
           logReproductiveEvent={logReproductiveEvent}
           animalMeasurements={animalMeasurements}
           addAnimalMeasurement={addAnimalMeasurement}
+          />;
+      case View.GeneticAnalysis:
+        return <GeneticAnalysis 
+          animals={animals} 
+          reproductiveEvents={reproductiveEvents}
+          animalMeasurements={animalMeasurements}
           />;
       case View.Clients:
         return <ClientManagement clients={clients} addClient={addClient} harvests={harvests} />;
