@@ -1,11 +1,19 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { AIIcon } from './ui/Icons';
-import { Message } from '../types';
+import { Message, Animal, HabitatZone, RainfallLog } from '../types';
 import { getAIResponse } from '../services/geminiService';
+import { RANCH_AREA_HECTARES } from '../constants';
 
-export const AIAssistant: React.FC = () => {
+interface AIAssistantProps {
+    animals: Animal[];
+    habitats: HabitatZone[];
+    rainfallLogs: RainfallLog[];
+}
+
+export const AIAssistant: React.FC<AIAssistantProps> = ({ animals, habitats, rainfallLogs }) => {
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', text: "Hello! How can I help you manage your ranch today? Ask me about animal health, habitat improvement, or feed strategies.", sender: 'ai' }
   ]);
@@ -20,6 +28,55 @@ export const AIAssistant: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  const generateContextualPrompt = (userInput: string): string => {
+    const stocking = animals.reduce((acc, animal) => {
+        if (animal.forageType === 'Grazer') {
+            acc.grazerLSU += animal.lsuEquivalent;
+        } else if (animal.forageType === 'Browser') {
+            acc.browserLSU += animal.lsuEquivalent;
+        } else if (animal.forageType === 'Mixed-Feeder') {
+            acc.grazerLSU += animal.lsuEquivalent * 0.5;
+            acc.browserLSU += animal.lsuEquivalent * 0.5;
+        }
+        return acc;
+    }, { grazerLSU: 0, browserLSU: 0 });
+
+    const habitatSummary = habitats.map(h => `${h.name} (Veld Condition: ${h.veldCondition})`).join(', ');
+
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    const recentRainfall = rainfallLogs
+        .filter(log => new Date(log.date + 'T00:00:00') >= threeMonthsAgo)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const monthlyRainfall: Record<string, number> = recentRainfall.reduce((acc, log) => {
+        const month = new Date(log.date + 'T00:00:00').toLocaleString('default', { month: 'long' });
+        acc[month] = (acc[month] || 0) + log.amount;
+        return acc;
+    }, {});
+    
+    const rainfallSummary = Object.entries(monthlyRainfall)
+        .map(([month, total]) => `${month}: ${Math.round(total)}mm`)
+        .join(', ');
+
+    const activeIssues = habitats
+        .flatMap(h => h.issues.map(issue => `${issue} (in ${h.name})`))
+        .join('; ');
+
+    const ranchContext = `
+Current Ranch Context:
+- Total Hectares: ${RANCH_AREA_HECTARES} ha
+- Habitat Zones: ${habitatSummary || 'N/A'}
+- Current Animal Stocking: ${stocking.grazerLSU.toFixed(1)} LSU Grazers, ${stocking.browserLSU.toFixed(1)} LSU Browsers.
+- Recent Rainfall (last 3 months): ${rainfallSummary || 'No recent data'}
+- Active Issues: ${activeIssues || 'None'}
+`;
+
+    return `${ranchContext}\nUser's Question: ${userInput}`;
+  };
+
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,10 +84,12 @@ export const AIAssistant: React.FC = () => {
 
     const userMessage: Message = { id: Date.now().toString(), text: input, sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
+    
+    const fullPrompt = generateContextualPrompt(input);
     setInput('');
     setIsLoading(true);
 
-    const aiResponseText = await getAIResponse(input);
+    const aiResponseText = await getAIResponse(fullPrompt);
     
     const aiMessage: Message = { id: (Date.now() + 1).toString(), text: aiResponseText, sender: 'ai' };
     setMessages(prev => [...prev, aiMessage]);

@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -222,7 +223,11 @@ const App: React.FC = () => {
           permits={permits}
           />;
       case View.AIAssistant:
-        return <AIAssistant />;
+        return <AIAssistant 
+            animals={animals}
+            habitats={habitats}
+            rainfallLogs={rainfallLogs}
+        />;
       case View.RanchMap:
         return <RanchMap landmarks={landmarks} boundaries={boundaries} animals={animals} addLandmark={addLandmark} addBoundary={addBoundary} removeFeature={removeMapFeature} />;
       default:
