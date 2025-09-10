@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Animal, Transaction, TransactionType } from '../types';
+import { Animal, Transaction, TransactionType, ReproductiveEvent } from '../types';
 import { Card } from './ui/Card';
 import { StarIcon } from './ui/Icons';
 
@@ -8,6 +8,8 @@ interface AnimalProfileProps {
   animal: Animal;
   onBack: () => void;
   transactions: Transaction[];
+  animals: Animal[];
+  reproductiveEvents: ReproductiveEvent[];
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -35,10 +37,16 @@ const DetailItem: React.FC<{label: string, value: React.ReactNode}> = ({label, v
 );
 
 
-export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, transactions }) => {
+export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, transactions, animals, reproductiveEvents }) => {
     const animalTransactions = transactions
         .filter(t => t.linkedAnimalId === animal.id)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+    const sire = animals.find(a => a.id === animal.sireId);
+    const dam = animals.find(a => a.id === animal.damId);
+
+    const offspringEvents = reproductiveEvents.filter(e => e.damTagId === animal.tagId || e.sireTagId === animal.tagId)
+        .sort((a, b) => new Date(b.birthDate).getTime() - new Date(a.birthDate).getTime());
 
   return (
     <div>
@@ -55,60 +63,95 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card title="Primary Details" className="md:col-span-2">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                <DetailItem label="Age" value={`${animal.age} years`} />
-                <DetailItem label="Sex" value={animal.sex} />
-                <DetailItem label="Current Location" value={animal.location} />
-            </div>
-        </Card>
-        <Card title="Health & Condition">
-            <div className="space-y-4">
-                 <div>
-                    <p className="text-sm text-gray-500">Health Status</p>
-                    <span className={`px-3 py-1 inline-flex text-base leading-5 font-semibold rounded-full ${getHealthColor(animal.health)}`}>
-                        {animal.health}
-                      </span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+            <Card title="Primary Details">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    <DetailItem label="Age" value={`${animal.age} years`} />
+                    <DetailItem label="Sex" value={animal.sex} />
+                    <DetailItem label="Current Location" value={animal.location} />
                 </div>
-                 <div>
-                    <p className="text-sm text-gray-500">Condition Score</p>
-                    <ConditionScore score={animal.conditionScore} />
+                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 mt-6 border-t">
+                     <h4 className="col-span-full text-sm font-semibold text-gray-500 mb-[-1rem]">Lineage</h4>
+                    <DetailItem label="Dam (Mother)" value={dam ? `${dam.tagId} (${dam.species})` : 'Unknown'} />
+                    <DetailItem label="Sire (Father)" value={sire ? `${sire.tagId} (${sire.species})` : 'Unknown'} />
                 </div>
-            </div>
-        </Card>
+            </Card>
+        </div>
+        <div className="lg:col-span-1">
+            <Card title="Health & Condition">
+                <div className="space-y-4">
+                     <div>
+                        <p className="text-sm text-gray-500">Health Status</p>
+                        <span className={`px-3 py-1 inline-flex text-base leading-5 font-semibold rounded-full ${getHealthColor(animal.health)}`}>
+                            {animal.health}
+                          </span>
+                    </div>
+                     <div>
+                        <p className="text-sm text-gray-500">Condition Score</p>
+                        <ConditionScore score={animal.conditionScore} />
+                    </div>
+                </div>
+            </Card>
+        </div>
       </div>
-
-       <Card title="Financial History" className="mt-6">
-            {animalTransactions.length > 0 ? (
-              <div className="overflow-x-auto max-h-96">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {animalTransactions.map((t) => (
-                      <tr key={t.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{t.description}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.category}</td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${t.type === TransactionType.Income ? 'text-green-600' : 'text-red-600'}`}>
-                          {t.type === TransactionType.Income ? '+' : '-'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-gray-500">No financial history recorded for this animal.</p>
-            )}
-          </Card>
+      
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <Card title="Reproductive History">
+                {offspringEvents.length > 0 ? (
+                  <div className="overflow-x-auto max-h-96">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Birth Date</th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offspring Tag</th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sex</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {offspringEvents.map((event) => (
+                          <tr key={event.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{event.birthDate}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{event.offspringTagId}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{event.sex}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No reproductive history recorded for this animal.</p>
+                )}
+            </Card>
+           <Card title="Financial History">
+                {animalTransactions.length > 0 ? (
+                  <div className="overflow-x-auto max-h-96">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {animalTransactions.map((t) => (
+                          <tr key={t.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{t.description}</td>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${t.type === TransactionType.Income ? 'text-green-600' : 'text-red-600'}`}>
+                              {t.type === TransactionType.Income ? '+' : '-'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No financial history recorded for this animal.</p>
+                )}
+            </Card>
+       </div>
 
     </div>
   );

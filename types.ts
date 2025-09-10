@@ -32,6 +32,8 @@ export interface Animal {
   tagId: string;
   forageType: 'Grazer' | 'Browser' | 'Mixed-Feeder';
   lsuEquivalent: number; // e.g., Kudu = 0.7, Impala = 0.25
+  sireId?: string; // ID of the father for genetic tracking
+  damId?: string;  // ID of the mother for genetic tracking
 }
 
 export interface HabitatZone {
@@ -134,6 +136,16 @@ export interface VeldAssessment {
   basalCover: number; // Score out of 10
   soilErosion: number; // Score out of 5
   condition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  notes?: string;
+}
+
+export interface ReproductiveEvent {
+  id: string;
+  offspringTagId: string;
+  damTagId: string;
+  sireTagId?: string;
+  birthDate: string;
+  sex: 'Male' | 'Female';
   notes?: string;
 }
 

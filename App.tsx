@@ -10,8 +10,8 @@ import { AIAssistant } from './components/AIAssistant';
 import { RanchMap } from './components/RanchMap';
 import { ClientManagement } from './components/ClientManagement';
 import { PermitManagement } from './components/PermitManagement';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS } from './constants';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const [veldAssessments, setVeldAssessments] = useState<VeldAssessment[]>(INITIAL_VELD_ASSESSMENTS);
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
   const [permits, setPermits] = useState<Permit[]>(INITIAL_PERMITS);
+  const [reproductiveEvents, setReproductiveEvents] = useState<ReproductiveEvent[]>(INITIAL_REPRODUCTIVE_EVENTS);
 
 
   const addAnimal = (animal: Omit<Animal, 'id'>) => {
@@ -148,6 +149,11 @@ const App: React.FC = () => {
     setTransactions(prev => [newTransaction, ...prev]);
   };
 
+  const logReproductiveEvent = (eventData: Omit<ReproductiveEvent, 'id'>) => {
+    const newEvent: ReproductiveEvent = { ...eventData, id: `RE${Date.now()}` };
+    setReproductiveEvents(prev => [newEvent, ...prev].sort((a, b) => new Date(b.birthDate).getTime() - new Date(a.birthDate).getTime()));
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -178,6 +184,8 @@ const App: React.FC = () => {
           transactions={transactions}
           clients={clients}
           permits={permits}
+          reproductiveEvents={reproductiveEvents}
+          logReproductiveEvent={logReproductiveEvent}
           />;
       case View.Clients:
         return <ClientManagement clients={clients} addClient={addClient} harvests={harvests} />;

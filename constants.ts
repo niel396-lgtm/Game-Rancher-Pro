@@ -1,4 +1,4 @@
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 
@@ -33,8 +33,9 @@ export const INITIAL_ANIMALS: Animal[] = [
   { id: 'A004', species: 'Warthog', age: 2, sex: 'Female', health: 'Good', conditionScore: 4, location: 'Oak Forest', tagId: 'WHG-21', forageType: 'Mixed-Feeder', lsuEquivalent: 0.2 },
   { id: 'A005', species: 'Blesbok', age: 4, sex: 'Male', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'BLK-11', forageType: 'Grazer', lsuEquivalent: 0.4 },
   { id: 'A006', species: 'Kudu', age: 7, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'West Ridge', tagId: 'KDU-08', forageType: 'Browser', lsuEquivalent: 0.7 },
-  { id: 'A007', species: 'Impala', age: 4, sex: 'Female', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'IMP-02', forageType: 'Mixed-Feeder', lsuEquivalent: 0.25 },
+  { id: 'A007', species: 'Impala', age: 4, sex: 'Female', health: 'Good', conditionScore: 4, location: 'North Pasture', tagId: 'IMP-02', forageType: 'Mixed-Feeder', lsuEquivalent: 0.25, damId: 'A001', sireId: 'A009' },
   { id: 'A008', species: 'Sable Antelope', age: 5, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'South Plains', tagId: 'SBL-01', forageType: 'Grazer', lsuEquivalent: 0.7 },
+  { id: 'A009', species: 'Impala', age: 5, sex: 'Male', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-M1', forageType: 'Mixed-Feeder', lsuEquivalent: 0.3 },
 ];
 
 export const INITIAL_HABITAT_ZONES: HabitatZone[] = [
@@ -90,6 +91,10 @@ export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
 export const INITIAL_VELD_ASSESSMENTS: VeldAssessment[] = [
     { id: 'VA01', habitatZoneId: 'H04', date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], speciesComposition: 8, basalCover: 7, soilErosion: 2, condition: 'Good', notes: 'Post-rain recovery looks good.'},
     { id: 'VA02', habitatZoneId: 'H04', date: new Date().toISOString().split('T')[0], speciesComposition: 6, basalCover: 5, soilErosion: 3, condition: 'Fair', notes: 'Showing signs of grazing pressure.'},
+];
+
+export const INITIAL_REPRODUCTIVE_EVENTS: ReproductiveEvent[] = [
+    { id: 'RE001', offspringTagId: 'IMP-02', damTagId: 'IMP-01', sireTagId: 'IMP-M1', birthDate: getPastDate(1460), sex: 'Female', notes: 'Healthy birth, normal weight.' }
 ];
 
 

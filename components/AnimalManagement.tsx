@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit } from '../types';
+import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent } from '../types';
 import { PlusIcon, TrashIcon, StarIcon, ExportIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { AnimalProfile } from './AnimalProfile';
@@ -19,6 +19,8 @@ interface AnimalManagementProps {
   transactions: Transaction[];
   clients: Client[];
   permits: Permit[];
+  reproductiveEvents: ReproductiveEvent[];
+  logReproductiveEvent: (event: Omit<ReproductiveEvent, 'id'>) => void;
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -75,8 +77,8 @@ const exportToCsv = (filename: string, rows: object[]) => {
 };
 
 
-export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits }) => {
-  const [activeTab, setActiveTab] = useState<'active' | 'mortality' | 'harvest'>('active');
+export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits, reproductiveEvents, logReproductiveEvent }) => {
+  const [activeTab, setActiveTab] = useState<'active' | 'mortality' | 'harvest' | 'reproduction'>('active');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [animalToRemove, setAnimalToRemove] = useState<Animal | null>(null);
   const [isLogMortalityOpen, setIsLogMortalityOpen] = useState(false);
@@ -84,25 +86,21 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
   const [harvestData, setHarvestData] = useState({ 
-    hunter: '', 
-    method: 'Rifle', 
-    trophyMeasurements: '',
-    hornLengthL: '',
-    hornLengthR: '',
-    tipToTipSpread: '',
-    clientId: '',
-    permitId: '',
-    photoUrl: '',
+    hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', clientId: '', permitId: '', photoUrl: '',
   });
+
+  const [isLogBirthOpen, setIsLogBirthOpen] = useState(false);
+  const initialBirthState = {
+      damId: '', sireId: '', offspringTagId: '', birthDate: new Date().toISOString().split('T')[0], sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, notes: ''
+  };
+  const [newBirth, setNewBirth] = useState(initialBirthState);
 
   const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
 
-  // FIX: Added missing properties `forageType` and `lsuEquivalent` to initial state to match the `Animal` type.
   const [newAnimal, setNewAnimal] = useState({
-      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], lsuEquivalent: 0.5
+      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], lsuEquivalent: 0.5, sireId: '', damId: ''
   });
 
-  // FIX: Updated input handler to parse `lsuEquivalent` as a float and made integer parsing more robust.
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
       setNewAnimal(prev => ({ ...prev, [name]: name === 'age' || name === 'conditionScore' ? parseInt(value, 10) || 0 : (name === 'lsuEquivalent' ? parseFloat(value) || 0 : value) }));
@@ -119,10 +117,13 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
           alert('Please fill all required fields');
           return;
       }
-      addAnimal(newAnimal);
+      const finalAnimal: Omit<Animal, 'id'> = {...newAnimal};
+      if (!finalAnimal.sireId) delete finalAnimal.sireId;
+      if (!finalAnimal.damId) delete finalAnimal.damId;
+      
+      addAnimal(finalAnimal);
       setIsAddModalOpen(false);
-      // FIX: Included `forageType` and `lsuEquivalent` in the state reset object.
-      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder', lsuEquivalent: 0.5 });
+      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder', lsuEquivalent: 0.5, sireId: '', damId: '' });
   };
   
   const handleOpenRemoveConfirmation = (animal: Animal) => {
@@ -183,26 +184,56 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
             const clientName = h.clientId ? clients.find(c => c.id === h.clientId)?.name : 'N/A';
             const permitNumber = h.permitId ? permits.find(p => p.id === h.permitId)?.permitNumber : 'N/A';
             return {
-                'Date': h.date,
-                'Tag ID': h.animalTagId,
-                'Species': h.species,
-                'Hunter': h.hunter,
-                'Client': clientName,
-                'Permit #': permitNumber,
-                'Method': h.method,
-                'Trophy Measurements': h.trophyMeasurements,
-                'Location': h.location,
-                'Left Horn (in)': h.hornLengthL ?? '',
-                'Right Horn (in)': h.hornLengthR ?? '',
-                'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '',
-                'Photo URL': h.photoUrl ?? '',
+                'Date': h.date, 'Tag ID': h.animalTagId, 'Species': h.species, 'Hunter': h.hunter, 'Client': clientName, 'Permit #': permitNumber, 'Method': h.method, 'Trophy Measurements': h.trophyMeasurements, 'Location': h.location, 'Left Horn (in)': h.hornLengthL ?? '', 'Right Horn (in)': h.hornLengthR ?? '', 'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '', 'Photo URL': h.photoUrl ?? '',
             };
         });
         exportToCsv('harvest_log_export.csv', dataToExport);
     }
   };
+  
+  const handleBirthInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewBirth(prev => ({ ...prev, [name]: name === 'conditionScore' ? parseInt(value, 10) : value }));
+  };
 
-  const TabButton: React.FC<{label:string; view: 'active' | 'mortality' | 'harvest'}> = ({label, view}) => (
+  const handleLogBirthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const dam = animals.find(a => a.id === newBirth.damId);
+    if (!dam || !newBirth.offspringTagId) {
+      alert("A valid Dam and Offspring Tag ID are required.");
+      return;
+    }
+
+    const newAnimalForAdd: Omit<Animal, 'id'> = {
+        tagId: newBirth.offspringTagId,
+        species: dam.species,
+        age: 0,
+        sex: newBirth.sex,
+        health: newBirth.health,
+        conditionScore: newBirth.conditionScore,
+        location: dam.location,
+        forageType: dam.forageType,
+        lsuEquivalent: dam.lsuEquivalent,
+        damId: dam.id,
+        sireId: newBirth.sireId || undefined
+    };
+    addAnimal(newAnimalForAdd);
+
+    const newReproEvent: Omit<ReproductiveEvent, 'id'> = {
+        offspringTagId: newBirth.offspringTagId,
+        damTagId: dam.tagId,
+        sireTagId: animals.find(a => a.id === newBirth.sireId)?.tagId,
+        birthDate: newBirth.birthDate,
+        sex: newBirth.sex,
+        notes: newBirth.notes,
+    };
+    logReproductiveEvent(newReproEvent);
+    
+    setIsLogBirthOpen(false);
+    setNewBirth(initialBirthState);
+  };
+
+  const TabButton: React.FC<{label:string; view: 'active' | 'mortality' | 'harvest' | 'reproduction'}> = ({label, view}) => (
       <button 
         onClick={() => setActiveTab(view)}
         className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === view ? 'bg-white border-b-0 border-t border-x text-brand-primary' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
@@ -212,7 +243,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   );
 
   if (viewingProfile) {
-    return <AnimalProfile animal={viewingProfile} onBack={() => setViewingProfile(null)} transactions={transactions} />;
+    return <AnimalProfile animal={viewingProfile} onBack={() => setViewingProfile(null)} transactions={transactions} animals={animals} reproductiveEvents={reproductiveEvents} />;
   }
 
   return (
@@ -221,26 +252,26 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
         <h2 className="text-3xl font-bold text-brand-dark">Animal Management</h2>
         <div className="flex items-center gap-4">
             {(activeTab === 'active' || activeTab === 'harvest') && (
-                <button
-                    onClick={handleExport}
-                    className="flex items-center px-4 py-2 bg-brand-secondary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
-                >
-                    <ExportIcon className="w-5 h-5 mr-2" />
-                    Export CSV
+                <button onClick={handleExport} className="flex items-center px-4 py-2 bg-brand-secondary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow">
+                    <ExportIcon className="w-5 h-5 mr-2" /> Export CSV
                 </button>
             )}
-            <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow"
-            >
-                <PlusIcon className="w-5 h-5 mr-2" />
-                Add Animal
-            </button>
+            {activeTab === 'reproduction' && (
+                 <button onClick={() => setIsLogBirthOpen(true)} className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow">
+                    <PlusIcon className="w-5 h-5 mr-2" /> Log Birth Event
+                </button>
+            )}
+             {activeTab === 'active' && (
+                <button onClick={() => setIsAddModalOpen(true)} className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors shadow">
+                    <PlusIcon className="w-5 h-5 mr-2" /> Add Animal
+                </button>
+             )}
         </div>
       </div>
 
       <div className="-mb-px flex">
           <TabButton label="Active Herd" view="active" />
+          <TabButton label="Reproduction" view="reproduction" />
           <TabButton label="Mortality Register" view="mortality" />
           <TabButton label="Harvest Log" view="harvest" />
       </div>
@@ -282,6 +313,31 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                         <TrashIcon className="w-5 h-5"/>
                       </button>
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : activeTab === 'reproduction' ? (
+             <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Birth Date</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offspring Tag ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sex</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dam Tag ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sire Tag ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {reproductiveEvents.map((event) => (
+                  <tr key={event.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{event.birthDate}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{event.offspringTagId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{event.sex}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{event.damTagId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{event.sireTagId || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{event.notes}</td>
                   </tr>
                 ))}
               </tbody>
@@ -352,31 +408,30 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
         </div>
       </Card>
       
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Animal">
+      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Animal (Acquisition)">
           <form onSubmit={handleAddAnimal} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="tagId" className="block text-sm font-medium text-gray-700">Tag ID</label>
-                  <input type="text" name="tagId" id="tagId" value={newAnimal.tagId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" required />
+                  <input type="text" name="tagId" id="tagId" value={newAnimal.tagId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
                 </div>
                 <div>
                   <label htmlFor="species" className="block text-sm font-medium text-gray-700">Species</label>
-                  <input type="text" name="species" id="species" value={newAnimal.species} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" required />
+                  <input type="text" name="species" id="species" value={newAnimal.species} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
                 </div>
                 <div>
                   <label htmlFor="age" className="block text-sm font-medium text-gray-700">Age</label>
-                  <input type="number" name="age" id="age" value={newAnimal.age} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" required />
+                  <input type="number" name="age" id="age" value={newAnimal.age} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
                 </div>
                 <div>
                   <label htmlFor="sex" className="block text-sm font-medium text-gray-700">Sex</label>
-                  <select name="sex" id="sex" value={newAnimal.sex} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
-                      <option>Female</option>
-                      <option>Male</option>
+                  <select name="sex" id="sex" value={newAnimal.sex} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                      <option>Female</option> <option>Male</option>
                   </select>
                 </div>
                  <div>
                   <label htmlFor="health" className="block text-sm font-medium text-gray-700">Health Status</label>
-                  <select name="health" id="health" value={newAnimal.health} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
+                  <select name="health" id="health" value={newAnimal.health} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                       <option>Excellent</option><option>Good</option><option>Fair</option><option>Poor</option>
                   </select>
                 </div>
@@ -384,29 +439,99 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   <label htmlFor="conditionScore" className="block text-sm font-medium text-gray-700">Condition Score (1-5)</label>
                   <input type="range" min="1" max="5" name="conditionScore" id="conditionScore" value={newAnimal.conditionScore} onChange={handleInputChange} className="mt-1 block w-full" />
                 </div>
-                {/* FIX: Added form fields for `forageType` and `lsuEquivalent` to be included when adding a new animal. */}
                 <div>
                   <label htmlFor="forageType" className="block text-sm font-medium text-gray-700">Forage Type</label>
-                  <select name="forageType" id="forageType" value={newAnimal.forageType} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
-                      <option>Mixed-Feeder</option>
-                      <option>Grazer</option>
-                      <option>Browser</option>
+                  <select name="forageType" id="forageType" value={newAnimal.forageType} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                      <option>Mixed-Feeder</option> <option>Grazer</option> <option>Browser</option>
                   </select>
                 </div>
                 <div>
                   <label htmlFor="lsuEquivalent" className="block text-sm font-medium text-gray-700">LSU Equivalent</label>
-                  <input type="number" step="0.01" name="lsuEquivalent" id="lsuEquivalent" value={newAnimal.lsuEquivalent} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" required />
+                  <input type="number" step="0.01" name="lsuEquivalent" id="lsuEquivalent" value={newAnimal.lsuEquivalent} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
                 </div>
                 <div className="md:col-span-2">
                    <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
-                   <select name="location" id="location" value={newAnimal.location} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
+                   <select name="location" id="location" value={newAnimal.location} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                        {habitats.map(h => <option key={h.id}>{h.name}</option>)}
                    </select>
+                </div>
+                <div className="md:col-span-2 pt-2 border-t">
+                  <h4 className="text-sm font-medium text-gray-500">Known Lineage (Optional)</h4>
+                </div>
+                <div>
+                  <label htmlFor="damId" className="block text-sm font-medium text-gray-700">Dam (Mother)</label>
+                  <select name="damId" id="damId" value={newAnimal.damId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                      <option value="">Unknown</option>
+                      {animals.filter(a => a.sex === 'Female').map(a => <option key={a.id} value={a.id}>{a.tagId} ({a.species})</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="sireId" className="block text-sm font-medium text-gray-700">Sire (Father)</label>
+                  <select name="sireId" id="sireId" value={newAnimal.sireId} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                      <option value="">Unknown</option>
+                      {animals.filter(a => a.sex === 'Male').map(a => <option key={a.id} value={a.id}>{a.tagId} ({a.species})</option>)}
+                  </select>
                 </div>
               </div>
               <div className="flex justify-end gap-4 mt-6">
                   <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
                   <button type="submit" className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Add Animal</button>
+              </div>
+          </form>
+      </Modal>
+
+      <Modal isOpen={isLogBirthOpen} onClose={() => setIsLogBirthOpen(false)} title="Log New Birth Event">
+          <form onSubmit={handleLogBirthSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                      <label htmlFor="damId" className="block text-sm font-medium text-gray-700">Dam (Mother)</label>
+                      <select name="damId" id="damId" value={newBirth.damId} onChange={handleBirthInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required>
+                          <option value="">Select Dam...</option>
+                          {animals.filter(a => a.sex === 'Female').map(a => <option key={a.id} value={a.id}>{a.tagId} ({a.species})</option>)}
+                      </select>
+                  </div>
+                   <div>
+                      <label htmlFor="sireId" className="block text-sm font-medium text-gray-700">Sire (Father)</label>
+                      <select name="sireId" id="sireId" value={newBirth.sireId} onChange={handleBirthInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                          <option value="">Unknown / Multiple</option>
+                          {animals.filter(a => a.sex === 'Male').map(a => <option key={a.id} value={a.id}>{a.tagId} ({a.species})</option>)}
+                      </select>
+                  </div>
+              </div>
+              <h4 className="text-md font-semibold text-gray-600 pt-4 border-t">Offspring Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                      <label htmlFor="offspringTagId" className="block text-sm font-medium text-gray-700">Offspring Tag ID</label>
+                      <input type="text" name="offspringTagId" id="offspringTagId" value={newBirth.offspringTagId} onChange={handleBirthInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                  </div>
+                  <div>
+                      <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Birth Date</label>
+                      <input type="date" name="birthDate" id="birthDate" value={newBirth.birthDate} onChange={handleBirthInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                  </div>
+                  <div>
+                      <label htmlFor="sex" className="block text-sm font-medium text-gray-700">Sex</label>
+                      <select name="sex" id="sex" value={newBirth.sex} onChange={handleBirthInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                          <option>Female</option><option>Male</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label htmlFor="health" className="block text-sm font-medium text-gray-700">Initial Health</label>
+                      <select name="health" id="health" value={newBirth.health} onChange={handleBirthInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                          <option>Excellent</option><option>Good</option><option>Fair</option><option>Poor</option>
+                      </select>
+                  </div>
+                   <div className="md:col-span-2">
+                      <label htmlFor="conditionScore" className="block text-sm font-medium text-gray-700">Initial Condition ({newBirth.conditionScore}/5)</label>
+                      <input type="range" min="1" max="5" name="conditionScore" id="conditionScore" value={newBirth.conditionScore} onChange={handleBirthInputChange} className="mt-1 block w-full" />
+                  </div>
+                   <div className="md:col-span-2">
+                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
+                      <textarea name="notes" id="notes" value={newBirth.notes} onChange={handleBirthInputChange} rows={2} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                  </div>
+              </div>
+               <div className="flex justify-end gap-4 mt-6">
+                  <button type="button" onClick={() => setIsLogBirthOpen(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Log Birth</button>
               </div>
           </form>
       </Modal>
@@ -424,15 +549,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       <Modal isOpen={isLogMortalityOpen} onClose={handleCloseRemoveModals} title={`Log Mortality for ${animalToRemove?.tagId}`}>
           <div>
               <label htmlFor="causeOfDeath" className="block text-sm font-medium text-gray-700">Cause of Death</label>
-              <input 
-                type="text" 
-                name="causeOfDeath" 
-                id="causeOfDeath" 
-                value={causeOfDeath} 
-                onChange={(e) => setCauseOfDeath(e.target.value)} 
-                placeholder="e.g., Predation, Disease, Old Age"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" 
-              />
+              <input type="text" name="causeOfDeath" id="causeOfDeath" value={causeOfDeath} onChange={(e) => setCauseOfDeath(e.target.value)} placeholder="e.g., Predation, Disease, Old Age" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
           </div>
           <div className="flex justify-end gap-4 mt-6">
               <button type="button" onClick={handleCloseRemoveModals} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
@@ -465,10 +582,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                <div>
                   <label htmlFor="method" className="block text-sm font-medium text-gray-700">Method</label>
                   <select name="method" id="method" value={harvestData.method} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-                      <option>Rifle</option>
-                      <option>Bow</option>
-                      <option>Crossbow</option>
-                      <option>Other</option>
+                      <option>Rifle</option> <option>Bow</option> <option>Crossbow</option> <option>Other</option>
                   </select>
               </div>
               <div>
