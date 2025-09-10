@@ -30,6 +30,8 @@ export interface Animal {
   conditionScore: number; // 1-5 scale
   location: string;
   tagId: string;
+  forageType: 'Grazer' | 'Browser' | 'Mixed-Feeder';
+  lsuEquivalent: number; // e.g., Kudu = 0.7, Impala = 0.25
 }
 
 export interface HabitatZone {
@@ -40,6 +42,9 @@ export interface HabitatZone {
   veldCondition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
   issues: string[];
   carryingCapacity: number; // Max animals
+  areaHectares: number;
+  grazerLSUPer100ha: number; // Recommended stocking rate for grazers
+  browserLSUPer100ha: number; // Recommended stocking rate for browsers
 }
 
 export interface InventoryItem {

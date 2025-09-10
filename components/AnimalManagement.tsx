@@ -97,13 +97,15 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
 
   const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
 
+  // FIX: Added missing properties `forageType` and `lsuEquivalent` to initial state to match the `Animal` type.
   const [newAnimal, setNewAnimal] = useState({
-      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || ''
+      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], lsuEquivalent: 0.5
   });
 
+  // FIX: Updated input handler to parse `lsuEquivalent` as a float and made integer parsing more robust.
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
-      setNewAnimal(prev => ({ ...prev, [name]: name === 'age' || name === 'conditionScore' ? parseInt(value, 10) : value }));
+      setNewAnimal(prev => ({ ...prev, [name]: name === 'age' || name === 'conditionScore' ? parseInt(value, 10) || 0 : (name === 'lsuEquivalent' ? parseFloat(value) || 0 : value) }));
   };
   
   const handleHarvestInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -119,7 +121,8 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       }
       addAnimal(newAnimal);
       setIsAddModalOpen(false);
-      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '' });
+      // FIX: Included `forageType` and `lsuEquivalent` in the state reset object.
+      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder', lsuEquivalent: 0.5 });
   };
   
   const handleOpenRemoveConfirmation = (animal: Animal) => {
@@ -380,6 +383,19 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                  <div>
                   <label htmlFor="conditionScore" className="block text-sm font-medium text-gray-700">Condition Score (1-5)</label>
                   <input type="range" min="1" max="5" name="conditionScore" id="conditionScore" value={newAnimal.conditionScore} onChange={handleInputChange} className="mt-1 block w-full" />
+                </div>
+                {/* FIX: Added form fields for `forageType` and `lsuEquivalent` to be included when adding a new animal. */}
+                <div>
+                  <label htmlFor="forageType" className="block text-sm font-medium text-gray-700">Forage Type</label>
+                  <select name="forageType" id="forageType" value={newAnimal.forageType} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
+                      <option>Mixed-Feeder</option>
+                      <option>Grazer</option>
+                      <option>Browser</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="lsuEquivalent" className="block text-sm font-medium text-gray-700">LSU Equivalent</label>
+                  <input type="number" step="0.01" name="lsuEquivalent" id="lsuEquivalent" value={newAnimal.lsuEquivalent} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" required />
                 </div>
                 <div className="md:col-span-2">
                    <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
