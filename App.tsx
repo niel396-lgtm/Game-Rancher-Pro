@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -18,6 +19,7 @@ import { HuntRegister } from './components/HuntRegister';
 import { VeterinaryLog as VeterinaryLogView } from './components/VeterinaryLog';
 import { BioeconomicsReport } from './components/BioeconomicsReport';
 import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol } from './types';
+// FIX: Added missing imports for initial data from constants.ts
 import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {

@@ -153,22 +153,25 @@ export interface Harvest {
   date: string;
   professionalHunterId: string;
   clientId?: string;
-  method: string;
+  method: 'Rifle' | 'Bow' | 'Crossbow' | 'Muzzleloader' | 'Handgun';
   trophyMeasurements: string; // e.g., SCI Score, Rowland Ward
-  location: string;
+  location: string; // Habitat Zone
+  locality: string; // Specific locality of harvest on the ranch
   coordinates?: Coords;
   hornLengthL?: number; // Optional: Left Horn Length in inches
   hornLengthR?: number; // Optional: Right Horn Length in inches
   baseCircumferenceL?: number; // Optional: Left Base Circumference
   baseCircumferenceR?: number; // Optional: Right Base Circumference
   tipToTipSpread?: number; // Optional: Spread measurement
-  photoUrl?: string;
+  photoUrl?: string; // Field photo
   huntId?: string;
   farmName: string;
   farmOwner: string;
   clientSignature?: string; // URL to scanned signature
   phSignature?: string; // URL to scanned signature
   witness?: string;
+  sciMeasurerId?: string; // Official SCI Measurer Number
+  dateMeasured?: string;
 }
 
 export interface RainfallLog {
