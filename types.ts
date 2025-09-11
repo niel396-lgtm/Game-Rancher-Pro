@@ -230,10 +230,16 @@ export interface VeterinaryLog {
     date: string;
     animalId?: string; // For individual treatments
     species?: string; // For herd treatments
-    procedure: 'Vaccination' | 'Deworming' | 'Disease Testing' | 'Treatment' | 'Check-up';
+    procedure: 'Vaccination' | 'Deworming' | 'Disease Testing' | 'Treatment' | 'Check-up' | 'Immobilization' | 'Translocation';
+    diagnosis?: string; // e.g., 'Suspected Heartwater'
+    clinicalSigns?: string; // e.g., 'Lethargy, fever'
+    labTest?: string; // e.g., 'Blood Smear', 'PCR'
+    testResult?: 'Positive' | 'Negative' | 'Pending';
     medicationUsed?: string;
     dosage?: string;
+    drugWithdrawalPeriod?: string; // e.g., '21 days'
     vetName?: string;
+    vetPracticeNumber?: string; // Essential for official records
     notes?: string;
 }
 
