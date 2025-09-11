@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -16,8 +15,10 @@ import { PopulationSurveys } from './components/PopulationSurveys';
 import { AnnualReport } from './components/AnnualReport';
 import { PHManagement } from './components/PHManagement';
 import { HuntRegister } from './components/HuntRegister';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS } from './constants';
+import { VeterinaryLog as VeterinaryLogView } from './components/VeterinaryLog';
+import { BioeconomicsReport } from './components/BioeconomicsReport';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -50,6 +51,8 @@ const App: React.FC = () => {
   const [populationSurveys, setPopulationSurveys] = useState<PopulationSurvey[]>(INITIAL_POPULATION_SURVEYS);
   const [professionalHunters, setProfessionalHunters] = useState<ProfessionalHunter[]>(INITIAL_PROFESSIONAL_HUNTERS);
   const [hunts, setHunts] = useState<Hunt[]>(INITIAL_HUNTS);
+  const [veterinaryLogs, setVeterinaryLogs] = useState<VeterinaryLog[]>(INITIAL_VETERINARY_LOGS);
+  const [healthProtocols, setHealthProtocols] = useState<HealthProtocol[]>(INITIAL_HEALTH_PROTOCOLS);
 
   const handleManagementStyleChange = (style: ManagementStyle) => {
     setManagementStyle(style);
@@ -192,6 +195,16 @@ const App: React.FC = () => {
   const updateHunt = (updatedHunt: Hunt) => {
       setHunts(prev => prev.map(h => h.id === updatedHunt.id ? updatedHunt : h));
   };
+  
+  const addVeterinaryLog = (log: Omit<VeterinaryLog, 'id'>) => {
+    const newLog = { ...log, id: `VL${Date.now()}` };
+    setVeterinaryLogs(prev => [newLog, ...prev].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  };
+
+  const addHealthProtocol = (protocol: Omit<HealthProtocol, 'id'>) => {
+    const newProtocol = { ...protocol, id: `HP${Date.now()}` };
+    setHealthProtocols(prev => [...prev, newProtocol]);
+  };
 
   const renderView = () => {
     switch (currentView) {
@@ -212,6 +225,8 @@ const App: React.FC = () => {
           animalMeasurements={animalMeasurements}
           populationSurveys={populationSurveys}
           veldAssessments={veldAssessments}
+          healthProtocols={healthProtocols}
+          veterinaryLogs={veterinaryLogs}
           />;
       case View.Animals:
         return <AnimalManagement 
@@ -231,6 +246,14 @@ const App: React.FC = () => {
           animalMeasurements={animalMeasurements}
           addAnimalMeasurement={addAnimalMeasurement}
           professionalHunters={professionalHunters}
+          />;
+      case View.VeterinaryLog:
+        return <VeterinaryLogView
+            veterinaryLogs={veterinaryLogs}
+            addVeterinaryLog={addVeterinaryLog}
+            healthProtocols={healthProtocols}
+            addHealthProtocol={addHealthProtocol}
+            animals={animals}
           />;
       case View.PopulationSurveys:
         return <PopulationSurveys
@@ -289,6 +312,12 @@ const App: React.FC = () => {
           clients={clients}
           permits={permits}
           />;
+       case View.BioeconomicsReport:
+        return <BioeconomicsReport
+          transactions={transactions}
+          populationSurveys={populationSurveys}
+          animals={animals}
+          />;
       case View.AIAssistant:
         return <AIAssistant 
             animals={animals}
@@ -322,6 +351,8 @@ const App: React.FC = () => {
           animalMeasurements={animalMeasurements}
           populationSurveys={populationSurveys}
           veldAssessments={veldAssessments}
+          healthProtocols={healthProtocols}
+          veterinaryLogs={veterinaryLogs}
           />;
     }
   };

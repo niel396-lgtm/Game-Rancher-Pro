@@ -1,4 +1,4 @@
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 
@@ -103,7 +103,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     { id: 'T006', date: '2023-11-08', description: 'Fuel for Vehicles', category: 'Operations', amount: 400, type: TransactionType.Expense },
     { id: 'T007', date: '2023-11-12', description: 'Sale of 2 Impala', category: 'Sales', amount: 1800, type: TransactionType.Income, permitId: 'P003' },
     { id: 'T008', date: '2023-11-20', description: 'Fence Supplies', category: 'Maintenance', amount: 600, type: TransactionType.Expense },
-    { id: 'T009', date: getPastDate(15), description: 'High-value feed for breeding Sable', category: 'Feed', amount: 800, type: TransactionType.Expense, linkedAnimalId: 'A008' },
+    { id: 'T009', date: getPastDate(15), description: 'High-value feed for breeding Sable', category: 'Feed', amount: 800, type: TransactionType.Expense, linkedSpecies: 'Sable Antelope' },
     { id: 'T010', date: getPastDate(300), description: 'Annual Insurance', category: 'Admin', amount: 3000, type: TransactionType.Expense },
     { id: 'T011', date: '2023-12-22', description: 'Guided Tour Income', category: 'Services', amount: 800, type: TransactionType.Income },
 ];
@@ -119,152 +119,4 @@ export const INITIAL_TASKS: Task[] = [
 
 export const INITIAL_MORTALITIES: Mortality[] = [];
 export const INITIAL_HARVESTS: Harvest[] = [
-    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', date: '2023-10-20', professionalHunterId: 'PH001', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-13556d278a5a?q=80&w=2070&auto=format&fit=crop', huntId: 'HUNT001', coordinates: [30.511, -98.399] },
-    { id: 'H002', animalTagId: 'IMP-01', species: 'Impala', date: '2023-11-05', professionalHunterId: 'PH002', method: 'Bow', trophyMeasurements: 'SCI Score: 60', location: 'North Pasture', hornLengthL: 22.0, hornLengthR: 21.5, tipToTipSpread: 18.0, clientId: 'C002', photoUrl: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?q=80&w=2072&auto=format&fit=crop' }
-];
-
-export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
-    { id: 'R01', date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], amount: 15 },
-    { id: 'R02', date: new Date(Date.now() - 86400000).toISOString().split('T')[0], amount: 5 },
-];
-
-export const INITIAL_VELD_ASSESSMENTS: VeldAssessment[] = [
-    { id: 'VA01', habitatZoneId: 'H04', date: new Date(Date.now() - 86400000 * 365).toISOString().split('T')[0], speciesComposition: 8, basalCover: 7, soilErosion: 2, condition: 'Good', forageUtilization: 'Moderate', notes: 'Post-rain recovery looks good.', isFixedPointSite: true, photoUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000&auto=format&fit=crop'},
-    { id: 'VA02', habitatZoneId: 'H04', date: new Date().toISOString().split('T')[0], speciesComposition: 6, basalCover: 5, soilErosion: 3, condition: 'Fair', forageUtilization: 'Heavy', notes: 'Showing signs of grazing pressure.', isFixedPointSite: true, photoUrl: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2070&auto=format&fit=crop'},
-    { id: 'VA03', habitatZoneId: 'H01', date: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0], speciesComposition: 9, basalCover: 9, soilErosion: 1, condition: 'Excellent', forageUtilization: 'Light', notes: 'Excellent condition.' },
-];
-
-export const INITIAL_REPRODUCTIVE_EVENTS: ReproductiveEvent[] = [
-    { id: 'RE001', offspringTagId: 'IMP-02', damTagId: 'IMP-01', sireTagId: 'IMP-M1', birthDate: getPastDate(1460), sex: 'Female', notes: 'Healthy birth, normal weight.' },
-    { id: 'RE002', offspringTagId: 'KDU-J1', damTagId: 'KDU-08', sireTagId: 'KDU-07', birthDate: getPastDate(730), sex: 'Male', notes: 'Healthy.' },
-    { id: 'RE003', offspringTagId: 'KDU-J2', damTagId: 'KDU-08', sireTagId: 'KDU-07', birthDate: getPastDate(30), sex: 'Female', notes: 'Healthy.' },
-
-];
-
-export const INITIAL_ANIMAL_MEASUREMENTS: AnimalMeasurement[] = [
-    { id: 'AM001', animalId: 'A002', date: getPastDate(365), measurementType: 'Horn Length (L)', value: 48.5, unit: 'in', notes: 'Annual checkup, age 4.' },
-    { id: 'AM002', animalId: 'A002', date: getPastDate(365), measurementType: 'Horn Length (R)', value: 49.0, unit: 'in', notes: 'Annual checkup, age 4.' },
-    { id: 'AM003', animalId: 'A002', date: getPastDate(10), measurementType: 'Horn Length (L)', value: 52.0, unit: 'in', notes: 'Pre-season measurement, age 5.' },
-    { id: 'AM004', animalId: 'A002', date: getPastDate(10), measurementType: 'Horn Length (R)', value: 52.5, unit: 'in', notes: 'Pre-season measurement, age 5.' },
-    { id: 'AM005', animalId: 'A009', date: getPastDate(730), measurementType: 'Horn Length (L)', value: 15.0, unit: 'in' },
-    { id: 'AM006', animalId: 'A009', date: getPastDate(365), measurementType: 'Horn Length (L)', value: 18.0, unit: 'in' },
-];
-
-export const INITIAL_POPULATION_SURVEYS: PopulationSurvey[] = [
-  { id: 'PS001', date: getPastDate(180), species: 'Kudu', method: 'Aerial Count (Sample)', estimatedCount: 150, maleCount: 40, femaleCount: 90, juvenileCount: 20, confidence: 'Medium', notes: 'Drought conditions may have concentrated animals near water.' },
-  { id: 'PS002', date: getPastDate(180), species: 'Impala', method: 'Ground Count', estimatedCount: 400, maleCount: 120, femaleCount: 250, juvenileCount: 30, confidence: 'High', habitatZoneId: 'H01' },
-  { id: 'PS003', date: getPastDate(10), species: 'Kudu', method: 'Aerial Count (Sample)', estimatedCount: 165, maleCount: 45, femaleCount: 100, juvenileCount: 20, confidence: 'High', notes: 'Good post-rain conditions, herd looks healthy.' },
-  { id: 'PS004', date: getPastDate(10), species: 'Impala', method: 'Ground Count', estimatedCount: 420, maleCount: 130, femaleCount: 260, juvenileCount: 30, confidence: 'High', habitatZoneId: 'H01' },
-  { id: 'PS005', date: getPastDate(90), species: 'Blue Wildebeest', method: 'Aerial Count (Total)', estimatedCount: 80, maleCount: 30, femaleCount: 50, confidence: 'Medium' },
-];
-
-// Initial data for the mapping feature
-export const INITIAL_LANDMARKS: Landmark[] = [
-    { id: 'L01', name: 'Main Gate', type: LandmarkType.Gate, position: [30.508, -98.390] },
-    { id: 'L02', name: 'North Trough', type: LandmarkType.WaterTrough, position: [30.518, -98.392] },
-    { id: 'L03', name: 'Creek Dam', type: LandmarkType.Dam, position: [30.515, -98.385] },
-    { id: 'L04', name: 'Lookout Hide', type: LandmarkType.HuntingHide, position: [30.511, -98.399] },
-];
-
-export const INITIAL_BOUNDARIES: Boundary[] = [
-    {
-        id: 'B01',
-        name: 'North Pasture',
-        positions: [ [30.520, -98.402], [30.521, -98.391], [30.512, -98.392], [30.511, -98.403], [30.520, -98.402] ]
-    },
-    {
-        id: 'B02',
-        name: 'West Ridge',
-        positions: [ [30.511, -98.403], [30.512, -98.392], [30.504, -98.393], [30.503, -98.404], [30.511, -98.403] ]
-    },
-    {
-        id: 'B03',
-        name: 'South Plains',
-        positions: [ [30.512, -98.392], [30.513, -98.381], [30.505, -98.382], [30.504, -98.393], [30.512, -98.392] ]
-    },
-    {
-        id: 'B04',
-        name: 'Oak Forest',
-        positions: [ [30.521, -98.391], [30.522, -98.380], [30.513, -98.381], [30.512, -98.392], [30.521, -98.391] ]
-    }
-];
-
-export const SPECIES_BENCHMARKS = {
-  "Kudu": {
-    "TrophyLine": [ { age: 2, hornLength: 20 }, { age: 3, hornLength: 35 }, { age: 5, hornLength: 48 }, { age: 7, hornLength: 55 } ],
-    "AverageLine": [ { age: 2, hornLength: 15 }, { age: 3, hornLength: 30 }, { age: 5, hornLength: 42 }, { age: 7, hornLength: 48 } ]
-  },
-  "Impala": {
-    "TrophyLine": [ { age: 2, hornLength: 18 }, { age: 4, hornLength: 22 }, { age: 6, hornLength: 24 } ],
-    "AverageLine": [ { age: 2, hornLength: 15 }, { age: 4, hornLength: 19 }, { age: 6, hornLength: 21 } ]
-  }
-};
-
-export const SPECIES_PARAMETERS = {
-  "Kudu": {
-    maxAge: 15,
-    primeReproductiveAge: [4, 9], // years
-    idealCalvingInterval: 380, // days
-    growthRateLambda: 1.20,
-  },
-  "Impala": {
-    maxAge: 12,
-    primeReproductiveAge: [3, 8],
-    idealCalvingInterval: 380, // days
-    growthRateLambda: 1.30,
-  },
-  "Sable Antelope": {
-    maxAge: 18,
-    primeReproductiveAge: [4, 12],
-    idealCalvingInterval: 380, // days
-    growthRateLambda: 1.15,
-  },
-  "Blue Wildebeest": {
-    maxAge: 20,
-    primeReproductiveAge: [3, 16],
-    idealCalvingInterval: 380,
-    growthRateLambda: 1.25,
-  },
-  "Blesbok": {
-    maxAge: 12,
-    primeReproductiveAge: [2, 8],
-    idealCalvingInterval: 380,
-    growthRateLambda: 1.30,
-  },
-  "Warthog": {
-    maxAge: 15,
-    primeReproductiveAge: [2, 10],
-    idealCalvingInterval: 365,
-    growthRateLambda: 1.40,
-  }
-};
-
-export const SCI_FORMULAS: Record<string, { fields: { id: string, name: string }[], formula: (m: any) => number }> = {
-  "Kudu": {
-    fields: [
-      { id: 'hornLengthL', name: 'Length of Left Horn' },
-      { id: 'hornLengthR', name: 'Length of Right Horn' },
-      { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
-      { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
-    ],
-    formula: (m: any) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
-  },
-  "Impala": {
-    fields: [
-      { id: 'hornLengthL', name: 'Length of Left Horn' },
-      { id: 'hornLengthR', name: 'Length of Right Horn' },
-      { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
-      { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
-    ],
-    formula: (m: any) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
-  },
-  "Sable Antelope": {
-    fields: [
-      { id: 'hornLengthL', name: 'Length of Left Horn' },
-      { id: 'hornLengthR', name: 'Length of Right Horn' },
-      { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
-      { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
-    ],
-    formula: (m: any) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
-  },
-};
+    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', date: '2023-10-20', professionalHunterId: 'PH001', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-13556d278a5a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3

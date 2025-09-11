@@ -1,15 +1,16 @@
-
 import { Coords } from './RanchMap';
 
 export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
+  VeterinaryLog = 'Veterinary Log',
   PopulationSurveys = 'Population Surveys',
   Clients = 'Clients',
   Permits = 'Permits & Compliance',
   Habitat = 'Habitat',
   Inventory = 'Inventory',
   Finance = 'Finance',
+  BioeconomicsReport = 'Bio-Economics',
   AIAssistant = 'AI Assistant',
   RanchMap = 'Ranch Map',
   GeneticAnalysis = 'Genetic Analysis',
@@ -120,6 +121,7 @@ export interface Transaction {
   linkedInventoryId?: string;
   clientId?: string;
   permitId?: string;
+  linkedSpecies?: string;
 }
 
 export interface Message {
@@ -215,6 +217,27 @@ export interface PopulationSurvey {
   juvenileCount?: number;
   confidence: 'High' | 'Medium' | 'Low';
   notes?: string;
+}
+
+export interface VeterinaryLog {
+    id: string;
+    date: string;
+    animalId?: string; // For individual treatments
+    species?: string; // For herd treatments
+    procedure: 'Vaccination' | 'Deworming' | 'Disease Testing' | 'Treatment' | 'Check-up';
+    medicationUsed?: string;
+    dosage?: string;
+    vetName?: string;
+    notes?: string;
+}
+
+export interface HealthProtocol {
+    id: string;
+    name: string;
+    species: string; // e.g., 'Sable Antelope' or 'All'
+    procedure: string; // e.g., 'Brucellosis testing'
+    frequency: 'Annually' | 'Bi-Annually' | 'Quarterly';
+    dueMonth: string; // e.g., 'September'
 }
 
 
