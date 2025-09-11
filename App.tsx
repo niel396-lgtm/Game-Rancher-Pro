@@ -20,7 +20,7 @@ import { VeterinaryLog as VeterinaryLogView } from './components/VeterinaryLog';
 import { BioeconomicsReport } from './components/BioeconomicsReport';
 import { DocumentHub } from './components/DocumentHub';
 import { GameMeatProcessing as GameMeatProcessingView } from './components/GameMeatProcessing';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing } from './types';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint } from './types';
 import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
@@ -58,6 +58,7 @@ const App: React.FC = () => {
   const [healthProtocols, setHealthProtocols] = useState<HealthProtocol[]>(INITIAL_HEALTH_PROTOCOLS);
   const [documents, setDocuments] = useState<OfficialDocument[]>(INITIAL_OFFICIAL_DOCUMENTS);
   const [gameMeatProcessing, setGameMeatProcessing] = useState<GameMeatProcessing[]>(INITIAL_GAME_MEAT_PROCESSING);
+  const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
 
   const handleManagementStyleChange = (style: ManagementStyle) => {
     setManagementStyle(style);
@@ -236,6 +237,11 @@ const App: React.FC = () => {
       setGameMeatProcessing(prev => prev.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry));
   };
 
+  const addWaypoint = (waypoint: Omit<Waypoint, 'id'>) => {
+    const newWaypoint = { ...waypoint, id: `WP${Date.now()}` };
+    setWaypoints(prev => [...prev, newWaypoint]);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -371,7 +377,16 @@ const App: React.FC = () => {
             rainfallLogs={rainfallLogs}
         />;
       case View.RanchMap:
-        return <RanchMap landmarks={landmarks} boundaries={boundaries} animals={animals} addLandmark={addLandmark} addBoundary={addBoundary} removeFeature={removeMapFeature} />;
+        return <RanchMap 
+          landmarks={landmarks} 
+          boundaries={boundaries} 
+          animals={animals} 
+          addLandmark={addLandmark} 
+          addBoundary={addBoundary} 
+          removeFeature={removeMapFeature}
+          waypoints={waypoints}
+          addWaypoint={addWaypoint}
+        />;
       case View.AnnualReport:
         return <AnnualReport 
             transactions={transactions}

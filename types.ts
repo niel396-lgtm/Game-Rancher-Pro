@@ -321,3 +321,21 @@ export interface Boundary {
   name: string;
   positions: CoordsPath;
 }
+
+export enum WaypointCategory {
+  Sighting = 'Sighting',
+  BrokenFence = 'Broken Fence',
+  PoachingSign = 'Poaching Sign',
+  WaterIssue = 'Water Issue',
+  Infrastructure = 'Infrastructure',
+  Other = 'Other',
+}
+
+export interface Waypoint {
+  id: string;
+  category: WaypointCategory;
+  position: Coords;
+  title: string;
+  notes?: string;
+  date: string;
+}

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { MapContainer, TileLayer, Polygon, Marker, Popup, FeatureGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet-draw';
-import { Landmark, Boundary, Coords, CoordsPath, LandmarkType, Animal } from '../types';
+import { Landmark, Boundary, Coords, CoordsPath, LandmarkType, Animal, Waypoint, WaypointCategory } from '../types';
 import { Modal } from './ui/Modal';
 import { Card } from './ui/Card';
 
@@ -20,6 +20,8 @@ interface RanchMapProps {
   addLandmark: (landmark: Omit<Landmark, 'id'>) => void;
   addBoundary: (boundary: Omit<Boundary, 'id'>) => void;
   removeFeature: (id: string) => void;
+  waypoints: Waypoint[];
+  addWaypoint: (waypoint: Omit<Waypoint, 'id'>) => void;
 }
 
 interface NewFeatureData {
@@ -47,6 +49,25 @@ const getLandmarkIcon = (type: LandmarkType) => {
         className: 'bg-transparent border-0',
         iconSize: [32, 32],
         iconAnchor: [16, 16],
+    });
+};
+
+const WAYPOINT_COLORS: Record<WaypointCategory, string> = {
+    [WaypointCategory.Sighting]: '#3b82f6', // blue
+    [WaypointCategory.BrokenFence]: '#f97316', // orange
+    [WaypointCategory.PoachingSign]: '#ef4444', // red
+    [WaypointCategory.WaterIssue]: '#0ea5e9', // cyan
+    [WaypointCategory.Infrastructure]: '#a855f7', // purple
+    [WaypointCategory.Other]: '#6b7280', // gray
+};
+
+const getWaypointIcon = (category: WaypointCategory) => {
+    const color = WAYPOINT_COLORS[category] || WAYPOINT_COLORS[WaypointCategory.Other];
+    return L.divIcon({
+        html: `<div class="w-6 h-6 rounded-full shadow-md border-2 border-white" style="background-color: ${color};"></div>`,
+        className: 'bg-transparent border-0',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
     });
 };
 
@@ -142,7 +163,7 @@ const MapLayersControl = () => {
 };
 
 
-export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, animals, addLandmark, addBoundary, removeFeature }) => {
+export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, animals, addLandmark, addBoundary, removeFeature, waypoints, addWaypoint }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFeature, setNewFeature] = useState<NewFeatureData | null>(null);
   const [name, setName] = useState('');
@@ -150,6 +171,9 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, anima
   const [drawnLayer, setDrawnLayer] = useState<L.Layer | null>(null);
   
   const featureGroupRef = useRef<L.FeatureGroup>(null);
+
+  const [isWaypointModalOpen, setIsWaypointModalOpen] = useState(false);
+  const [newWaypointData, setNewWaypointData] = useState<Omit<Waypoint, 'id' | 'category' | 'title'>>();
 
   const RANCH_CENTER: Coords = [30.51, -98.39];
   const RANCH_ZOOM = 14;
@@ -169,13 +193,17 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, anima
     
     if (layerType === 'marker') {
       const { lat, lng } = layer.getLatLng();
-      setNewFeature({ type: 'landmark', data: [lat, lng] });
+      setNewWaypointData({
+          position: [lat, lng],
+          date: new Date().toISOString().split('T')[0]
+      });
+      setIsWaypointModalOpen(true);
     }
     if (layerType === 'polygon') {
       const latlngs = layer.getLatLngs()[0].map((p: L.LatLng) => [p.lat, p.lng]);
       setNewFeature({ type: 'boundary', data: [...latlngs, latlngs[0]] });
+      setIsModalOpen(true);
     }
-    setIsModalOpen(true);
   }, []);
   
   // Use a ref to hold the latest removeFeature function.
@@ -224,6 +252,28 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, anima
     setDrawnLayer(null);
   };
   
+  const handleWaypointSubmit = (e: React.FormEvent, category: WaypointCategory, title: string, notes?: string) => {
+    e.preventDefault();
+    if (!newWaypointData || !title) {
+        alert('Please provide a title for the waypoint.');
+        return;
+    }
+    addWaypoint({ ...newWaypointData, category, title, notes });
+    resetWaypointModal();
+};
+
+const resetWaypointModal = () => {
+    if (drawnLayer) {
+      if ((drawnLayer as any)._map) {
+          drawnLayer.remove();
+      }
+    }
+    setIsWaypointModalOpen(false);
+    setNewWaypointData(undefined);
+    setDrawnLayer(null);
+};
+
+
   return (
     <div className="h-full flex flex-col">
       <h2 className="text-3xl font-bold text-brand-dark mb-6">Ranch Map</h2>
@@ -289,6 +339,20 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, anima
             );
           })}
 
+          {waypoints.map(waypoint => (
+            <Marker 
+                key={waypoint.id} 
+                position={waypoint.position} 
+                icon={getWaypointIcon(waypoint.category)}
+            >
+                <Popup>
+                    <strong>{waypoint.title}</strong> ({waypoint.category})<br/>
+                    Date: {waypoint.date}<br/>
+                    {waypoint.notes}
+                </Popup>
+            </Marker>
+            ))}
+
         </MapContainer>
       </Card>
       
@@ -313,6 +377,39 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, anima
                   <button type="submit" className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Save</button>
               </div>
           </form>
+      </Modal>
+
+      <Modal isOpen={isWaypointModalOpen} onClose={resetWaypointModal} title="Create New Waypoint">
+        <form onSubmit={(e) => {
+            const formData = new FormData(e.target as HTMLFormElement);
+            handleWaypointSubmit(
+                e,
+                formData.get('category') as WaypointCategory,
+                formData.get('title') as string,
+                formData.get('notes') as string
+            );
+        }}>
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Title</label>
+                    <input name="title" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" required />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select name="category" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm">
+                        {Object.values(WaypointCategory).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm" />
+                </div>
+            </div>
+            <div className="flex justify-end gap-4 mt-6">
+                <button type="button" onClick={resetWaypointModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Save Waypoint</button>
+            </div>
+        </form>
       </Modal>
     </div>
   );
