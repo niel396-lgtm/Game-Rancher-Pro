@@ -1,4 +1,4 @@
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 
@@ -25,6 +25,46 @@ export const INITIAL_CLIENTS: Client[] = [
   { id: 'C001', name: 'John Doe', email: 'john.d@example.com', phone: '555-1234', visitDates: ['2023-10-18 to 2023-10-22'] },
   { id: 'C002', name: 'Jane Smith', email: 'jane.s@example.com', phone: '555-5678', visitDates: ['2023-11-03 to 2023-11-07'] },
 ];
+
+export const INITIAL_PROFESSIONAL_HUNTERS: ProfessionalHunter[] = [
+    { id: 'PH001', name: 'John Smith', licenseNumber: 'LP-12345', licenseExpiryDate: getFutureDate(300), provincialEndorsements: ['Limpopo', 'Mpumalanga'] },
+    { id: 'PH002', name: 'Peter Jones', licenseNumber: 'FS-67890', licenseExpiryDate: getFutureDate(45), provincialEndorsements: ['Free State', 'KwaZulu-Natal'] },
+    { id: 'PH003', name: 'David Miller', licenseNumber: 'EC-54321', licenseExpiryDate: getPastDate(10), provincialEndorsements: ['Eastern Cape'] },
+];
+
+export const INITIAL_HUNTS: Hunt[] = [
+    {
+        id: 'HUNT001',
+        clientId: 'C001',
+        professionalHunterId: 'PH001',
+        permitIds: ['P002'],
+        startDate: '2023-10-18',
+        endDate: '2023-10-22',
+        status: 'Completed',
+        checklist: {
+            indemnitySigned: true,
+            firearmPermitVerified: true,
+            provincialLicenseAcquired: true,
+        },
+        notes: 'Successful Kudu hunt.'
+    },
+    {
+        id: 'HUNT002',
+        clientId: 'C002',
+        professionalHunterId: 'PH002',
+        permitIds: ['P002'],
+        startDate: getPastDate(5),
+        endDate: getFutureDate(2),
+        status: 'Active',
+        checklist: {
+            indemnitySigned: true,
+            firearmPermitVerified: false,
+            provincialLicenseAcquired: true,
+        },
+        notes: 'Currently hunting Impala.'
+    }
+];
+
 
 export const INITIAL_ANIMALS: Animal[] = [
   { id: 'A001', species: 'Impala', age: 9, sex: 'Female', health: 'Excellent', conditionScore: 5, location: 'North Pasture', tagId: 'IMP-01', forageType: 'Mixed-Feeder', lsuEquivalent: 0.25, lsuConsumptionRate: 912.5, category: 'Breeding Stock' },
@@ -79,8 +119,8 @@ export const INITIAL_TASKS: Task[] = [
 
 export const INITIAL_MORTALITIES: Mortality[] = [];
 export const INITIAL_HARVESTS: Harvest[] = [
-    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', date: '2023-10-20', hunter: 'John Doe', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-13556d278a5a?q=80&w=2070&auto=format&fit=crop' },
-    { id: 'H002', animalTagId: 'IMP-01', species: 'Impala', date: '2023-11-05', hunter: 'Jane Smith', method: 'Bow', trophyMeasurements: 'SCI Score: 60', location: 'North Pasture', hornLengthL: 22.0, hornLengthR: 21.5, tipToTipSpread: 18.0, clientId: 'C002', photoUrl: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?q=80&w=2072&auto=format&fit=crop' }
+    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', date: '2023-10-20', professionalHunterId: 'PH001', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-13556d278a5a?q=80&w=2070&auto=format&fit=crop', huntId: 'HUNT001', coordinates: [30.511, -98.399] },
+    { id: 'H002', animalTagId: 'IMP-01', species: 'Impala', date: '2023-11-05', professionalHunterId: 'PH002', method: 'Bow', trophyMeasurements: 'SCI Score: 60', location: 'North Pasture', hornLengthL: 22.0, hornLengthR: 21.5, tipToTipSpread: 18.0, clientId: 'C002', photoUrl: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?q=80&w=2072&auto=format&fit=crop' }
 ];
 
 export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [

@@ -1,5 +1,5 @@
 
-
+import { Coords } from './RanchMap';
 
 export enum View {
   Dashboard = 'Dashboard',
@@ -14,6 +14,8 @@ export enum View {
   RanchMap = 'Ranch Map',
   GeneticAnalysis = 'Genetic Analysis',
   HarvestPlanning = 'Harvest Planning',
+  PHManagement = 'PH Management',
+  HuntRegister = 'Hunt Register',
   AnnualReport = 'Annual Report',
 }
 
@@ -28,6 +30,32 @@ export interface Permit {
   linkedSpecies: string[];
   notes?: string;
 }
+
+export interface ProfessionalHunter {
+  id: string;
+  name: string;
+  licenseNumber: string;
+  licenseExpiryDate: string;
+  provincialEndorsements: string[];
+}
+
+export interface Hunt {
+    id: string;
+    clientId: string;
+    professionalHunterId: string;
+    permitIds: string[];
+    startDate: string;
+    endDate: string;
+    status: 'Planned' | 'Active' | 'Completed';
+    checklist: {
+        indemnitySigned: boolean;
+        firearmPermitVerified: boolean;
+        provincialLicenseAcquired: boolean;
+        indemnityPdfUrl?: string;
+    };
+    notes?: string;
+}
+
 
 export interface Animal {
   id: string;
@@ -120,18 +148,19 @@ export interface Harvest {
   animalTagId: string;
   species: string;
   date: string;
-  hunter: string;
+  professionalHunterId: string;
   clientId?: string;
   method: string;
   trophyMeasurements: string; // e.g., SCI Score, Rowland Ward
   location: string;
+  coordinates?: Coords;
   hornLengthL?: number; // Optional: Left Horn Length in inches
   hornLengthR?: number; // Optional: Right Horn Length in inches
   baseCircumferenceL?: number; // Optional: Left Base Circumference
   baseCircumferenceR?: number; // Optional: Right Base Circumference
   tipToTipSpread?: number; // Optional: Spread measurement
-  permitId?: string;
   photoUrl?: string;
+  huntId?: string;
 }
 
 export interface RainfallLog {

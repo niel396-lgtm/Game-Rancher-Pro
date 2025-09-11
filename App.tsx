@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -19,8 +14,10 @@ import { GeneticAnalysis } from './components/GeneticAnalysis';
 import { HarvestPlanning } from './components/HarvestPlanning';
 import { PopulationSurveys } from './components/PopulationSurveys';
 import { AnnualReport } from './components/AnnualReport';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS } from './constants';
+import { PHManagement } from './components/PHManagement';
+import { HuntRegister } from './components/HuntRegister';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -51,6 +48,8 @@ const App: React.FC = () => {
   const [reproductiveEvents, setReproductiveEvents] = useState<ReproductiveEvent[]>(INITIAL_REPRODUCTIVE_EVENTS);
   const [animalMeasurements, setAnimalMeasurements] = useState<AnimalMeasurement[]>(INITIAL_ANIMAL_MEASUREMENTS);
   const [populationSurveys, setPopulationSurveys] = useState<PopulationSurvey[]>(INITIAL_POPULATION_SURVEYS);
+  const [professionalHunters, setProfessionalHunters] = useState<ProfessionalHunter[]>(INITIAL_PROFESSIONAL_HUNTERS);
+  const [hunts, setHunts] = useState<Hunt[]>(INITIAL_HUNTS);
 
   const handleManagementStyleChange = (style: ManagementStyle) => {
     setManagementStyle(style);
@@ -180,6 +179,20 @@ const App: React.FC = () => {
     setPopulationSurveys(prev => [newSurvey, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   };
 
+  const addProfessionalHunter = (ph: Omit<ProfessionalHunter, 'id'>) => {
+    const newPh = { ...ph, id: `PH${Date.now()}` };
+    setProfessionalHunters(prev => [...prev, newPh].sort((a,b) => a.name.localeCompare(b.name)));
+  };
+
+  const addHunt = (hunt: Omit<Hunt, 'id'>) => {
+      const newHunt = { ...hunt, id: `HUNT${Date.now()}` };
+      setHunts(prev => [newHunt, ...prev].sort((a,b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
+  };
+
+  const updateHunt = (updatedHunt: Hunt) => {
+      setHunts(prev => prev.map(h => h.id === updatedHunt.id ? updatedHunt : h));
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -217,6 +230,7 @@ const App: React.FC = () => {
           logReproductiveEvent={logReproductiveEvent}
           animalMeasurements={animalMeasurements}
           addAnimalMeasurement={addAnimalMeasurement}
+          professionalHunters={professionalHunters}
           />;
       case View.PopulationSurveys:
         return <PopulationSurveys
@@ -241,6 +255,17 @@ const App: React.FC = () => {
           />;
       case View.Clients:
         return <ClientManagement clients={clients} addClient={addClient} harvests={harvests} />;
+      case View.PHManagement:
+        return <PHManagement professionalHunters={professionalHunters} addProfessionalHunter={addProfessionalHunter} />;
+      case View.HuntRegister:
+        return <HuntRegister
+            hunts={hunts}
+            clients={clients}
+            professionalHunters={professionalHunters}
+            permits={permits}
+            addHunt={addHunt}
+            updateHunt={updateHunt}
+        />;
       case View.Permits:
         return <PermitManagement permits={permits} addPermit={addPermit} />;
       case View.Habitat:

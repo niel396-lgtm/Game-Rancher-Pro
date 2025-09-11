@@ -1,12 +1,7 @@
 
-
-
-
-
-
 import React, { useMemo } from 'react';
 import { View, ManagementStyle } from '../types';
-import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, GeneticsIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon } from './ui/Icons';
+import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, GeneticsIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon, PHIcon, HuntIcon } from './ui/Icons';
 
 interface SidebarProps {
   currentView: View;
@@ -44,6 +39,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, m
       { view: View.GeneticAnalysis, icon: <GeneticsIcon />, style: 'Intensive' },
       { view: View.HarvestPlanning, icon: <HarvestPlanningIcon /> },
       { view: View.Clients, icon: <ClientIcon /> },
+      { view: View.PHManagement, icon: <PHIcon /> },
+      { view: View.HuntRegister, icon: <HuntIcon /> },
       { view: View.Permits, icon: <PermitIcon /> },
       { view: View.Habitat, icon: <HabitatIcon /> },
       { view: View.RanchMap, icon: <MapIcon /> },

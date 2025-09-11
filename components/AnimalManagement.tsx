@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement } from '../types';
+import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement, ProfessionalHunter, Coords } from '../types';
 import { PlusIcon, TrashIcon, StarIcon, ExportIcon, TrophyIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { AnimalProfile } from './AnimalProfile';
 import { SCICalculator } from './SCICalculator';
 import { SCI_FORMULAS } from '../constants';
+import { LocationPickerMap } from './LocationPickerMap';
 
 
 interface AnimalManagementProps {
@@ -25,6 +26,7 @@ interface AnimalManagementProps {
   logReproductiveEvent: (event: Omit<ReproductiveEvent, 'id'>) => void;
   animalMeasurements: AnimalMeasurement[];
   addAnimalMeasurement: (measurement: Omit<AnimalMeasurement, 'id'>) => void;
+  professionalHunters: ProfessionalHunter[];
 }
 
 const getHealthColor = (health: 'Excellent' | 'Good' | 'Fair' | 'Poor') => {
@@ -81,7 +83,7 @@ const exportToCsv = (filename: string, rows: object[]) => {
 };
 
 
-export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits, reproductiveEvents, logReproductiveEvent, animalMeasurements, addAnimalMeasurement }) => {
+export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, habitats, addAnimal, removeAnimal, mortalities, logAnimalMortality, harvests, logAnimalHarvest, transactions, clients, permits, reproductiveEvents, logReproductiveEvent, animalMeasurements, addAnimalMeasurement, professionalHunters }) => {
   const [activeTab, setActiveTab] = useState<'active' | 'mortality' | 'harvest' | 'reproduction'>('active');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [animalToRemove, setAnimalToRemove] = useState<Animal | null>(null);
@@ -90,8 +92,10 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
   const [harvestData, setHarvestData] = useState({ 
-    hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', permitId: '', photoUrl: '',
+    professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null
   });
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+
 
   const [isLogBirthOpen, setIsLogBirthOpen] = useState(false);
   const initialBirthState = {
@@ -143,7 +147,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', permitId: '', photoUrl: '' });
+    setHarvestData({ professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -167,23 +171,12 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       if(baseCircumferenceR) finalData.baseCircumferenceR = parseFloat(baseCircumferenceR);
 
       if(!finalData.clientId) delete finalData.clientId;
-      if(!finalData.permitId) delete finalData.permitId;
       if(!finalData.photoUrl) delete finalData.photoUrl;
+      if(!finalData.coordinates) delete finalData.coordinates;
 
       logAnimalHarvest(animalToRemove, finalData);
       handleCloseRemoveModals();
     }
-  };
-
-  const getValidPermitsForHarvest = (species: string) => {
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      return permits.filter(p => {
-          const expiryDate = new Date(p.expiryDate + 'T00:00:00');
-          const isExpired = expiryDate < today;
-          const speciesMatch = p.linkedSpecies.length === 0 || p.linkedSpecies.includes(species);
-          return !isExpired && speciesMatch;
-      });
   };
 
   const handleExport = () => {
@@ -193,9 +186,9 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     } else if (activeTab === 'harvest') {
         const dataToExport = harvests.map(h => {
             const clientName = h.clientId ? clients.find(c => c.id === h.clientId)?.name : 'N/A';
-            const permitNumber = h.permitId ? permits.find(p => p.id === h.permitId)?.permitNumber : 'N/A';
+            const phName = professionalHunters.find(ph => ph.id === h.professionalHunterId)?.name || 'N/A';
             return {
-                'Date': h.date, 'Tag ID': h.animalTagId, 'Species': h.species, 'Hunter': h.hunter, 'Client': clientName, 'Permit #': permitNumber, 'Method': h.method, 'Trophy Measurements': h.trophyMeasurements, 'Location': h.location, 'Left Horn (in)': h.hornLengthL ?? '', 'Right Horn (in)': h.hornLengthR ?? '', 'Base (L)': h.baseCircumferenceL ?? '', 'Base (R)': h.baseCircumferenceR ?? '', 'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '', 'Photo URL': h.photoUrl ?? '',
+                'Date': h.date, 'Tag ID': h.animalTagId, 'Species': h.species, 'Professional Hunter': phName, 'Client': clientName, 'Method': h.method, 'Trophy Measurements': h.trophyMeasurements, 'Location': h.location, 'GPS': h.coordinates ? `${h.coordinates[0]}, ${h.coordinates[1]}`: '', 'Left Horn (in)': h.hornLengthL ?? '', 'Right Horn (in)': h.hornLengthR ?? '', 'Base (L)': h.baseCircumferenceL ?? '', 'Base (R)': h.baseCircumferenceR ?? '', 'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '', 'Photo URL': h.photoUrl ?? '',
             };
         });
         exportToCsv('harvest_log_export.csv', dataToExport);
@@ -405,25 +398,23 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tag ID</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Species</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hunter / Client</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permit #</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PH / Client</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trophy Info</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {harvests.map((h) => {
                   const clientName = h.clientId ? clients.find(c => c.id === h.clientId)?.name : null;
-                  const permitNumber = h.permitId ? permits.find(p => p.id === h.permitId)?.permitNumber : 'N/A';
+                  const phName = professionalHunters.find(ph => ph.id === h.professionalHunterId)?.name;
                   return (
                     <tr key={h.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{h.animalTagId}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{h.species}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div>{h.hunter}</div>
+                        <div>{phName || 'N/A'}</div>
                         {clientName && <div className="text-xs text-gray-400">Client: {clientName}</div>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{permitNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {[
                           h.trophyMeasurements,
@@ -602,8 +593,11 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
        <Modal isOpen={isLogHarvestOpen} onClose={handleCloseRemoveModals} title={`Log Harvest for ${animalToRemove?.tagId}`}>
           <form onSubmit={handleLogHarvestSubmit} className="space-y-4">
               <div>
-                  <label htmlFor="hunter" className="block text-sm font-medium text-gray-700">Hunter Name</label>
-                  <input type="text" name="hunter" id="hunter" value={harvestData.hunter} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                  <label htmlFor="professionalHunterId" className="block text-sm font-medium text-gray-700">Professional Hunter</label>
+                  <select name="professionalHunterId" id="professionalHunterId" value={harvestData.professionalHunterId} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required>
+                      <option value="">Select PH...</option>
+                      {professionalHunters.map(ph => <option key={ph.id} value={ph.id}>{ph.name} - {ph.licenseNumber}</option>)}
+                  </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -613,19 +607,12 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                         {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                 </div>
-                <div>
-                    <label htmlFor="permitId" className="block text-sm font-medium text-gray-700">Permit</label>
-                    <select name="permitId" id="permitId" value={harvestData.permitId} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-                        <option value="">None</option>
-                        {animalToRemove && getValidPermitsForHarvest(animalToRemove.species).map(p => <option key={p.id} value={p.id}>{p.permitNumber} ({p.type})</option>)}
-                    </select>
-                </div>
-              </div>
-               <div>
+                 <div>
                   <label htmlFor="method" className="block text-sm font-medium text-gray-700">Method</label>
                   <select name="method" id="method" value={harvestData.method} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                       <option>Rifle</option> <option>Bow</option> <option>Crossbow</option> <option>Other</option>
                   </select>
+              </div>
               </div>
                <div>
                   <label htmlFor="trophyMeasurements" className="block text-sm font-medium text-gray-700">Trophy Info / Score</label>
@@ -658,6 +645,15 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   </div>
               </div>
                <div>
+                <label className="block text-sm font-medium text-gray-700">Harvest Coordinates</label>
+                <div className="mt-1 flex items-center gap-4">
+                    <p className="flex-grow p-2 bg-gray-100 rounded-md text-sm">
+                        {harvestData.coordinates ? `Lat: ${harvestData.coordinates[0].toFixed(5)}, Lng: ${harvestData.coordinates[1].toFixed(5)}` : "Not set"}
+                    </p>
+                    <button type="button" onClick={() => setIsLocationPickerOpen(true)} className="px-4 py-2 bg-brand-secondary text-white rounded-lg hover:bg-brand-dark">Set on Map</button>
+                </div>
+              </div>
+               <div>
                   <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700">Photo URL (optional)</label>
                   <input type="url" name="photoUrl" id="photoUrl" value={harvestData.photoUrl} onChange={handleHarvestInputChange} placeholder="https://example.com/image.jpg" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
               </div>
@@ -682,6 +678,12 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
             }}
         />
       )}
+        <LocationPickerMap 
+            isOpen={isLocationPickerOpen}
+            onClose={() => setIsLocationPickerOpen(false)}
+            onLocationSelect={(coords) => setHarvestData(prev => ({ ...prev, coordinates: coords }))}
+            initialCenter={[30.51, -98.39]}
+        />
     </div>
   );
 };
