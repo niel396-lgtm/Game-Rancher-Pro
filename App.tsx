@@ -18,9 +18,10 @@ import { PHManagement } from './components/PHManagement';
 import { HuntRegister } from './components/HuntRegister';
 import { VeterinaryLog as VeterinaryLogView } from './components/VeterinaryLog';
 import { BioeconomicsReport } from './components/BioeconomicsReport';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol } from './types';
-// FIX: Added missing imports for initial data from constants.ts
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS } from './constants';
+import { DocumentHub } from './components/DocumentHub';
+import { GameMeatProcessing as GameMeatProcessingView } from './components/GameMeatProcessing';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -55,6 +56,8 @@ const App: React.FC = () => {
   const [hunts, setHunts] = useState<Hunt[]>(INITIAL_HUNTS);
   const [veterinaryLogs, setVeterinaryLogs] = useState<VeterinaryLog[]>(INITIAL_VETERINARY_LOGS);
   const [healthProtocols, setHealthProtocols] = useState<HealthProtocol[]>(INITIAL_HEALTH_PROTOCOLS);
+  const [documents, setDocuments] = useState<OfficialDocument[]>(INITIAL_OFFICIAL_DOCUMENTS);
+  const [gameMeatProcessing, setGameMeatProcessing] = useState<GameMeatProcessing[]>(INITIAL_GAME_MEAT_PROCESSING);
 
   const handleManagementStyleChange = (style: ManagementStyle) => {
     setManagementStyle(style);
@@ -209,6 +212,30 @@ const App: React.FC = () => {
     setHealthProtocols(prev => [...prev, newProtocol]);
   };
 
+  const addDocument = (doc: Omit<OfficialDocument, 'id'>) => {
+    const newDoc = { ...doc, id: `DOC${Date.now()}` };
+    setDocuments(prev => [newDoc, ...prev].sort((a,b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()));
+  };
+
+  const addGameMeatEntry = (harvest: Harvest) => {
+      const newEntry: GameMeatProcessing = {
+          id: `GMP${Date.now()}`,
+          harvestId: harvest.id,
+          animalTagId: harvest.animalTagId,
+          species: harvest.species,
+          carcassWeightKg: 0, // To be filled in later
+          processingDate: new Date().toISOString().split('T')[0],
+          processedBy: '', // To be filled in later
+          status: 'Awaiting Processing',
+          sales: [],
+      };
+      setGameMeatProcessing(prev => [newEntry, ...prev]);
+  };
+
+  const updateGameMeatEntry = (updatedEntry: GameMeatProcessing) => {
+      setGameMeatProcessing(prev => prev.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry));
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -230,6 +257,7 @@ const App: React.FC = () => {
           veldAssessments={veldAssessments}
           healthProtocols={healthProtocols}
           veterinaryLogs={veterinaryLogs}
+          documents={documents}
           />;
       case View.Animals:
         return <AnimalManagement 
@@ -249,6 +277,7 @@ const App: React.FC = () => {
           animalMeasurements={animalMeasurements}
           addAnimalMeasurement={addAnimalMeasurement}
           professionalHunters={professionalHunters}
+          addGameMeatEntry={addGameMeatEntry}
           />;
       case View.VeterinaryLog:
         return <VeterinaryLogView
@@ -295,6 +324,14 @@ const App: React.FC = () => {
         />;
       case View.Permits:
         return <PermitManagement permits={permits} addPermit={addPermit} />;
+       case View.Documents:
+        return <DocumentHub
+          documents={documents}
+          addDocument={addDocument}
+          clients={clients}
+          professionalHunters={professionalHunters}
+          hunts={hunts}
+        />;
       case View.Habitat:
         return <HabitatManagement 
           habitats={habitats} 
@@ -316,6 +353,12 @@ const App: React.FC = () => {
           clients={clients}
           permits={permits}
           />;
+      case View.GameMeat:
+        return <GameMeatProcessingView
+          processingEntries={gameMeatProcessing}
+          updateProcessingEntry={updateGameMeatEntry}
+          addTransaction={addTransaction}
+        />;
        case View.BioeconomicsReport:
         return <BioeconomicsReport
           transactions={transactions}
@@ -357,6 +400,7 @@ const App: React.FC = () => {
           veldAssessments={veldAssessments}
           healthProtocols={healthProtocols}
           veterinaryLogs={veterinaryLogs}
+          documents={documents}
           />;
     }
   };

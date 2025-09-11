@@ -7,6 +7,7 @@ export enum View {
   PopulationSurveys = 'Population Surveys',
   Clients = 'Clients',
   Permits = 'Permits & Compliance',
+  Documents = 'Documents',
   Habitat = 'Habitat',
   Inventory = 'Inventory',
   Finance = 'Finance',
@@ -31,6 +32,19 @@ export interface Permit {
   expiryDate: string;
   linkedSpecies: string[];
   notes?: string;
+}
+
+export interface OfficialDocument {
+    id: string;
+    fileName: string;
+    category: 'Indemnity' | 'Insurance' | 'Firearm Permit' | 'CITES Permit' | 'Veterinary' | 'Other';
+    uploadDate: string;
+    expiryDate?: string;
+    linkedClientId?: string;
+    linkedPhId?: string;
+    linkedHuntId?: string;
+    fileUrl: string; // URL to the stored document
+    notes?: string;
 }
 
 export interface ProfessionalHunter {
