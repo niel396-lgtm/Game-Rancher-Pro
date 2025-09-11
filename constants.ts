@@ -198,3 +198,33 @@ export const SPECIES_PARAMETERS = {
     growthRateLambda: 1.40,
   }
 };
+
+export const SCI_FORMULAS: Record<string, { fields: { id: string, name: string }[], formula: (m: any) => number }> = {
+  "Kudu": {
+    fields: [
+      { id: 'hornLengthL', name: 'Length of Left Horn' },
+      { id: 'hornLengthR', name: 'Length of Right Horn' },
+      { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
+      { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
+    ],
+    formula: (m: any) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
+  },
+  "Impala": {
+    fields: [
+      { id: 'hornLengthL', name: 'Length of Left Horn' },
+      { id: 'hornLengthR', name: 'Length of Right Horn' },
+      { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
+      { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
+    ],
+    formula: (m: any) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
+  },
+  "Sable Antelope": {
+    fields: [
+      { id: 'hornLengthL', name: 'Length of Left Horn' },
+      { id: 'hornLengthR', name: 'Length of Right Horn' },
+      { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
+      { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
+    ],
+    formula: (m: any) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
+  },
+};

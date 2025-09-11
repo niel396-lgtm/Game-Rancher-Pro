@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement } from '../types';
-import { PlusIcon, TrashIcon, StarIcon, ExportIcon } from './ui/Icons';
+import { PlusIcon, TrashIcon, StarIcon, ExportIcon, TrophyIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 import { AnimalProfile } from './AnimalProfile';
+import { SCICalculator } from './SCICalculator';
+import { SCI_FORMULAS } from '../constants';
 
 
 interface AnimalManagementProps {
@@ -88,7 +90,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
   const [harvestData, setHarvestData] = useState({ 
-    hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', clientId: '', permitId: '', photoUrl: '',
+    hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', permitId: '', photoUrl: '',
   });
 
   const [isLogBirthOpen, setIsLogBirthOpen] = useState(false);
@@ -98,6 +100,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const [newBirth, setNewBirth] = useState(initialBirthState);
 
   const [viewingProfile, setViewingProfile] = useState<Animal | null>(null);
+  const [isSciCalculatorOpen, setIsSciCalculatorOpen] = useState(false);
 
   const [newAnimal, setNewAnimal] = useState({
       tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], lsuEquivalent: 0.5, sireId: '', damId: '', category: 'Production' as Animal['category']
@@ -140,7 +143,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', clientId: '', permitId: '', photoUrl: '' });
+    setHarvestData({ hunter: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', permitId: '', photoUrl: '' });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -153,13 +156,16 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const handleLogHarvestSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (animalToRemove) {
-      const { hornLengthL, hornLengthR, tipToTipSpread, ...rest } = harvestData;
+      const { hornLengthL, hornLengthR, tipToTipSpread, baseCircumferenceL, baseCircumferenceR, ...rest } = harvestData;
       
       const finalData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'> = { ...rest };
 
       if(hornLengthL) finalData.hornLengthL = parseFloat(hornLengthL);
       if(hornLengthR) finalData.hornLengthR = parseFloat(hornLengthR);
       if(tipToTipSpread) finalData.tipToTipSpread = parseFloat(tipToTipSpread);
+      if(baseCircumferenceL) finalData.baseCircumferenceL = parseFloat(baseCircumferenceL);
+      if(baseCircumferenceR) finalData.baseCircumferenceR = parseFloat(baseCircumferenceR);
+
       if(!finalData.clientId) delete finalData.clientId;
       if(!finalData.permitId) delete finalData.permitId;
       if(!finalData.photoUrl) delete finalData.photoUrl;
@@ -189,7 +195,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
             const clientName = h.clientId ? clients.find(c => c.id === h.clientId)?.name : 'N/A';
             const permitNumber = h.permitId ? permits.find(p => p.id === h.permitId)?.permitNumber : 'N/A';
             return {
-                'Date': h.date, 'Tag ID': h.animalTagId, 'Species': h.species, 'Hunter': h.hunter, 'Client': clientName, 'Permit #': permitNumber, 'Method': h.method, 'Trophy Measurements': h.trophyMeasurements, 'Location': h.location, 'Left Horn (in)': h.hornLengthL ?? '', 'Right Horn (in)': h.hornLengthR ?? '', 'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '', 'Photo URL': h.photoUrl ?? '',
+                'Date': h.date, 'Tag ID': h.animalTagId, 'Species': h.species, 'Hunter': h.hunter, 'Client': clientName, 'Permit #': permitNumber, 'Method': h.method, 'Trophy Measurements': h.trophyMeasurements, 'Location': h.location, 'Left Horn (in)': h.hornLengthL ?? '', 'Right Horn (in)': h.hornLengthR ?? '', 'Base (L)': h.baseCircumferenceL ?? '', 'Base (R)': h.baseCircumferenceR ?? '', 'Tip-to-Tip Spread (in)': h.tipToTipSpread ?? '', 'Photo URL': h.photoUrl ?? '',
             };
         });
         exportToCsv('harvest_log_export.csv', dataToExport);
@@ -238,6 +244,18 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     
     setIsLogBirthOpen(false);
     setNewBirth(initialBirthState);
+  };
+  
+  const handleApplySciScore = (score: string, measurements: Record<string, number>) => {
+    setHarvestData(prev => ({
+        ...prev,
+        trophyMeasurements: score,
+        hornLengthL: measurements.hornLengthL?.toString() || prev.hornLengthL,
+        hornLengthR: measurements.hornLengthR?.toString() || prev.hornLengthR,
+        baseCircumferenceL: measurements.baseCircumferenceL?.toString() || prev.baseCircumferenceL,
+        baseCircumferenceR: measurements.baseCircumferenceR?.toString() || prev.baseCircumferenceR,
+    }));
+    setIsSciCalculatorOpen(false);
   };
 
   const TabButton: React.FC<{label:string; view: 'active' | 'mortality' | 'harvest' | 'reproduction'}> = ({label, view}) => (
@@ -609,11 +627,19 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                       <option>Rifle</option> <option>Bow</option> <option>Crossbow</option> <option>Other</option>
                   </select>
               </div>
-              <div>
-                  <label htmlFor="trophyMeasurements" className="block text-sm font-medium text-gray-700">Trophy Info / Score System</label>
-                  <input type="text" name="trophyMeasurements" id="trophyMeasurements" value={harvestData.trophyMeasurements} onChange={handleHarvestInputChange} placeholder="e.g., SCI Score, Rowland Ward" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+               <div>
+                  <label htmlFor="trophyMeasurements" className="block text-sm font-medium text-gray-700">Trophy Info / Score</label>
+                  <div className="flex items-center gap-2">
+                    <input type="text" name="trophyMeasurements" id="trophyMeasurements" value={harvestData.trophyMeasurements} onChange={handleHarvestInputChange} placeholder="e.g., SCI Score: 135 3/8" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                    {animalToRemove && SCI_FORMULAS[animalToRemove.species] && (
+                        <button type="button" onClick={() => setIsSciCalculatorOpen(true)} className="mt-1 px-3 py-2 bg-brand-secondary text-white rounded-md hover:bg-brand-dark whitespace-nowrap">
+                            <TrophyIcon className="w-5 h-5 inline-block mr-1"/>
+                             SCI Calc
+                        </button>
+                    )}
+                  </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                  <div>
                       <label htmlFor="hornLengthL" className="block text-sm font-medium text-gray-700">Left Horn (in)</label>
                       <input type="number" step="0.1" name="hornLengthL" id="hornLengthL" value={harvestData.hornLengthL} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
@@ -623,8 +649,12 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                       <input type="number" step="0.1" name="hornLengthR" id="hornLengthR" value={harvestData.hornLengthR} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
                   </div>
                   <div>
-                      <label htmlFor="tipToTipSpread" className="block text-sm font-medium text-gray-700">Tip-to-Tip (in)</label>
-                      <input type="number" step="0.1" name="tipToTipSpread" id="tipToTipSpread" value={harvestData.tipToTipSpread} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                      <label htmlFor="baseCircumferenceL" className="block text-sm font-medium text-gray-700">Base (L)</label>
+                      <input type="number" step="0.1" name="baseCircumferenceL" id="baseCircumferenceL" value={harvestData.baseCircumferenceL} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                  </div>
+                  <div>
+                      <label htmlFor="baseCircumferenceR" className="block text-sm font-medium text-gray-700">Base (R)</label>
+                      <input type="number" step="0.1" name="baseCircumferenceR" id="baseCircumferenceR" value={harvestData.baseCircumferenceR} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
                   </div>
               </div>
                <div>
@@ -637,6 +667,21 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
               </div>
           </form>
       </Modal>
+
+      {animalToRemove && (
+        <SCICalculator 
+            isOpen={isSciCalculatorOpen}
+            onClose={() => setIsSciCalculatorOpen(false)}
+            species={animalToRemove.species}
+            onApply={handleApplySciScore}
+            initialMeasurements={{
+                hornLengthL: parseFloat(harvestData.hornLengthL) || 0,
+                hornLengthR: parseFloat(harvestData.hornLengthR) || 0,
+                baseCircumferenceL: parseFloat(harvestData.baseCircumferenceL) || 0,
+                baseCircumferenceR: parseFloat(harvestData.baseCircumferenceR) || 0,
+            }}
+        />
+      )}
     </div>
   );
 };

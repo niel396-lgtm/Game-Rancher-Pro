@@ -3,9 +3,10 @@
 
 
 
+
 import React, { useMemo } from 'react';
 import { View, ManagementStyle } from '../types';
-import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, GeneticsIcon, HarvestPlanningIcon, PopulationIcon } from './ui/Icons';
+import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, GeneticsIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon } from './ui/Icons';
 
 interface SidebarProps {
   currentView: View;
@@ -49,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, m
       { view: View.Inventory, icon: <InventoryIcon /> },
       { view: View.Finance, icon: <FinanceIcon /> },
       { view: View.AIAssistant, icon: <AIIcon /> },
+      { view: View.AnnualReport, icon: <ReportIcon /> },
     ];
     return allItems.filter(item => !item.style || item.style === managementStyle);
   }, [managementStyle]);

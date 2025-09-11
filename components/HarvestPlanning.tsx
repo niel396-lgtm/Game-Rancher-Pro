@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { Animal, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle } from '../types';
 import { SPECIES_PARAMETERS, SPECIES_BENCHMARKS } from '../constants';
+import { calculateStrategicQuota } from '../services/harvestPlanningService';
 
 interface HarvestPlanningProps {
   animals: Animal[];
@@ -257,40 +258,14 @@ const StrategicQuotaCalculator: React.FC<Pick<HarvestPlanningProps, 'populationS
     }, [latestSurvey]);
 
     const calculatedQuota = useMemo(() => {
-        if (!latestSurvey || growthRate <= 0 || targetPopulation < 0) return { total: 0, males: 0, females: 0 };
-        
-        const N_t = latestSurvey.estimatedCount;
-        const lambda = growthRate;
-        const K = targetPopulation;
-
-        const H = Math.round(N_t * lambda - K);
-        if (H <= 0) return { total: 0, males: 0, females: 0 };
-
-        const N_m = latestSurvey.maleCount || 0;
-        const N_f = latestSurvey.femaleCount || 0;
-
-        if (N_m === 0 || N_f === 0 || targetRatioMale <= 0 || targetRatioFemale <= 0) {
-            return { total: H, males: 'N/A', females: 'N/A' };
-        }
-
-        const R = targetRatioFemale / targetRatioMale;
-        
-        let H_m = (R * N_m - N_f + H) / (1 + R);
-        H_m = Math.round(Math.max(0, Math.min(N_m, H_m)));
-        
-        let H_f = H - H_m;
-        if (H_f < 0) {
-            H_f = 0;
-            H_m = H;
-        }
-        if (H_f > N_f) {
-            H_f = N_f;
-            H_m = H - N_f;
-        }
-        H_m = Math.max(0, Math.min(N_m, H_m));
-
-        return { total: H, males: H_m, females: H_f };
-
+        if (!latestSurvey) return { total: 0, males: 0, females: 0 };
+        return calculateStrategicQuota(
+            latestSurvey,
+            targetPopulation,
+            growthRate,
+            targetRatioMale,
+            targetRatioFemale
+        );
     }, [latestSurvey, targetPopulation, growthRate, targetRatioMale, targetRatioFemale]);
 
 

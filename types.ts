@@ -1,5 +1,6 @@
 
 
+
 export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
@@ -13,6 +14,7 @@ export enum View {
   RanchMap = 'Ranch Map',
   GeneticAnalysis = 'Genetic Analysis',
   HarvestPlanning = 'Harvest Planning',
+  AnnualReport = 'Annual Report',
 }
 
 export type ManagementStyle = 'Intensive' | 'Extensive';
@@ -125,6 +127,8 @@ export interface Harvest {
   location: string;
   hornLengthL?: number; // Optional: Left Horn Length in inches
   hornLengthR?: number; // Optional: Right Horn Length in inches
+  baseCircumferenceL?: number; // Optional: Left Base Circumference
+  baseCircumferenceR?: number; // Optional: Right Base Circumference
   tipToTipSpread?: number; // Optional: Spread measurement
   permitId?: string;
   photoUrl?: string;

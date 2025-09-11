@@ -31,6 +31,40 @@
        .leaflet-draw-actions a:hover {
         background-color: #2E3B2E !important;
       }
+
+      /* Print-specific styles */
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .print-container, .print-container * {
+          visibility: visible;
+        }
+        .print-container {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          padding: 1rem;
+        }
+        aside { /* Sidebar */
+          display: none !important;
+        }
+        main {
+          overflow-y: visible !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 100%;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .card-print {
+            box-shadow: none !important;
+            border: 1px solid #ddd;
+            page-break-inside: avoid;
+        }
+      }
     </style>
 
     <script>

@@ -3,6 +3,7 @@
 
 
 
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -17,6 +18,7 @@ import { PermitManagement } from './components/PermitManagement';
 import { GeneticAnalysis } from './components/GeneticAnalysis';
 import { HarvestPlanning } from './components/HarvestPlanning';
 import { PopulationSurveys } from './components/PopulationSurveys';
+import { AnnualReport } from './components/AnnualReport';
 import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle } from './types';
 import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS } from './constants';
 
@@ -270,6 +272,14 @@ const App: React.FC = () => {
         />;
       case View.RanchMap:
         return <RanchMap landmarks={landmarks} boundaries={boundaries} animals={animals} addLandmark={addLandmark} addBoundary={addBoundary} removeFeature={removeMapFeature} />;
+      case View.AnnualReport:
+        return <AnnualReport 
+            transactions={transactions}
+            populationSurveys={populationSurveys}
+            harvests={harvests}
+            animals={animals}
+            reproductiveEvents={reproductiveEvents}
+        />;
       default:
         return <Dashboard 
           animals={animals} 
