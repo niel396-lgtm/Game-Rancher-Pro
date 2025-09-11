@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
-import { Animal, AnimalMeasurement } from '../types';
+import { Animal, AnimalMeasurement, ReproductiveEvent } from '../types';
 import { SPECIES_BENCHMARKS } from '../constants';
 
 interface StudBookProps {
   animals: Animal[];
   animalMeasurements: AnimalMeasurement[];
+  reproductiveEvents: ReproductiveEvent[];
 }
 
 // Helper to get all ancestors with their shortest path generation number
@@ -80,7 +81,7 @@ const PedigreeColumn: React.FC<{ title: string; animal?: Animal; allAnimals: Map
     );
 };
 
-export const StudBook: React.FC<StudBookProps> = ({ animals, animalMeasurements }) => {
+export const StudBook: React.FC<StudBookProps> = ({ animals, animalMeasurements, reproductiveEvents }) => {
     const [selectedSireId, setSelectedSireId] = useState<string>('');
     const [selectedDamId, setSelectedDamId] = useState<string>('');
     
