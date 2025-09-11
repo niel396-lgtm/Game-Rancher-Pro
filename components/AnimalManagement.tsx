@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement, ProfessionalHunter, Coords } from '../types';
@@ -90,8 +91,9 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const [causeOfDeath, setCauseOfDeath] = useState('');
   
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
+  // FIX: Add missing 'locality' property to initial state to match the Harvest type.
   const [harvestData, setHarvestData] = useState({ 
-    professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null,
+    professionalHunterId: '', locality: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null,
     farmName: 'Game Ranch Pro Estates',
     farmOwner: 'GRP Management',
     clientSignature: '',
@@ -151,7 +153,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null, farmName: 'Game Ranch Pro Estates', farmOwner: 'GRP Management', clientSignature: '', phSignature: '', witness: '' });
+    setHarvestData({ professionalHunterId: '', locality: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null, farmName: 'Game Ranch Pro Estates', farmOwner: 'GRP Management', clientSignature: '', phSignature: '', witness: '' });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -620,6 +622,11 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                       <option>Rifle</option> <option>Bow</option> <option>Crossbow</option> <option>Other</option>
                   </select>
               </div>
+              </div>
+               {/* FIX: Add input for the required 'locality' field. */}
+               <div>
+                  <label htmlFor="locality" className="block text-sm font-medium text-gray-700">Locality (Specific Area)</label>
+                  <input type="text" name="locality" id="locality" value={harvestData.locality} onChange={handleHarvestInputChange} placeholder="e.g., Near the old windmill" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
               </div>
                <div>
                   <label htmlFor="trophyMeasurements" className="block text-sm font-medium text-gray-700">Trophy Info / Score</label>

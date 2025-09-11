@@ -1,13 +1,11 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
 import { HerdQualityChart } from './HerdQualityChart';
-// FIX: Added HealthProtocol and VeterinaryLog to the import
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey, VeldAssessment, HealthProtocol, VeterinaryLog } from '../types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey, VeldAssessment, HealthProtocol, VeterinaryLog, OfficialDocument, ProfessionalHunter } from '../types';
 import { PopulationIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 
@@ -27,9 +25,10 @@ interface DashboardProps {
     animalMeasurements: AnimalMeasurement[];
     populationSurveys: PopulationSurvey[];
     veldAssessments: VeldAssessment[];
-    // FIX: Added missing props to the interface to match what App.tsx provides.
     healthProtocols: HealthProtocol[];
     veterinaryLogs: VeterinaryLog[];
+    documents: OfficialDocument[];
+    professionalHunters: ProfessionalHunter[];
 }
 
 const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
@@ -46,7 +45,7 @@ const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; u
     </Card>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys, veldAssessments }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys, veldAssessments, documents, professionalHunters }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -79,22 +78,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
   const totalIncome = transactions.filter(t => t.type === TransactionType.Income).reduce((sum, t) => sum + t.amount, 0);
   const totalExpense = transactions.filter(t => t.type === TransactionType.Expense).reduce((sum, t) => sum + t.amount, 0);
   
-  const { expiringPermits, expiredPermits } = useMemo(() => {
+  const { expiringItems, expiredItems } = useMemo(() => {
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     const sixtyDaysFromNow = new Date();
     sixtyDaysFromNow.setDate(today.getDate() + 60);
 
-    return permits.reduce((acc, permit) => {
-        const expiryDate = new Date(permit.expiryDate + 'T00:00:00');
+    const allItems: {id: string, name: string, type: string, expiryDate: string}[] = [];
+    
+    permits.forEach(p => allItems.push({ id: p.id, name: p.permitNumber, type: `Permit (${p.type})`, expiryDate: p.expiryDate }));
+    documents.forEach(d => {
+      if(d.expiryDate) {
+        allItems.push({ id: d.id, name: d.fileName, type: `Document (${d.category})`, expiryDate: d.expiryDate });
+      }
+    });
+    professionalHunters.forEach(ph => allItems.push({ id: ph.id, name: ph.name, type: 'PH License', expiryDate: ph.licenseExpiryDate }));
+
+    return allItems.reduce((acc, item) => {
+        const expiryDate = new Date(item.expiryDate + 'T00:00:00'); // Ensure local timezone
         if (expiryDate < today) {
-            acc.expiredPermits.push(permit);
+            acc.expiredItems.push(item);
         } else if (expiryDate <= sixtyDaysFromNow) {
-            acc.expiringPermits.push(permit);
+            acc.expiringItems.push(item);
         }
         return acc;
-    }, { expiringPermits: [] as Permit[], expiredPermits: [] as Permit[] });
-  }, [permits]);
+    }, { expiringItems: [] as typeof allItems, expiredItems: [] as typeof allItems });
+  }, [permits, documents, professionalHunters]);
   
     const highGrazingPressureAlerts = useMemo(() => {
         const thirtyDaysAgo = new Date();
@@ -331,21 +340,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
       </div>
 
        <div className="mt-6">
-          <Card title="Permit Expiry Watchlist">
+          <Card title="Expiry Watchlist">
             <ul className="max-h-60 overflow-y-auto">
-              {expiredPermits.length === 0 && expiringPermits.length === 0 && (
-                <p className="p-2 text-gray-500">No permits are expiring soon.</p>
+              {expiredItems.length === 0 && expiringItems.length === 0 && (
+                <p className="p-2 text-gray-500">No items are expiring soon.</p>
               )}
-              {expiredPermits.map(permit => (
-                <li key={permit.id} className="flex items-center p-2 border-b">
+              {expiredItems.map(item => (
+                <li key={item.id} className="flex items-center p-2 border-b">
                     <PermitIcon className="w-5 h-5 text-red-500 mr-3" />
-                    <span className="text-red-700"><strong>EXPIRED:</strong> Permit <strong>{permit.permitNumber}</strong> ({permit.type}) expired on {permit.expiryDate}.</span>
+                    <span className="text-red-700"><strong>EXPIRED:</strong> {item.type} <strong>{item.name}</strong> expired on {item.expiryDate}.</span>
                 </li>
               ))}
-              {expiringPermits.map(permit => (
-                <li key={permit.id} className="flex items-center p-2 border-b">
+              {expiringItems.map(item => (
+                <li key={item.id} className="flex items-center p-2 border-b">
                     <PermitIcon className="w-5 h-5 text-yellow-500 mr-3" />
-                    <span>Permit <strong>{permit.permitNumber}</strong> ({permit.type}) expires on <strong>{permit.expiryDate}</strong>.</span>
+                    <span>{item.type} <strong>{item.name}</strong> expires on <strong>{item.expiryDate}</strong>.</span>
                 </li>
               ))}
             </ul>

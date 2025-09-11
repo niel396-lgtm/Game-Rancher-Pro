@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { View, ManagementStyle } from '../types';
-import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, GeneticsIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon, PHIcon, HuntIcon } from './ui/Icons';
+import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, StudBookIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon, PHIcon, HuntIcon, VeterinaryIcon, DocumentIcon, GameMeatIcon, BioeconomicsIcon } from './ui/Icons';
 
 interface SidebarProps {
   currentView: View;
@@ -35,17 +35,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, m
     const allItems = [
       { view: View.Dashboard, icon: <DashboardIcon /> },
       { view: View.Animals, icon: <AnimalIcon />, style: 'Intensive' },
+      { view: View.VeterinaryLog, icon: <VeterinaryIcon />, style: 'Intensive' },
+      { view: View.StudBook, icon: <StudBookIcon />, style: 'Intensive' },
       { view: View.PopulationSurveys, icon: <PopulationIcon />, style: 'Extensive' },
-      { view: View.GeneticAnalysis, icon: <GeneticsIcon />, style: 'Intensive' },
+      { view: View.BioeconomicsReport, icon: <BioeconomicsIcon />, style: 'Extensive' },
       { view: View.HarvestPlanning, icon: <HarvestPlanningIcon /> },
       { view: View.Clients, icon: <ClientIcon /> },
       { view: View.PHManagement, icon: <PHIcon /> },
       { view: View.HuntRegister, icon: <HuntIcon /> },
       { view: View.Permits, icon: <PermitIcon /> },
+      { view: View.Documents, icon: <DocumentIcon /> },
       { view: View.Habitat, icon: <HabitatIcon /> },
       { view: View.RanchMap, icon: <MapIcon /> },
       { view: View.Inventory, icon: <InventoryIcon /> },
       { view: View.Finance, icon: <FinanceIcon /> },
+      { view: View.GameMeat, icon: <GameMeatIcon /> },
       { view: View.AIAssistant, icon: <AIIcon /> },
       { view: View.AnnualReport, icon: <ReportIcon /> },
     ];
@@ -79,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, m
           </div>
       </div>
       
-      <nav>
+      <nav className="overflow-y-auto">
         <ul>
           {navItems.map((item) => (
             <NavItem

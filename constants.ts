@@ -120,5 +120,97 @@ export const INITIAL_TASKS: Task[] = [
 ];
 
 export const INITIAL_MORTALITIES: Mortality[] = [];
+// FIX: Add missing farmName and farmOwner properties to comply with Harvest type
 export const INITIAL_HARVESTS: Harvest[] = [
-    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', sex: 'Male', date: '2023-10-20', professionalHunterId: 'PH001', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', locality: 'Near the old windmill', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-1355
+    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', sex: 'Male', date: '2023-10-20', professionalHunterId: 'PH001', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', locality: 'Near the old windmill', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-1355', farmName: 'Game Ranch Pro Estates', farmOwner: 'GRP Management' },
+];
+
+// FIX: Define and export missing initial data arrays
+export const INITIAL_LANDMARKS: Landmark[] = [];
+export const INITIAL_BOUNDARIES: Boundary[] = [];
+export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
+  { id: 'RL01', date: getPastDate(30), amount: 15 },
+  { id: 'RL02', date: getPastDate(25), amount: 22 },
+  { id: 'RL03', date: getPastDate(10), amount: 8 },
+];
+export const INITIAL_VELD_ASSESSMENTS: VeldAssessment[] = [];
+export const INITIAL_REPRODUCTIVE_EVENTS: ReproductiveEvent[] = [];
+export const INITIAL_ANIMAL_MEASUREMENTS: AnimalMeasurement[] = [
+    { id: 'AM001', animalId: 'A002', date: getPastDate(180), measurementType: 'Horn Length (L)', value: 52, unit: 'in' },
+    { id: 'AM002', animalId: 'A002', date: getPastDate(180), measurementType: 'Horn Length (R)', value: 52.5, unit: 'in' },
+    { id: 'AM003', animalId: 'A002', date: getPastDate(10), measurementType: 'Horn Length (L)', value: 54.5, unit: 'in' },
+    { id: 'AM004', animalId: 'A002', date: getPastDate(10), measurementType: 'Horn Length (R)', value: 55, unit: 'in' },
+];
+export const INITIAL_POPULATION_SURVEYS: PopulationSurvey[] = [
+    { id: 'PS001', date: getPastDate(90), species: 'Kudu', method: 'Ground Count', estimatedCount: 75, maleCount: 20, femaleCount: 45, juvenileCount: 10, confidence: 'Medium' },
+    { id: 'PS002', date: getPastDate(90), species: 'Impala', method: 'Ground Count', estimatedCount: 250, confidence: 'High' },
+];
+export const INITIAL_VETERINARY_LOGS: VeterinaryLog[] = [];
+export const INITIAL_HEALTH_PROTOCOLS: HealthProtocol[] = [];
+export const INITIAL_OFFICIAL_DOCUMENTS: OfficialDocument[] = [];
+export const INITIAL_GAME_MEAT_PROCESSING: GameMeatProcessing[] = [];
+
+
+// FIX: Define and export missing constants used across various components
+export const SPECIES_PARAMETERS = {
+    Kudu: {
+        primeReproductiveAge: [4, 9], // years
+        maxAge: 12,
+        idealCalvingInterval: 365, // days
+        growthRateLambda: 1.25, // 25% annual growth potential
+    },
+    Impala: {
+        primeReproductiveAge: [2, 6],
+        maxAge: 8,
+        idealCalvingInterval: 200, // days
+        growthRateLambda: 1.35,
+    },
+    'Blue Wildebeest': {
+        primeReproductiveAge: [3, 10],
+        maxAge: 15,
+        idealCalvingInterval: 365, // days
+        growthRateLambda: 1.20,
+    }
+};
+
+export const SPECIES_BENCHMARKS = {
+    Kudu: {
+        AverageLine: [
+            { age: 3, hornLength: 30 },
+            { age: 4, hornLength: 40 },
+            { age: 5, hornLength: 48 },
+            { age: 6, hornLength: 52 },
+            { age: 7, hornLength: 55 },
+            { age: 8, hornLength: 56 },
+        ],
+        TrophyLine: [
+            { age: 3, hornLength: 35 },
+            { age: 4, hornLength: 45 },
+            { age: 5, hornLength: 53 },
+            { age: 6, hornLength: 58 },
+            { age: 7, hornLength: 60 },
+            { age: 8, hornLength: 61 },
+        ],
+    },
+};
+
+export const SCI_FORMULAS: Record<string, { fields: {id: string, name: string}[], formula: (m: Record<string, number>) => number }> = {
+    Kudu: {
+        fields: [
+            { id: 'hornLengthL', name: 'Length of Left Horn' },
+            { id: 'hornLengthR', name: 'Length of Right Horn' },
+            { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
+            { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
+        ],
+        formula: (m) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
+    },
+    Impala: {
+        fields: [
+            { id: 'hornLengthL', name: 'Length of Left Horn' },
+            { id: 'hornLengthR', name: 'Length of Right Horn' },
+            { id: 'baseCircumferenceL', name: 'Circumference of Left Base' },
+            { id: 'baseCircumferenceR', name: 'Circumference of Right Base' },
+        ],
+        formula: (m) => (m.hornLengthL || 0) + (m.hornLengthR || 0) + (m.baseCircumferenceL || 0) + (m.baseCircumferenceR || 0),
+    }
+};
