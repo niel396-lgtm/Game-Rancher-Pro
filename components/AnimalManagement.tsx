@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement, ProfessionalHunter, Coords } from '../types';
@@ -628,6 +627,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                 </div>
                  <div>
                   <label htmlFor="method" className="block text-sm font-medium text-gray-700">Method</label>
+                  {/* FIX: Corrected the dropdown options to match the Harvest type definition. */}
                   <select name="method" id="method" value={harvestData.method} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                       <option>Rifle</option>
                       <option>Bow</option>

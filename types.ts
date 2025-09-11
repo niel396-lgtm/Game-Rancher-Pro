@@ -23,6 +23,51 @@ export enum View {
 
 export type ManagementStyle = 'Intensive' | 'Extensive';
 
+// Types for the mapping feature moved up to resolve reference error
+export type Coords = [number, number];
+export type CoordsPath = Coords[];
+
+export enum LandmarkType {
+  WaterTrough = 'Water Trough',
+  Dam = 'Dam',
+  Pump = 'Pump',
+  Gate = 'Gate',
+  HuntingHide = 'Hunting Hide',
+  Other = 'Other',
+}
+
+export interface Landmark {
+  id: string;
+  type: LandmarkType;
+  name: string;
+  position: Coords;
+}
+
+export interface Boundary {
+  id: string;
+  name: string;
+  positions: CoordsPath;
+}
+
+export enum WaypointCategory {
+  Sighting = 'Sighting',
+  BrokenFence = 'Broken Fence',
+  PoachingSign = 'Poaching Sign',
+  WaterIssue = 'Water Issue',
+  Infrastructure = 'Infrastructure',
+  Other = 'Other',
+}
+
+export interface Waypoint {
+  id: string;
+  category: WaypointCategory;
+  position: Coords;
+  title: string;
+  notes?: string;
+  date: string;
+}
+
+
 export interface Permit {
   id: string;
   permitNumber: string;
@@ -292,49 +337,4 @@ export interface GameMeatProcessing {
   processedBy: string;
   status: 'Awaiting Processing' | 'In Process' | 'Processed' | 'Partially Sold' | 'Sold';
   sales: GameMeatSale[];
-}
-
-
-// Types for the new mapping feature
-export type Coords = [number, number];
-export type CoordsPath = Coords[];
-
-export enum LandmarkType {
-  WaterTrough = 'Water Trough',
-  Dam = 'Dam',
-  Pump = 'Pump',
-  Gate = 'Gate',
-  HuntingHide = 'Hunting Hide',
-  Other = 'Other',
-}
-
-export interface Landmark {
-  id: string;
-  type: LandmarkType;
-  name: string;
-  position: Coords;
-}
-
-export interface Boundary {
-  id: string;
-  name: string;
-  positions: CoordsPath;
-}
-
-export enum WaypointCategory {
-  Sighting = 'Sighting',
-  BrokenFence = 'Broken Fence',
-  PoachingSign = 'Poaching Sign',
-  WaterIssue = 'Water Issue',
-  Infrastructure = 'Infrastructure',
-  Other = 'Other',
-}
-
-export interface Waypoint {
-  id: string;
-  category: WaypointCategory;
-  position: Coords;
-  title: string;
-  notes?: string;
-  date: string;
 }

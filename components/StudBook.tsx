@@ -1,12 +1,18 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
-import { Animal, AnimalMeasurement, ReproductiveEvent } from '../types';
-import { SPECIES_BENCHMARKS } from '../constants';
+import { Animal, ReproductiveEvent, AnimalMeasurement } from '../types';
 
 interface StudBookProps {
   animals: Animal[];
-  animalMeasurements: AnimalMeasurement[];
   reproductiveEvents: ReproductiveEvent[];
+  animalMeasurements: AnimalMeasurement[];
+}
+
+interface SireRecommendation {
+    sire: Animal;
+    inbreedingCoefficient: number;
+    latestMeasurement: number | null;
+    offspringCount: number;
 }
 
 // Helper to get all ancestors with their shortest path generation number
@@ -18,29 +24,37 @@ const getAncestors = (animalId: string, animalMap: Map<string, Animal>): Map<str
     while (queue.length > 0) {
         const [currentId, generation] = queue.shift()!;
         
-        if (visited.has(currentId) || generation > 8) continue; // Prevent infinite loops and limit depth
+        if (visited.has(currentId) || generation > 10) continue; // Prevent infinite loops and limit depth
         visited.add(currentId);
 
         if (generation > 0) {
+            // Only add ancestors, not the animal itself.
             if (!ancestors.has(currentId) || ancestors.get(currentId)! > generation) {
                 ancestors.set(currentId, generation);
             }
         }
         
         const animal = animalMap.get(currentId);
-        if (animal?.sireId) queue.push([animal.sireId, generation + 1]);
-        if (animal?.damId) queue.push([animal.damId, generation + 1]);
+        if (animal?.sireId) {
+            queue.push([animal.sireId, generation + 1]);
+        }
+        if (animal?.damId) {
+            queue.push([animal.damId, generation + 1]);
+        }
     }
     return ancestors;
 };
 
 // Main calculation function for Wright's coefficient of inbreeding
 const calculateInbreedingCoefficient = (sire: Animal, dam: Animal, animalMap: Map<string, Animal>): number => {
-    if (!sire || !dam || sire.id === dam.id) return 0;
+    if (!sire || !dam || sire.id === dam.id) return 1.0;
     
     const sireAncestors = getAncestors(sire.id, animalMap);
     const damAncestors = getAncestors(dam.id, animalMap);
     
+    // An animal cannot be its own ancestor
+    if (sireAncestors.has(dam.id) || damAncestors.has(sire.id)) return 1.0;
+
     let totalCoefficient = 0;
     
     sireAncestors.forEach((n1, commonAncestorId) => {
@@ -54,135 +68,114 @@ const calculateInbreedingCoefficient = (sire: Animal, dam: Animal, animalMap: Ma
 };
 
 const getInbreedingColor = (coeff: number) => {
-    if (coeff >= 0.125) return 'bg-red-100 text-red-800'; // High risk (e.g., half-sibs or closer)
-    if (coeff >= 0.0625) return 'bg-yellow-100 text-yellow-800'; // Moderate risk
-    return 'bg-green-100 text-green-800';
+    if (coeff > 0.125) return 'text-red-600 font-bold'; // High risk (e.g., half-sibs or closer)
+    if (coeff > 0.0625) return 'text-yellow-600 font-semibold'; // Moderate risk
+    return 'text-green-600';
 };
 
-const PedigreeColumn: React.FC<{ title: string; animal?: Animal; allAnimals: Map<string, Animal> }> = ({ title, animal, allAnimals }) => {
-    const sire = animal?.sireId ? allAnimals.get(animal.sireId) : undefined;
-    const dam = animal?.damId ? allAnimals.get(animal.damId) : undefined;
-    return (
-        <div className="flex-1 space-y-2">
-            <h4 className="text-center font-semibold text-gray-600">{title}</h4>
-            <div className={`p-2 rounded border text-center ${animal?.sex === 'Male' ? 'bg-blue-50 border-blue-200' : 'bg-pink-50 border-pink-200'}`}>
-                <p className="font-bold">{animal?.tagId || 'Unknown'}</p>
-                <p className="text-xs">{animal?.species}</p>
-            </div>
-            <div className="pl-4 border-l-2 ml-4 space-y-2">
-                <div className="p-1 rounded border bg-blue-50 border-blue-200 text-sm">
-                    <span className="font-semibold">Sire:</span> {sire?.tagId || 'Unknown'}
-                </div>
-                <div className="p-1 rounded border bg-pink-50 border-pink-200 text-sm">
-                    <span className="font-semibold">Dam:</span> {dam?.tagId || 'Unknown'}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export const StudBook: React.FC<StudBookProps> = ({ animals, animalMeasurements, reproductiveEvents }) => {
-    const [selectedSireId, setSelectedSireId] = useState<string>('');
+export const StudBook: React.FC<StudBookProps> = ({ animals, reproductiveEvents, animalMeasurements }) => {
     const [selectedDamId, setSelectedDamId] = useState<string>('');
-    
     const animalMap = useMemo(() => new Map(animals.map(a => [a.id, a])), [animals]);
-    const sires = useMemo(() => animals.filter(a => a.sex === 'Male').sort((a,b) => a.tagId.localeCompare(b.tagId)), [animals]);
-    const dams = useMemo(() => animals.filter(a => a.sex === 'Female').sort((a,b) => a.tagId.localeCompare(b.tagId)), [animals]);
 
-    const { inbreedingCoefficient, projectedPotential, commonAncestors } = useMemo(() => {
-        if (!selectedSireId || !selectedDamId) return { inbreedingCoefficient: 0, projectedPotential: null, commonAncestors: [] };
-        
-        const sire = animalMap.get(selectedSireId);
-        const dam = animalMap.get(selectedDamId);
-        if (!sire || !dam || sire.species !== dam.species) return { inbreedingCoefficient: 0, projectedPotential: null, commonAncestors: [] };
+    const dams = useMemo(() => animals.filter(a => a.sex === 'Female'), [animals]);
 
-        const coefficient = calculateInbreedingCoefficient(sire, dam, animalMap);
-        
-        const sireAncestors = getAncestors(sire.id, animalMap);
-        const damAncestors = getAncestors(dam.id, animalMap);
-        const ancestors: string[] = [];
-        sireAncestors.forEach((_, id) => {
-            if(damAncestors.has(id)) ancestors.push(animalMap.get(id)?.tagId || id);
+    const sireRecommendations = useMemo((): SireRecommendation[] => {
+        if (!selectedDamId) return [];
+
+        const selectedDam = animalMap.get(selectedDamId);
+        if (!selectedDam) return [];
+
+        const potentialSires = animals.filter(a => a.sex === 'Male' && a.species === selectedDam.species && a.id !== selectedDam.id);
+
+        const recommendations = potentialSires.map(sire => {
+            const inbreedingCoefficient = calculateInbreedingCoefficient(sire, selectedDam, animalMap);
+
+            const sireMeasurements = animalMeasurements
+                .filter(m => m.animalId === sire.id && (m.measurementType === 'Horn Length (L)' || m.measurementType === 'Horn Length (R)'))
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            
+            let latestMeasurement: number | null = null;
+            if (sireMeasurements.length > 0) {
+                 const latestDate = sireMeasurements[0].date;
+                 const latestMeasurementsOnDate = sireMeasurements.filter(m => m.date === latestDate);
+                 latestMeasurement = latestMeasurementsOnDate.reduce((sum, m) => sum + m.value, 0) / latestMeasurementsOnDate.length;
+            }
+
+            const offspringCount = reproductiveEvents.filter(e => e.sireTagId === sire.tagId).length;
+
+            return { sire, inbreedingCoefficient, latestMeasurement, offspringCount };
         });
 
-        let potential: string | null = null;
-        const speciesBenchmarks = (SPECIES_BENCHMARKS as any)[sire.species];
-        if (speciesBenchmarks) {
-            let sirePerformance = 1.0;
-            let damPerformance = 1.0;
-
-            const sireMeasurements = animalMeasurements.filter(m => m.animalId === sire.id && m.measurementType.includes('Horn'));
-            if(sireMeasurements.length > 0) {
-                 const avgMeasurement = sireMeasurements.reduce((acc, m) => acc + m.value, 0) / sireMeasurements.length;
-                 const benchmark = speciesBenchmarks.AverageLine.find((p:any) => p.age === sire.age)?.hornLength || speciesBenchmarks.AverageLine[speciesBenchmarks.AverageLine.length-1].hornLength;
-                 sirePerformance = avgMeasurement / benchmark;
+        // Sort by lowest inbreeding, then by best measurement
+        return recommendations.sort((a, b) => {
+            if (a.inbreedingCoefficient < b.inbreedingCoefficient) return -1;
+            if (a.inbreedingCoefficient > b.inbreedingCoefficient) return 1;
+            if (b.latestMeasurement && a.latestMeasurement) {
+                return b.latestMeasurement - a.latestMeasurement;
             }
+            return 0;
+        });
 
-            const damSire = dam.sireId ? animalMap.get(dam.sireId) : null;
-            if (damSire) {
-                 const damSireMeasurements = animalMeasurements.filter(m => m.animalId === damSire.id && m.measurementType.includes('Horn'));
-                 if(damSireMeasurements.length > 0) {
-                     const avgMeasurement = damSireMeasurements.reduce((acc, m) => acc + m.value, 0) / damSireMeasurements.length;
-                     const benchmark = speciesBenchmarks.AverageLine.find((p:any) => p.age === damSire.age)?.hornLength || speciesBenchmarks.AverageLine[speciesBenchmarks.AverageLine.length-1].hornLength;
-                     damPerformance = avgMeasurement / benchmark;
-                 }
-            }
-            
-            const matureBenchmark = speciesBenchmarks.TrophyLine[speciesBenchmarks.TrophyLine.length - 1].hornLength;
-            const projectedLength = matureBenchmark * ((sirePerformance + damPerformance) / 2);
-            potential = `${projectedLength.toFixed(1)}" Mature Horn Length`;
-        }
-
-        return { inbreedingCoefficient: coefficient, projectedPotential: potential, commonAncestors: ancestors };
-
-    }, [selectedSireId, selectedDamId, animalMap, animalMeasurements]);
+    }, [selectedDamId, animals, reproductiveEvents, animalMeasurements, animalMap]);
 
     return (
         <div>
-            <h2 className="text-3xl font-bold text-brand-dark mb-6">Stud Book & Potential Offspring Simulator</h2>
+            <h2 className="text-3xl font-bold text-brand-dark mb-6">Genetic Analysis & Breeding Recommendations</h2>
             <Card>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border-b">
-                     <div>
-                        <label htmlFor="sire-select" className="block text-lg font-medium text-gray-700 mb-2">Select Sire</label>
-                        <select id="sire-select" value={selectedSireId} onChange={e => setSelectedSireId(e.target.value)} className="mt-1 block w-full text-base border-gray-300 rounded-md shadow-sm">
-                            <option value="">-- Select a male --</option>
-                            {sires.map(s => <option key={s.id} value={s.id}>{s.tagId} ({s.species})</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label htmlFor="dam-select" className="block text-lg font-medium text-gray-700 mb-2">Select Dam</label>
-                        <select id="dam-select" value={selectedDamId} onChange={e => setSelectedDamId(e.target.value)} className="mt-1 block w-full text-base border-gray-300 rounded-md shadow-sm" disabled={!selectedSireId}>
-                            <option value="">-- Select a female --</option>
-                            {dams.filter(d => d.species === animalMap.get(selectedSireId)?.species).map(d => <option key={d.id} value={d.id}>{d.tagId} ({d.species})</option>)}
-                        </select>
-                    </div>
+                <div className="mb-6">
+                    <label htmlFor="dam-select" className="block text-lg font-medium text-gray-700 mb-2">
+                        Select a Dam to Analyze Potential Pairings
+                    </label>
+                    <select
+                        id="dam-select"
+                        value={selectedDamId}
+                        onChange={(e) => setSelectedDamId(e.target.value)}
+                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand-secondary focus:border-brand-secondary sm:text-sm rounded-md shadow"
+                    >
+                        <option value="">-- Select a female animal --</option>
+                        {dams.map(dam => (
+                            <option key={dam.id} value={dam.id}>
+                                {dam.tagId} ({dam.species})
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
-                {selectedSireId && selectedDamId && animalMap.get(selectedSireId)?.species === animalMap.get(selectedDamId)?.species ? (
-                    <div className="p-4">
-                        <h3 className="text-xl font-semibold text-brand-dark mb-4">Pairing Analysis</h3>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <div className={`p-4 rounded-lg text-center ${getInbreedingColor(inbreedingCoefficient)}`}>
-                                <p className="font-semibold">Wright's Inbreeding Coefficient</p>
-                                <p className="text-3xl font-bold">{(inbreedingCoefficient * 100).toFixed(2)}%</p>
-                            </div>
-                            <div className="p-4 rounded-lg bg-blue-100 text-blue-800 text-center">
-                                <p className="font-semibold">Projected Genetic Potential</p>
-                                <p className="text-3xl font-bold">{projectedPotential || 'N/A'}</p>
-                            </div>
-                        </div>
-                         <div>
-                             <h3 className="text-lg font-semibold text-brand-dark mb-2">Pedigree Comparison</h3>
-                             <p className="text-sm text-gray-600 mb-2">Common Ancestors: <span className="font-semibold">{commonAncestors.join(', ') || 'None Detected'}</span></p>
-                             <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
-                                 <PedigreeColumn title="Sire's Lineage" animal={animalMap.get(selectedSireId)} allAnimals={animalMap} />
-                                 <PedigreeColumn title="Dam's Lineage" animal={animalMap.get(selectedDamId)} allAnimals={animalMap} />
-                             </div>
-                         </div>
+                {selectedDamId ? (
+                    <div className="overflow-x-auto">
+                        <h3 className="text-xl font-semibold text-brand-dark mb-4">
+                           Breeding Recommendations for Dam: {animalMap.get(selectedDamId)?.tagId}
+                        </h3>
+                         <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sire Tag ID</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inbreeding Coefficient</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latest Horn Avg. (in)</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Known Offspring</th>
+                                </tr>
+                            </thead>
+                             <tbody className="bg-white divide-y divide-gray-200">
+                                {sireRecommendations.map((rec, index) => (
+                                    <tr key={rec.sire.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-primary">{rec.sire.tagId}</td>
+                                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${getInbreedingColor(rec.inbreedingCoefficient)}`}>
+                                            {(rec.inbreedingCoefficient * 100).toFixed(2)}%
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {rec.latestMeasurement ? rec.latestMeasurement.toFixed(2) : 'N/A'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{rec.offspringCount}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 ) : (
                     <div className="text-center py-12">
-                        <p className="text-gray-500">Please select a compatible sire and dam to simulate a potential pairing.</p>
+                        <p className="text-gray-500">Please select a dam from the dropdown to see breeding recommendations.</p>
                     </div>
                 )}
             </Card>
