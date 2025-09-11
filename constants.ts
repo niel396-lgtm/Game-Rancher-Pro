@@ -122,7 +122,7 @@ export const INITIAL_TASKS: Task[] = [
 export const INITIAL_MORTALITIES: Mortality[] = [];
 // FIX: Add missing farmName and farmOwner properties to comply with Harvest type
 export const INITIAL_HARVESTS: Harvest[] = [
-    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', sex: 'Male', date: '2023-10-20', professionalHunterId: 'PH001', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', locality: 'Near the old windmill', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-1355', farmName: 'Game Ranch Pro Estates', farmOwner: 'GRP Management' },
+    { id: 'H001', animalTagId: 'KDU-07', species: 'Kudu', sex: 'Male', date: '2023-10-20', professionalHunterId: 'PH001', method: 'Rifle', trophyMeasurements: 'Rowland Ward', location: 'West Ridge', locality: 'Near the old windmill', hornLengthL: 54.5, hornLengthR: 55.0, tipToTipSpread: 32.0, clientId: 'C001', photoUrl: 'https://images.unsplash.com/photo-1590393278637-1355', farmName: 'Game Rancher Pro Estates', farmOwner: 'GRP Management' },
 ];
 
 // FIX: Define and export missing initial data arrays

@@ -1,4 +1,3 @@
-import { Coords } from './RanchMap';
 
 export enum View {
   Dashboard = 'Dashboard',
