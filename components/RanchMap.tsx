@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, FeatureGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -115,6 +114,33 @@ const DrawControl = ({ featureGroupRef, onCreated, onDeleted }: any) => {
   return null;
 };
 
+const MapLayersControl = () => {
+    const map = useMap();
+
+    useEffect(() => {
+        const baseLayers = {
+            "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri'
+            }),
+            "Topographic": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenTopoMap'
+            }),
+            "Streets": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            })
+        };
+
+        // Add the default layer to the map
+        baseLayers.Satellite.addTo(map);
+
+        // Add the layer control
+        L.control.layers(baseLayers).addTo(map);
+
+    }, [map]);
+
+    return null;
+};
+
 
 export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, animals, addLandmark, addBoundary, removeFeature }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -203,10 +229,7 @@ export const RanchMap: React.FC<RanchMapProps> = ({ landmarks, boundaries, anima
       <h2 className="text-3xl font-bold text-brand-dark mb-6">Ranch Map</h2>
       <Card className="flex-grow p-2">
         <MapContainer center={RANCH_CENTER} zoom={RANCH_ZOOM} style={{ height: '100%', width: '100%' }} className="rounded-md">
-          <TileLayer
-            attribution='&copy; <a href="https://www.esri.com/en-us/home">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          />
+          <MapLayersControl />
           <FeatureGroup ref={featureGroupRef}>
             <DrawControl
               featureGroupRef={featureGroupRef}
