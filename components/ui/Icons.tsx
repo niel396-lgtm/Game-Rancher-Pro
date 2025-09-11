@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const IconWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
@@ -191,9 +190,7 @@ export const DocumentIcon: React.FC<{ className?: string }> = ({ className = 'w-
 
 export const GameMeatIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
     <IconWrapper className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 4.5l7.5 7.5-7.5 7.5" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.704 3.235a.75.75 0 011.092 0l7.265 6.357a.75.75 0 010 1.092l-7.265 6.357a.75.75 0 01-1.092 0L2.44 11.775a.75.75 0 010-1.092L9.704 3.235z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
     </IconWrapper>
 );
 
