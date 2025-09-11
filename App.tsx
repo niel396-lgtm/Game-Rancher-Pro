@@ -10,7 +10,7 @@ import { AIAssistant } from './components/AIAssistant';
 import { RanchMap } from './components/RanchMap';
 import { ClientManagement } from './components/ClientManagement';
 import { PermitManagement } from './components/PermitManagement';
-import { GeneticAnalysis } from './components/GeneticAnalysis';
+import { StudBook } from './components/StudBook';
 import { HarvestPlanning } from './components/HarvestPlanning';
 import { PopulationSurveys } from './components/PopulationSurveys';
 import { AnnualReport } from './components/AnnualReport';
@@ -258,6 +258,7 @@ const App: React.FC = () => {
           healthProtocols={healthProtocols}
           veterinaryLogs={veterinaryLogs}
           documents={documents}
+          professionalHunters={professionalHunters}
           />;
       case View.Animals:
         return <AnimalManagement 
@@ -277,7 +278,6 @@ const App: React.FC = () => {
           animalMeasurements={animalMeasurements}
           addAnimalMeasurement={addAnimalMeasurement}
           professionalHunters={professionalHunters}
-          addGameMeatEntry={addGameMeatEntry}
           />;
       case View.VeterinaryLog:
         return <VeterinaryLogView
@@ -294,8 +294,8 @@ const App: React.FC = () => {
             habitats={habitats}
             animals={animals}
         />;
-      case View.GeneticAnalysis:
-        return <GeneticAnalysis 
+      case View.StudBook:
+        return <StudBook 
           animals={animals} 
           reproductiveEvents={reproductiveEvents}
           animalMeasurements={animalMeasurements}
@@ -401,6 +401,7 @@ const App: React.FC = () => {
           healthProtocols={healthProtocols}
           veterinaryLogs={veterinaryLogs}
           documents={documents}
+          professionalHunters={professionalHunters}
           />;
     }
   };

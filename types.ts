@@ -15,7 +15,7 @@ export enum View {
   BioeconomicsReport = 'Bio-Economics',
   AIAssistant = 'AI Assistant',
   RanchMap = 'Ranch Map',
-  GeneticAnalysis = 'Genetic Analysis',
+  StudBook = 'Stud Book',
   HarvestPlanning = 'Harvest Planning',
   PHManagement = 'PH Management',
   HuntRegister = 'Hunt Register',
