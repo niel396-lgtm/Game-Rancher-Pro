@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from './ui/Card';
 // FIX: Alias the VeterinaryLog type to avoid name collision with the component.
