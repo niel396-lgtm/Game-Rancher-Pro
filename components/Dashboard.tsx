@@ -45,7 +45,7 @@ const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; u
     </Card>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys, veldAssessments, documents, professionalHunters }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys, veldAssessments, healthProtocols, documents, professionalHunters }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -94,8 +94,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
     });
     professionalHunters.forEach(ph => allItems.push({ id: ph.id, name: ph.name, type: 'PH License', expiryDate: ph.licenseExpiryDate }));
 
+    // FIX: Add this new section to process health protocols
+    const monthMap: { [key: string]: number } = { 'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5, 'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11 };
+    healthProtocols.forEach(p => {
+        const currentYear = today.getFullYear();
+        let dueDate = new Date(currentYear, monthMap[p.dueMonth], 1);
+        if (dueDate < today) {
+            // If the due date for this year has already passed, check next year's
+            dueDate.setFullYear(currentYear + 1);
+        }
+        allItems.push({ id: p.id, name: p.name, type: `Health Protocol (${p.species})`, expiryDate: dueDate.toISOString().split('T')[0] });
+    });
+    // --- End of new section ---
+
     return allItems.reduce((acc, item) => {
-        const expiryDate = new Date(item.expiryDate + 'T00:00:00'); // Ensure local timezone
+        const expiryDate = new Date(item.expiryDate + 'T00:00:00');
         if (expiryDate < today) {
             acc.expiredItems.push(item);
         } else if (expiryDate <= sixtyDaysFromNow) {
@@ -103,7 +116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
         }
         return acc;
     }, { expiringItems: [] as typeof allItems, expiredItems: [] as typeof allItems });
-  }, [permits, documents, professionalHunters]);
+  }, [permits, documents, professionalHunters, healthProtocols]);
   
     const highGrazingPressureAlerts = useMemo(() => {
         const thirtyDaysAgo = new Date();
