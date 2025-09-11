@@ -149,6 +149,7 @@ export interface Harvest {
   id: string;
   animalTagId: string;
   species: string;
+  sex: 'Male' | 'Female';
   date: string;
   professionalHunterId: string;
   clientId?: string;
@@ -163,6 +164,11 @@ export interface Harvest {
   tipToTipSpread?: number; // Optional: Spread measurement
   photoUrl?: string;
   huntId?: string;
+  farmName: string;
+  farmOwner: string;
+  clientSignature?: string; // URL to scanned signature
+  phSignature?: string; // URL to scanned signature
+  witness?: string;
 }
 
 export interface RainfallLog {

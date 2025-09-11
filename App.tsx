@@ -105,11 +105,12 @@ const App: React.FC = () => {
       removeAnimal(animal.id);
   };
   
-  const logAnimalHarvest = (animal: Animal, harvestData: Omit<Harvest, 'id' | 'animalTagId' | 'species' | 'date' | 'location'>) => {
+  const logAnimalHarvest = (animal: Animal, harvestData: Omit<Harvest, 'id' | 'animalTagId' | 'species' | 'sex' | 'date' | 'location'>) => {
     const newHarvest: Harvest = {
         id: `H${Date.now()}`,
         animalTagId: animal.tagId,
         species: animal.species,
+        sex: animal.sex,
         date: new Date().toISOString().split('T')[0],
         location: animal.location,
         ...harvestData,
@@ -288,6 +289,7 @@ const App: React.FC = () => {
             permits={permits}
             addHunt={addHunt}
             updateHunt={updateHunt}
+            harvests={harvests}
         />;
       case View.Permits:
         return <PermitManagement permits={permits} addPermit={addPermit} />;

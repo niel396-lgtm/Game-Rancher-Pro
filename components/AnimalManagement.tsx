@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement, ProfessionalHunter, Coords } from '../types';
@@ -18,7 +17,7 @@ interface AnimalManagementProps {
   mortalities: Mortality[];
   logAnimalMortality: (animal: Animal, cause: string) => void;
   harvests: Harvest[];
-  logAnimalHarvest: (animal: Animal, harvestData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'>) => void;
+  logAnimalHarvest: (animal: Animal, harvestData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'|'sex'>) => void;
   transactions: Transaction[];
   clients: Client[];
   permits: Permit[];
@@ -92,7 +91,12 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
   const [harvestData, setHarvestData] = useState({ 
-    professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null
+    professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null,
+    farmName: 'Game Ranch Pro Estates',
+    farmOwner: 'GRP Management',
+    clientSignature: '',
+    phSignature: '',
+    witness: ''
   });
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
@@ -147,7 +151,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null });
+    setHarvestData({ professionalHunterId: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null, farmName: 'Game Ranch Pro Estates', farmOwner: 'GRP Management', clientSignature: '', phSignature: '', witness: '' });
   };
 
   const handleLogMortalitySubmit = () => {
@@ -162,7 +166,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     if (animalToRemove) {
       const { hornLengthL, hornLengthR, tipToTipSpread, baseCircumferenceL, baseCircumferenceR, ...rest } = harvestData;
       
-      const finalData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'> = { ...rest };
+      const finalData: Omit<Harvest, 'id'|'animalTagId'|'species'|'date'|'location'|'sex'> = { ...rest };
 
       if(hornLengthL) finalData.hornLengthL = parseFloat(hornLengthL);
       if(hornLengthR) finalData.hornLengthR = parseFloat(hornLengthR);
@@ -173,6 +177,9 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
       if(!finalData.clientId) delete finalData.clientId;
       if(!finalData.photoUrl) delete finalData.photoUrl;
       if(!finalData.coordinates) delete finalData.coordinates;
+      if(!finalData.witness) delete (finalData as any).witness;
+      if(!finalData.clientSignature) delete (finalData as any).clientSignature;
+      if(!finalData.phSignature) delete (finalData as any).phSignature;
 
       logAnimalHarvest(animalToRemove, finalData);
       handleCloseRemoveModals();
@@ -657,6 +664,35 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700">Photo URL (optional)</label>
                   <input type="url" name="photoUrl" id="photoUrl" value={harvestData.photoUrl} onChange={handleHarvestInputChange} placeholder="https://example.com/image.jpg" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
               </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                 <h4 className="text-md font-semibold text-gray-600">Compliance Details (for PH Register)</h4>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="farmName" className="block text-sm font-medium text-gray-700">Farm Name</label>
+                        <input type="text" name="farmName" id="farmName" value={harvestData.farmName} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                    </div>
+                    <div>
+                        <label htmlFor="farmOwner" className="block text-sm font-medium text-gray-700">Farm Owner</label>
+                        <input type="text" name="farmOwner" id="farmOwner" value={harvestData.farmOwner} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                    </div>
+                </div>
+                <div>
+                    <label htmlFor="witness" className="block text-sm font-medium text-gray-700">Witness Name (optional)</label>
+                    <input type="text" name="witness" id="witness" value={harvestData.witness} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="clientSignature" className="block text-sm font-medium text-gray-700">Client Signature URL (optional)</label>
+                        <input type="url" name="clientSignature" id="clientSignature" value={harvestData.clientSignature} onChange={handleHarvestInputChange} placeholder="https://example.com/sig.pdf" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                    </div>
+                    <div>
+                        <label htmlFor="phSignature" className="block text-sm font-medium text-gray-700">PH Signature URL (optional)</label>
+                        <input type="url" name="phSignature" id="phSignature" value={harvestData.phSignature} onChange={handleHarvestInputChange} placeholder="https://example.com/sig.pdf" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                    </div>
+                </div>
+              </div>
+              
               <div className="flex justify-end gap-4 mt-6">
                   <button type="button" onClick={handleCloseRemoveModals} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
                   <button type="submit" className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-dark">Submit Harvest Log</button>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Modal } from './ui/Modal';
-import { PlusIcon } from './ui/Icons';
-import { Hunt, Client, ProfessionalHunter, Permit } from '../types';
+import { PlusIcon, ExportIcon } from './ui/Icons';
+import { Hunt, Client, ProfessionalHunter, Permit, Harvest } from '../types';
 
 interface HuntRegisterProps {
     hunts: Hunt[];
@@ -11,7 +11,44 @@ interface HuntRegisterProps {
     permits: Permit[];
     addHunt: (hunt: Omit<Hunt, 'id'>) => void;
     updateHunt: (hunt: Hunt) => void;
+    harvests: Harvest[];
 }
+
+// Utility function to handle CSV export
+const exportToCsv = (filename: string, rows: object[]) => {
+    if (!rows || !rows.length) {
+        return;
+    }
+    const separator = ',';
+    const keys = Object.keys(rows[0]);
+    const csvContent =
+        keys.join(separator) +
+        '\n' +
+        rows.map(row => {
+            return keys.map(k => {
+                let cell = (row as any)[k] === null || (row as any)[k] === undefined ? '' : (row as any)[k];
+                cell = cell instanceof Date
+                    ? cell.toLocaleString()
+                    : cell.toString().replace(/"/g, '""');
+                if (cell.search(/("|,|\n)/g) >= 0) {
+                    cell = `"${cell}"`;
+                }
+                return cell;
+            }).join(separator);
+        }).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
 
 const HuntStatusBadge: React.FC<{ status: Hunt['status'] }> = ({ status }) => {
     const styles = {
@@ -38,7 +75,7 @@ const getPHStatus = (expiryDate: string): { text: string; color: string } => {
     return { text: 'Active', color: '' };
 };
 
-export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, professionalHunters, permits, addHunt, updateHunt }) => {
+export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, professionalHunters, permits, addHunt, updateHunt, harvests }) => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingHunt, setEditingHunt] = useState<Hunt | null>(null);
 
@@ -102,6 +139,37 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
         updateHunt(updatedHunt);
         setEditingHunt(updatedHunt);
     }
+
+    const handleExportRegister = () => {
+        const sortedHarvests = [...harvests].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+        const dataToExport = sortedHarvests.map(h => {
+            const client = h.clientId ? clients.find(c => c.id === h.clientId) : null;
+            const ph = professionalHunters.find(p => p.id === h.professionalHunterId);
+            
+            return {
+                'Date': h.date,
+                'Farm Name': h.farmName,
+                'Farm Owner': h.farmOwner,
+                'Client Name': client?.name || 'N/A',
+                'Client Contact': client?.phone || client?.email || 'N/A',
+                'PH Name': ph?.name || 'N/A',
+                'PH License': ph?.licenseNumber || 'N/A',
+                'Species': h.species,
+                'Sex': h.sex,
+                'Trophy Measurements': h.trophyMeasurements,
+                'Witness': h.witness || 'N/A',
+                'Client Signature URL': h.clientSignature || 'N/A',
+                'PH Signature URL': h.phSignature || 'N/A',
+            };
+        });
+        
+        if(dataToExport.length > 0) {
+            exportToCsv('ph_hunting_register.csv', dataToExport);
+        } else {
+            alert("No harvest data available to export.");
+        }
+    };
     
     const clientMap = new Map(clients.map(c => [c.id, c.name]));
     const phMap = new Map(professionalHunters.map(ph => [ph.id, ph.name]));
@@ -111,13 +179,22 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
         <div>
              <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-brand-dark">Digital Hunt Register</h2>
-                <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark"
-                >
-                    <PlusIcon className="w-5 h-5 mr-2" />
-                    Plan New Hunt
-                </button>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={handleExportRegister}
+                        className="flex items-center px-4 py-2 bg-brand-secondary text-white font-semibold rounded-lg hover:bg-brand-dark"
+                    >
+                        <ExportIcon className="w-5 h-5 mr-2" />
+                        Export PH Register
+                    </button>
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark"
+                    >
+                        <PlusIcon className="w-5 h-5 mr-2" />
+                        Plan New Hunt
+                    </button>
+                </div>
             </div>
             <Card>
                  <div className="overflow-x-auto">

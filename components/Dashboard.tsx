@@ -6,7 +6,8 @@ import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
 import { HerdQualityChart } from './HerdQualityChart';
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey, VeldAssessment } from '../types';
+// FIX: Added HealthProtocol and VeterinaryLog to the import
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey, VeldAssessment, HealthProtocol, VeterinaryLog } from '../types';
 import { PopulationIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
 
@@ -26,6 +27,9 @@ interface DashboardProps {
     animalMeasurements: AnimalMeasurement[];
     populationSurveys: PopulationSurvey[];
     veldAssessments: VeldAssessment[];
+    // FIX: Added missing props to the interface to match what App.tsx provides.
+    healthProtocols: HealthProtocol[];
+    veterinaryLogs: VeterinaryLog[];
 }
 
 const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
