@@ -91,9 +91,19 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const [causeOfDeath, setCauseOfDeath] = useState('');
   
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
-  // FIX: Add missing 'locality' property to initial state to match the Harvest type.
   const [harvestData, setHarvestData] = useState({ 
-    professionalHunterId: '', locality: '', method: 'Rifle' as Harvest['method'], trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null,
+    professionalHunterId: '', 
+    locality: '', 
+    method: 'Rifle' as Harvest['method'], 
+    trophyMeasurements: '', 
+    hornLengthL: '', 
+    hornLengthR: '', 
+    tipToTipSpread: '', 
+    baseCircumferenceL: '', 
+    baseCircumferenceR: '', 
+    clientId: '', 
+    photoUrl: '', 
+    coordinates: null as Coords | null,
     farmName: 'Game Ranch Pro Estates',
     farmOwner: 'GRP Management',
     clientSignature: '',
@@ -123,7 +133,6 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   
   const handleHarvestInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
-      // FIX: Cast `method` to its specific type to prevent TypeScript from widening it to a generic `string`.
       setHarvestData(prev => ({ ...prev, [name]: name === 'method' ? (value as Harvest['method']) : value }));
   };
 
@@ -619,7 +628,6 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                 </div>
                  <div>
                   <label htmlFor="method" className="block text-sm font-medium text-gray-700">Method</label>
-                  {/* FIX: Corrected the dropdown options for harvest method to match the `Harvest` type definition. */}
                   <select name="method" id="method" value={harvestData.method} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                       <option>Rifle</option>
                       <option>Bow</option>
@@ -629,7 +637,6 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                   </select>
               </div>
               </div>
-               {/* FIX: Add input for the required 'locality' field. */}
                <div>
                   <label htmlFor="locality" className="block text-sm font-medium text-gray-700">Locality (Specific Area)</label>
                   <input type="text" name="locality" id="locality" value={harvestData.locality} onChange={handleHarvestInputChange} placeholder="e.g., Near the old windmill" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
