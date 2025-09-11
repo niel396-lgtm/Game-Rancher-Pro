@@ -297,7 +297,6 @@ const App: React.FC = () => {
       case View.StudBook:
         return <StudBook 
           animals={animals} 
-          reproductiveEvents={reproductiveEvents}
           animalMeasurements={animalMeasurements}
           />;
       case View.HarvestPlanning:

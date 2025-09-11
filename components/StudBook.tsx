@@ -1,12 +1,10 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
-import { Animal, ReproductiveEvent, AnimalMeasurement } from '../types';
+import { Animal, AnimalMeasurement } from '../types';
 import { SPECIES_BENCHMARKS } from '../constants';
 
 interface StudBookProps {
   animals: Animal[];
-  reproductiveEvents: ReproductiveEvent[];
   animalMeasurements: AnimalMeasurement[];
 }
 
