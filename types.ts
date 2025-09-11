@@ -10,6 +10,7 @@ export enum View {
   Habitat = 'Habitat',
   Inventory = 'Inventory',
   Finance = 'Finance',
+  GameMeat = 'Game Meat Processing',
   BioeconomicsReport = 'Bio-Economics',
   AIAssistant = 'AI Assistant',
   RanchMap = 'Ranch Map',
@@ -253,6 +254,31 @@ export interface HealthProtocol {
     procedure: string; // e.g., 'Brucellosis testing'
     frequency: 'Annually' | 'Bi-Annually' | 'Quarterly';
     dueMonth: string; // e.g., 'September'
+}
+
+export interface GameMeatSale {
+  id: string;
+  buyer: string;
+  invoiceNumber: string;
+  date: string;
+  weightKg: number;
+  pricePerKg: number;
+  totalPrice: number;
+  notes?: string;
+}
+
+export interface GameMeatProcessing {
+  id: string;
+  harvestId: string;
+  animalTagId: string;
+  species: string;
+  liveWeightKg?: number;
+  carcassWeightKg: number;
+  processedWeightKg?: number;
+  processingDate: string;
+  processedBy: string;
+  status: 'Awaiting Processing' | 'In Process' | 'Processed' | 'Partially Sold' | 'Sold';
+  sales: GameMeatSale[];
 }
 
 
