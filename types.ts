@@ -1,4 +1,5 @@
 
+
 export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
