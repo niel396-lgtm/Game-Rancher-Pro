@@ -93,7 +93,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const [isLogHarvestOpen, setIsLogHarvestOpen] = useState(false);
   // FIX: Add missing 'locality' property to initial state to match the Harvest type.
   const [harvestData, setHarvestData] = useState({ 
-    professionalHunterId: '', locality: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null,
+    professionalHunterId: '', locality: '', method: 'Rifle' as Harvest['method'], trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null as Coords | null,
     farmName: 'Game Ranch Pro Estates',
     farmOwner: 'GRP Management',
     clientSignature: '',
@@ -123,7 +123,8 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   
   const handleHarvestInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
-      setHarvestData(prev => ({ ...prev, [name]: value }));
+      // FIX: Cast `method` to its specific type to prevent TypeScript from widening it to a generic `string`.
+      setHarvestData(prev => ({ ...prev, [name]: name === 'method' ? (value as Harvest['method']) : value }));
   };
 
   const handleAddAnimal = (e: React.FormEvent) => {
@@ -618,8 +619,13 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                 </div>
                  <div>
                   <label htmlFor="method" className="block text-sm font-medium text-gray-700">Method</label>
+                  {/* FIX: Corrected the dropdown options for harvest method to match the `Harvest` type definition. */}
                   <select name="method" id="method" value={harvestData.method} onChange={handleHarvestInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-                      <option>Rifle</option> <option>Bow</option> <option>Crossbow</option> <option>Other</option>
+                      <option>Rifle</option>
+                      <option>Bow</option>
+                      <option>Crossbow</option>
+                      <option>Muzzleloader</option>
+                      <option>Handgun</option>
                   </select>
               </div>
               </div>
