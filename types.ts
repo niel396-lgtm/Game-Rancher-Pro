@@ -20,6 +20,7 @@ export enum View {
   PHManagement = 'PH Management',
   HuntRegister = 'Hunt Register',
   AnnualReport = 'Annual Report',
+  RanchDiscovery = 'Find a Ranch',
 }
 
 export type ManagementStyle = 'Intensive' | 'Extensive';
@@ -183,6 +184,7 @@ export interface Hunt {
         indemnityPdfUrl?: string;
     };
     notes?: string;
+    ranchId: string; // Added to link hunt to a specific ranch
 }
 
 

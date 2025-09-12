@@ -1,6 +1,6 @@
 
 
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating, ClientReview } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 export const GU_CONSUMPTION_RATE = 1650; // kg DM/year, based on Blue Wildebeest (1 GU)
@@ -18,23 +18,51 @@ const getPastDate = (days: number) => {
   return date.toISOString().split('T')[0];
 };
 
-export const INITIAL_RANCH_PROFILE: RanchProfile = {
-  id: 'RP001',
-  ranchId: 'RANCH01',
-  isPublic: true,
-  publicName: 'Game Rancher Pro Estates',
-  province: 'Limpopo',
-  shortDescription: 'A premier hunting and conservation destination.',
-  photoGalleryUrls: [],
-  speciesOffered: ['Kudu', 'Impala', 'Sable Antelope', 'Blue Wildebeest'],
-  contactInfo: {
-    email: 'contact@gamerancherpro.com',
-    website: 'www.gamerancherpro.com'
+export const INITIAL_RANCH_PROFILES: RanchProfile[] = [
+  {
+    id: 'RP001',
+    ranchId: 'RANCH01',
+    isPublic: true,
+    publicName: 'Game Rancher Pro Estates',
+    province: 'Limpopo',
+    shortDescription: 'A premier hunting and conservation destination focused on trophy Kudu and Sable.',
+    photoGalleryUrls: [],
+    speciesOffered: ['Kudu', 'Impala', 'Sable Antelope', 'Blue Wildebeest'],
+    contactInfo: {
+      email: 'contact@gamerancherpro.com',
+      website: 'www.gamerancherpro.com'
+    }
+  },
+  {
+    id: 'RP002',
+    ranchId: 'RANCH02',
+    isPublic: true,
+    publicName: 'Karoo Sustainable Safaris',
+    province: 'Eastern Cape',
+    shortDescription: 'Experience the rugged beauty of the Karoo with exceptional Springbok and Blesbok.',
+    photoGalleryUrls: [],
+    speciesOffered: ['Springbok', 'Blesbok', 'Kudu', 'Warthog'],
+    contactInfo: {
+      email: 'bookings@karoosafaris.co.za',
+      phone: '+27 41 555 1234'
+    }
+  },
+  {
+    id: 'RP003',
+    ranchId: 'RANCH03',
+    isPublic: false,
+    publicName: 'Bushveld Private Reserve',
+    province: 'North West',
+    shortDescription: 'A private, non-commercial reserve.',
+    photoGalleryUrls: [],
+    speciesOffered: ['Zebra', 'Giraffe'],
+    contactInfo: {}
   }
-};
+];
 
 export const INITIAL_VERIFIED_PROFESSIONALS: VerifiedProfessional[] = [
-    { id: 'VP001', name: 'Dr. Annelize Van Der Merwe', credentials: 'SAVC #12345, Wildlife Veterinarian', isVerifiedProfessional: true }
+    { id: 'VP001', name: 'Dr. Annelize Van Der Merwe', credentials: 'SAVC #12345, Wildlife Veterinarian', isVerifiedProfessional: true },
+    { id: 'VP002', name: 'Prof. Sipho Ndlovu', credentials: 'PhD Ecology, University of Cape Town', isVerifiedProfessional: true }
 ];
 
 export const INITIAL_ECOLOGICAL_RATINGS: EcologicalRating[] = [
@@ -47,6 +75,16 @@ export const INITIAL_ECOLOGICAL_RATINGS: EcologicalRating[] = [
         animalHealth: 5,
         managementPractices: 4,
         justificationNotes: 'Excellent animal health observed. Fencing and water management are good, but some early signs of bush encroachment in the western sector.'
+    },
+    {
+        id: 'ER002',
+        ranchId: 'RANCH02',
+        professionalId: 'VP002',
+        date: getPastDate(90),
+        habitatCondition: 5,
+        animalHealth: 4,
+        managementPractices: 5,
+        justificationNotes: 'Exemplary erosion control and habitat restoration work. Animal condition is good, reflecting the quality of the veld.'
     }
 ];
 
@@ -59,7 +97,9 @@ export const INITIAL_PERMITS: Permit[] = [
 
 export const INITIAL_CLIENTS: Client[] = [
   { id: 'C001', name: 'John Doe', email: 'john.d@example.com', phone: '555-1234', visitDates: ['2023-10-18 to 2023-10-22'] },
-  { id: 'C002', name: 'Jane Smith', email: 'jane.s@example.com', phone: '555-5678', visitDates: ['2023-11-03 to 2023-11-07'] },
+  { id: 'C002', name: 'Jane Smith', email: 'jane.s@example.com', phone: '555-5678', visitDates: ['2024-02-10 to 2024-02-14'] },
+  { id: 'C003', name: 'Carlos Gomez', email: 'carlos.g@example.com', phone: '555-8765', visitDates: ['2024-04-01 to 2024-04-05'] },
+  { id: 'C004', name: 'Emily White', email: 'emily.w@example.com', phone: '555-4321', visitDates: ['2024-05-20 to 2024-05-25'] },
 ];
 
 export const INITIAL_PROFESSIONAL_HUNTERS: ProfessionalHunter[] = [
@@ -71,35 +111,59 @@ export const INITIAL_PROFESSIONAL_HUNTERS: ProfessionalHunter[] = [
 export const INITIAL_HUNTS: Hunt[] = [
     {
         id: 'HUNT001',
+        ranchId: 'RANCH01',
         clientId: 'C001',
         professionalHunterId: 'PH001',
         permitIds: ['P002'],
         startDate: '2023-10-18',
         endDate: '2023-10-22',
         status: 'Completed',
-        checklist: {
-            indemnitySigned: true,
-            firearmPermitVerified: true,
-            provincialLicenseAcquired: true,
-            indemnityPdfUrl: '#'
-        },
+        checklist: { indemnitySigned: true, firearmPermitVerified: true, provincialLicenseAcquired: true, indemnityPdfUrl: '#' },
         notes: 'Successful Kudu hunt.'
     },
     {
         id: 'HUNT002',
+        ranchId: 'RANCH01',
         clientId: 'C002',
         professionalHunterId: 'PH002',
         permitIds: ['P002'],
-        startDate: getPastDate(5),
-        endDate: getFutureDate(2),
-        status: 'Active',
-        checklist: {
-            indemnitySigned: true,
-            firearmPermitVerified: false,
-            provincialLicenseAcquired: true,
-        },
-        notes: 'Currently hunting Impala.'
+        startDate: getPastDate(90),
+        endDate: getPastDate(86),
+        status: 'Completed',
+        checklist: { indemnitySigned: true, firearmPermitVerified: false, provincialLicenseAcquired: true, },
+        notes: 'Successful Impala hunt.'
+    },
+    {
+        id: 'HUNT003',
+        ranchId: 'RANCH02',
+        clientId: 'C003',
+        professionalHunterId: 'PH003',
+        permitIds: [],
+        startDate: getPastDate(60),
+        endDate: getPastDate(56),
+        status: 'Completed',
+        checklist: { indemnitySigned: true, firearmPermitVerified: true, provincialLicenseAcquired: true, },
+        notes: 'Springbok cull completed.'
+    },
+     {
+        id: 'HUNT004',
+        ranchId: 'RANCH02',
+        clientId: 'C004',
+        professionalHunterId: 'PH003',
+        permitIds: [],
+        startDate: getPastDate(10),
+        endDate: getPastDate(5),
+        status: 'Completed',
+        checklist: { indemnitySigned: true, firearmPermitVerified: true, provincialLicenseAcquired: true, },
+        notes: 'Warthog hunt.'
     }
+];
+
+export const INITIAL_CLIENT_REVIEWS: ClientReview[] = [
+    { id: 'CR001', huntId: 'HUNT001', ranchId: 'RANCH01', overallRating: 5, comment: 'Incredible experience, the PH was top-notch and the animals were in amazing condition.', isAnonymous: true, date: getPastDate(200) },
+    { id: 'CR002', huntId: 'HUNT002', ranchId: 'RANCH01', overallRating: 4, comment: 'Great hunt, beautiful property. Would have liked to see more mature animals.', isAnonymous: true, date: getPastDate(80) },
+    { id: 'CR003', huntId: 'HUNT003', ranchId: 'RANCH02', overallRating: 5, comment: 'The Karoo is breathtaking. Very professional outfit, everything was perfect.', isAnonymous: true, date: getPastDate(50) },
+    { id: 'CR004', huntId: 'HUNT004', ranchId: 'RANCH02', overallRating: 4, comment: 'Good value and a successful hunt. The accommodation was a bit rustic for my taste.', isAnonymous: true, date: getPastDate(2) },
 ];
 
 

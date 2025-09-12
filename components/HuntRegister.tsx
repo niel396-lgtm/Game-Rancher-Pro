@@ -108,6 +108,8 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
         }
         addHunt({
             ...newHunt,
+            // FIX: Add missing 'ranchId' property to align with the Hunt type.
+            ranchId: 'RANCH01',
             checklist: {
                 indemnitySigned: false,
                 firearmPermitVerified: false,

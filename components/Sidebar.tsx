@@ -1,7 +1,8 @@
 
+
 import React, { useMemo } from 'react';
 import { View, ManagementStyle } from '../types';
-import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, StudBookIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon, PHIcon, HuntIcon, VeterinaryIcon, DocumentIcon, GameMeatIcon, BioeconomicsIcon } from './ui/Icons';
+import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, StudBookIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon, PHIcon, HuntIcon, VeterinaryIcon, DocumentIcon, GameMeatIcon, BioeconomicsIcon, SearchIcon } from './ui/Icons';
 
 interface SidebarProps {
   currentView: View;
@@ -31,7 +32,7 @@ const NavItem: React.FC<{
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, managementStyle, setManagementStyle }) => {
   
-  const navItems = useMemo(() => {
+  const managementNavItems = useMemo(() => {
     const allItems = [
       { view: View.Dashboard, icon: <DashboardIcon /> },
       { view: View.Animals, icon: <AnimalIcon />, style: 'Intensive' },
@@ -83,9 +84,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, m
           </div>
       </div>
       
-      <nav className="overflow-y-auto">
+      <nav className="flex-grow overflow-y-auto">
         <ul>
-          {navItems.map((item) => (
+          {managementNavItems.map((item) => (
             <NavItem
               key={item.view}
               icon={item.icon}
@@ -95,6 +96,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, m
             />
           ))}
         </ul>
+
+         <div className="mt-4 pt-4 border-t border-brand-primary/20">
+            <h3 className="px-3 text-xs font-semibold uppercase text-brand-light/60 tracking-wider">Public Portal</h3>
+            <ul>
+                <NavItem
+                    key={View.RanchDiscovery}
+                    icon={<SearchIcon />}
+                    label={View.RanchDiscovery}
+                    isActive={currentView === View.RanchDiscovery}
+                    onClick={() => setCurrentView(View.RanchDiscovery)}
+                />
+            </ul>
+        </div>
       </nav>
       <div className="mt-auto text-center text-brand-light/50 text-xs">
         <p>&copy; {new Date().getFullYear()} Game Rancher Pro</p>
