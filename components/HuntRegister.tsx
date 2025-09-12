@@ -108,7 +108,6 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
         }
         addHunt({
             ...newHunt,
-            // FIX: Add missing 'ranchId' property to align with the Hunt type.
             ranchId: 'RANCH01',
             checklist: {
                 indemnitySigned: false,
@@ -146,8 +145,9 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
         // Check if status is changing TO 'Completed'
         if (hunt.status !== 'Completed' && newStatus === 'Completed') {
             const client = clients.find(c => c.id === hunt.clientId);
+            const ph = professionalHunters.find(p => p.id === hunt.professionalHunterId);
             if (client && client.email) {
-                console.log(`SIMULATION: Sending one-time review request link to ${client.email} for hunt ID ${hunt.id}.`);
+                console.log(`SIMULATION: Sending one-time review request link to ${client.email} for hunt ID ${hunt.id}. This review will cover both the ranch and the PH, ${ph?.name}.`);
                 // UI feedback for the user
                 alert(`A review request has been sent to ${client.name} (${client.email}).`);
             } else if (client) {

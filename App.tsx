@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -23,8 +24,8 @@ import { BioeconomicsReport } from './components/BioeconomicsReport';
 import { DocumentHub } from './components/DocumentHub';
 import { GameMeatProcessing as GameMeatProcessingView } from './components/GameMeatProcessing';
 import { RanchDiscovery } from './components/RanchDiscovery';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating, ClientReview } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING, INITIAL_HUNT_TRACKS, INITIAL_RANCH_PROFILES, INITIAL_VERIFIED_PROFESSIONALS, INITIAL_ECOLOGICAL_RATINGS, INITIAL_CLIENT_REVIEWS } from './constants';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating, ClientReview, PHProfile } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING, INITIAL_HUNT_TRACKS, INITIAL_RANCH_PROFILES, INITIAL_VERIFIED_PROFESSIONALS, INITIAL_ECOLOGICAL_RATINGS, INITIAL_CLIENT_REVIEWS, INITIAL_PH_PROFILES } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -64,6 +65,7 @@ const App: React.FC = () => {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [huntTracks, setHuntTracks] = useState<HuntTrack[]>(INITIAL_HUNT_TRACKS);
   const [ranchProfiles, setRanchProfiles] = useState<RanchProfile[]>(INITIAL_RANCH_PROFILES);
+  const [phProfiles, setPhProfiles] = useState<PHProfile[]>(INITIAL_PH_PROFILES);
   const [verifiedProfessionals, setVerifiedProfessionals] = useState<VerifiedProfessional[]>(INITIAL_VERIFIED_PROFESSIONALS);
   const [ecologicalRatings, setEcologicalRatings] = useState<EcologicalRating[]>(INITIAL_ECOLOGICAL_RATINGS);
   const [clientReviews, setClientReviews] = useState<ClientReview[]>(INITIAL_CLIENT_REVIEWS);
@@ -429,6 +431,9 @@ const App: React.FC = () => {
             ranchProfiles={ranchProfiles}
             ecologicalRatings={ecologicalRatings}
             clientReviews={clientReviews}
+            phProfiles={phProfiles}
+            professionalHunters={professionalHunters}
+            hunts={hunts}
         />;
       default:
         return <Dashboard 

@@ -41,6 +41,17 @@ export interface RanchProfile {
   };
 }
 
+export interface PHProfile {
+  id: string;
+  phId: string; // Links to the ProfessionalHunter record
+  isPublic: boolean;
+  photoUrl: string;
+  biography: string;
+  yearsOfExperience: number;
+  languages: string[]; // e.g., ["English", "Afrikaans", "German"]
+  specializations: string[]; // e.g., ["Dangerous Game", "Bow Hunting", "Mountain Game"]
+}
+
 export interface ClientReview {
   id: string;
   huntId: string; // Verifies the review is from a real hunt
@@ -49,6 +60,8 @@ export interface ClientReview {
   comment?: string;
   isAnonymous: boolean; // Always true for public view
   date: string;
+  phRating?: number; // 1-5 stars for the PH
+  phComment?: string;
 }
 
 export interface VerifiedProfessional {

@@ -1,6 +1,6 @@
 
 
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating, ClientReview } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating, ClientReview, PHProfile } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 export const GU_CONSUMPTION_RATE = 1650; // kg DM/year, based on Blue Wildebeest (1 GU)
@@ -100,6 +100,9 @@ export const INITIAL_CLIENTS: Client[] = [
   { id: 'C002', name: 'Jane Smith', email: 'jane.s@example.com', phone: '555-5678', visitDates: ['2024-02-10 to 2024-02-14'] },
   { id: 'C003', name: 'Carlos Gomez', email: 'carlos.g@example.com', phone: '555-8765', visitDates: ['2024-04-01 to 2024-04-05'] },
   { id: 'C004', name: 'Emily White', email: 'emily.w@example.com', phone: '555-4321', visitDates: ['2024-05-20 to 2024-05-25'] },
+  { id: 'C005', name: 'Michael Brown', email: 'michael.b@example.com', phone: '555-1111', visitDates: [getPastDate(150)] },
+  { id: 'C006', name: 'Sarah Davis', email: 'sarah.d@example.com', phone: '555-2222', visitDates: [getPastDate(120)] },
+  { id: 'C007', name: 'David Wilson', email: 'david.w@example.com', phone: '555-3333', visitDates: [getPastDate(100)] },
 ];
 
 export const INITIAL_PROFESSIONAL_HUNTERS: ProfessionalHunter[] = [
@@ -107,6 +110,40 @@ export const INITIAL_PROFESSIONAL_HUNTERS: ProfessionalHunter[] = [
     { id: 'PH002', name: 'Peter Jones', licenseNumber: 'FS-67890', licenseExpiryDate: getFutureDate(45), provincialEndorsements: ['Free State', 'KwaZulu-Natal'] },
     { id: 'PH003', name: 'David Miller', licenseNumber: 'EC-54321', licenseExpiryDate: getPastDate(10), provincialEndorsements: ['Eastern Cape'] },
 ];
+
+export const INITIAL_PH_PROFILES: PHProfile[] = [
+  {
+    id: 'PHP001',
+    phId: 'PH001',
+    isPublic: true,
+    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256',
+    biography: 'A seasoned professional with over 20 years of experience in the Limpopo and Mpumalanga bushveld. Specializes in ethical, walk-and-stalk hunts for Big 5 game.',
+    yearsOfExperience: 22,
+    languages: ['English', 'Afrikaans'],
+    specializations: ['Dangerous Game', 'Rifle Hunting', 'Tracking']
+  },
+  {
+    id: 'PHP002',
+    phId: 'PH002',
+    isPublic: true,
+    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=256',
+    biography: 'An expert bow hunter with a passion for plains game. Peter has guided clients from all over the world in the challenging terrains of the Free State and KZN.',
+    yearsOfExperience: 15,
+    languages: ['English', 'German'],
+    specializations: ['Bow Hunting', 'Plains Game', 'Mountain Game']
+  },
+  {
+    id: 'PHP003',
+    phId: 'PH003',
+    isPublic: false,
+    photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=256',
+    biography: 'Specialist in ethical culling and problem animal control in the Eastern Cape.',
+    yearsOfExperience: 18,
+    languages: ['English', 'Xhosa'],
+    specializations: ['Culling Operations', 'Problem Animal Control']
+  }
+];
+
 
 export const INITIAL_HUNTS: Hunt[] = [
     {
@@ -156,14 +193,34 @@ export const INITIAL_HUNTS: Hunt[] = [
         status: 'Completed',
         checklist: { indemnitySigned: true, firearmPermitVerified: true, provincialLicenseAcquired: true, },
         notes: 'Warthog hunt.'
+    },
+    // Hunts for PH001 to make him "Top Rated"
+    {
+        id: 'HUNT005', ranchId: 'RANCH01', clientId: 'C005', professionalHunterId: 'PH001', permitIds: [],
+        startDate: getPastDate(150), endDate: getPastDate(145), status: 'Completed',
+        checklist: { indemnitySigned: true, firearmPermitVerified: true, provincialLicenseAcquired: true, }, notes: 'Sable hunt.'
+    },
+    {
+        id: 'HUNT006', ranchId: 'RANCH01', clientId: 'C006', professionalHunterId: 'PH001', permitIds: [],
+        startDate: getPastDate(120), endDate: getPastDate(115), status: 'Completed',
+        checklist: { indemnitySigned: true, firearmPermitVerified: true, provincialLicenseAcquired: true, }, notes: 'Blue Wildebeest hunt.'
+    },
+    {
+        id: 'HUNT007', ranchId: 'RANCH01', clientId: 'C007', professionalHunterId: 'PH001', permitIds: [],
+        startDate: getPastDate(100), endDate: getPastDate(95), status: 'Completed',
+        checklist: { indemnitySigned: true, firearmPermitVerified: true, provincialLicenseAcquired: true, }, notes: 'Second Kudu hunt for this group.'
     }
 ];
 
 export const INITIAL_CLIENT_REVIEWS: ClientReview[] = [
-    { id: 'CR001', huntId: 'HUNT001', ranchId: 'RANCH01', overallRating: 5, comment: 'Incredible experience, the PH was top-notch and the animals were in amazing condition.', isAnonymous: true, date: getPastDate(200) },
-    { id: 'CR002', huntId: 'HUNT002', ranchId: 'RANCH01', overallRating: 4, comment: 'Great hunt, beautiful property. Would have liked to see more mature animals.', isAnonymous: true, date: getPastDate(80) },
-    { id: 'CR003', huntId: 'HUNT003', ranchId: 'RANCH02', overallRating: 5, comment: 'The Karoo is breathtaking. Very professional outfit, everything was perfect.', isAnonymous: true, date: getPastDate(50) },
-    { id: 'CR004', huntId: 'HUNT004', ranchId: 'RANCH02', overallRating: 4, comment: 'Good value and a successful hunt. The accommodation was a bit rustic for my taste.', isAnonymous: true, date: getPastDate(2) },
+    { id: 'CR001', huntId: 'HUNT001', ranchId: 'RANCH01', overallRating: 5, comment: 'Incredible experience, the PH was top-notch and the animals were in amazing condition.', isAnonymous: true, date: getPastDate(200), phRating: 5, phComment: 'John was a phenomenal guide. Knowledgeable, patient, and ethical.' },
+    { id: 'CR002', huntId: 'HUNT002', ranchId: 'RANCH01', overallRating: 4, comment: 'Great hunt, beautiful property. Would have liked to see more mature animals.', isAnonymous: true, date: getPastDate(80), phRating: 4, phComment: 'Peter was good.' },
+    { id: 'CR003', huntId: 'HUNT003', ranchId: 'RANCH02', overallRating: 5, comment: 'The Karoo is breathtaking. Very professional outfit, everything was perfect.', isAnonymous: true, date: getPastDate(50), phRating: 5 },
+    { id: 'CR004', huntId: 'HUNT004', ranchId: 'RANCH02', overallRating: 4, comment: 'Good value and a successful hunt. The accommodation was a bit rustic for my taste.', isAnonymous: true, date: getPastDate(2), phRating: 4 },
+    // Extra reviews to make RANCH01 and PH001 "Top Rated"
+    { id: 'CR005', huntId: 'HUNT005', ranchId: 'RANCH01', overallRating: 5, isAnonymous: true, date: getPastDate(140), phRating: 5, phComment: 'Best PH in the business.' },
+    { id: 'CR006', huntId: 'HUNT006', ranchId: 'RANCH01', overallRating: 5, isAnonymous: true, date: getPastDate(110), phRating: 5, phComment: 'Unforgettable experience thanks to John.' },
+    { id: 'CR007', huntId: 'HUNT007', ranchId: 'RANCH01', overallRating: 4, comment: 'Tough hunt but rewarding.', isAnonymous: true, date: getPastDate(90), phRating: 5, phComment: 'John worked tirelessly to find my animal. A true professional.' },
 ];
 
 
