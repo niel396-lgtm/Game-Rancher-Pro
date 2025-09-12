@@ -1,6 +1,6 @@
 export const getAIResponse = async (prompt: string): Promise<string> => {
   try {
-    // This is the new endpoint for our serverless function
+    // This tells the app to call our own secure function
     const response = await fetch('/.netlify/functions/gemini', {
       method: 'POST',
       headers: {
