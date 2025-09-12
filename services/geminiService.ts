@@ -1,20 +1,22 @@
-
-import { GoogleGenAI } from "@google/genai";
-
-const model = 'gemini-2.5-flash';
-
 export const getAIResponse = async (prompt: string): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: prompt,
-      config: {
-        systemInstruction: "You are an expert wildlife biologist and game ranch management consultant based in Southern Africa. Your advice should be clear, concise, and actionable for game ranchers in this region. Reference common Southern African species (like Kudu, Impala, Blue Wildebeest), local challenges (like specific parasites, drought cycles, bush encroachment), and regional best practices. Your tone should be professional, helpful, and supportive.",
-      }
+    // This is the new endpoint for our serverless function
+    const response = await fetch('/.netlify/functions/gemini', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
     });
-    return response.text;
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.text;
+
   } catch (error) {
     console.error("Error fetching AI response:", error);
     return "Sorry, I encountered an error. Please try again later.";
