@@ -1,5 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
+// Initialize the Gemini client with the API key from environment variables.
+// This allows the client to be reused across function invocations for better performance.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// The main serverless function handler
 export default async (req: Request) => {
   const headers = {
     'Content-Type': 'application/json',
@@ -29,8 +34,6 @@ export default async (req: Request) => {
       });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
