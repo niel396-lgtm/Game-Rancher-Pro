@@ -160,18 +160,30 @@ export const SPECIES_PARAMETERS = {
         maxAge: 12,
         idealCalvingInterval: 365, // days
         growthRateLambda: 1.25, // 25% annual growth potential
+        harvestStrategy: {
+            male: { 'Past-Prime': 0.75, 'Sub-Adult': 0.20, 'Prime': 0.05 },
+            female: { 'Past-Prime': 0.80, 'Prime': 0.15, 'Sub-Adult': 0.05 }
+        }
     },
     Impala: {
         primeReproductiveAge: [2, 6],
         maxAge: 8,
         idealCalvingInterval: 200, // days
         growthRateLambda: 1.35,
+        harvestStrategy: {
+            male: { 'Past-Prime': 0.60, 'Sub-Adult': 0.30, 'Prime': 0.10 },
+            female: { 'Past-Prime': 0.70, 'Prime': 0.25, 'Sub-Adult': 0.05 }
+        }
     },
     'Blue Wildebeest': {
         primeReproductiveAge: [3, 10],
         maxAge: 15,
         idealCalvingInterval: 365, // days
         growthRateLambda: 1.20,
+        harvestStrategy: {
+            male: { 'Past-Prime': 0.80, 'Sub-Adult': 0.15, 'Prime': 0.05 },
+            female: { 'Past-Prime': 0.90, 'Prime': 0.10, 'Sub-Adult': 0.00 }
+        }
     }
 };
 

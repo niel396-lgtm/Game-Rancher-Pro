@@ -268,6 +268,49 @@ const StrategicQuotaCalculator: React.FC<Pick<HarvestPlanningProps, 'populationS
         );
     }, [latestSurvey, targetPopulation, growthRate, targetRatioMale, targetRatioFemale]);
 
+    const harvestAgeDistribution = useMemo(() => {
+        if (!latestSurvey || !calculatedQuota || calculatedQuota.total === 0) {
+            return null;
+        }
+
+        const speciesParams = (SPECIES_PARAMETERS as any)[latestSurvey.species];
+        if (!speciesParams || !speciesParams.harvestStrategy) {
+            return null;
+        }
+
+        const { male: maleStrategy, female: femaleStrategy } = speciesParams.harvestStrategy;
+
+        const maleBreakdown = (typeof calculatedQuota.males === 'number' && calculatedQuota.males > 0)
+            ? Object.entries(maleStrategy).map(([ageClass, percentage]) => ({
+                ageClass: ageClass === 'Prime' ? 'Prime (Non-Trophy)' : ageClass,
+                count: Math.round(calculatedQuota.males as number * (percentage as number))
+            }))
+            : [];
+
+        const femaleBreakdown = (typeof calculatedQuota.females === 'number' && calculatedQuota.females > 0)
+            ? Object.entries(femaleStrategy).map(([ageClass, percentage]) => ({
+                ageClass,
+                count: Math.round(calculatedQuota.females as number * (percentage as number))
+            }))
+            : [];
+        
+        const reconcile = (breakdown: {ageClass: string, count: number}[], total: number) => {
+            if (breakdown.length === 0 || total === 0) return [];
+            const currentSum = breakdown.reduce((acc, item) => acc + item.count, 0);
+            let diff = total - currentSum;
+            if (diff !== 0) {
+                const largestCategory = breakdown.reduce((max, item) => item.count > max.count ? item : max, breakdown[0]);
+                largestCategory.count += diff;
+            }
+            return breakdown.filter(item => item.count > 0);
+        }
+        
+        const reconciledMaleBreakdown = reconcile(maleBreakdown, typeof calculatedQuota.males === 'number' ? calculatedQuota.males : 0);
+        const reconciledFemaleBreakdown = reconcile(femaleBreakdown, typeof calculatedQuota.females === 'number' ? calculatedQuota.females : 0);
+
+        return { males: reconciledMaleBreakdown, females: reconciledFemaleBreakdown };
+    }, [calculatedQuota, latestSurvey]);
+
 
     return (
         <Card>
@@ -282,22 +325,22 @@ const StrategicQuotaCalculator: React.FC<Pick<HarvestPlanningProps, 'populationS
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Estimated Current Population (Nₜ)</label>
+                        <label className="block text-sm font-medium text-gray-700">Current Population Estimate (Nₜ)</label>
                         <input type="number" value={latestSurvey?.estimatedCount || 0} className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readOnly/>
                         <p className="text-xs text-gray-500 mt-1">From latest survey on {latestSurvey?.date || 'N/A'}</p>
                     </div>
                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Target Population / Carrying Capacity (K)</label>
+                        <label className="block text-sm font-medium text-gray-700">Desired Post-Harvest Population / Carrying Capacity (K)</label>
                         <input type="number" value={targetPopulation} onChange={e => setTargetPopulation(Number(e.target.value))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
                     </div>
                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Annual Growth Rate (λ)</label>
+                        <label className="block text-sm font-medium text-gray-700">Intrinsic Rate of Population Growth (λ)</label>
                         <input type="number" step="0.01" value={growthRate} onChange={e => setGrowthRate(Number(e.target.value))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
                     </div>
                 </div>
 
                 <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-xl font-semibold text-brand-dark">Recommended Quota</h3>
+                    <h3 className="text-xl font-semibold text-brand-dark">Recommended Sustainable Off-take (Harvest)</h3>
                     <div className="text-center py-6 border-y">
                         <p className="text-lg text-gray-600">Total Harvestable Surplus</p>
                         <p className="text-6xl font-bold text-brand-primary">{calculatedQuota.total}</p>
@@ -322,6 +365,36 @@ const StrategicQuotaCalculator: React.FC<Pick<HarvestPlanningProps, 'populationS
                                 <p className="text-2xl font-bold text-pink-900">{calculatedQuota.females}</p>
                             </div>
                         </div>
+                        {harvestAgeDistribution && (
+                            <div className="mt-4 pt-4 border-t">
+                                <h4 className="font-semibold text-gray-800">Suggested Harvest Age Distribution</h4>
+                                <p className="text-xs text-gray-500 mb-2">This is a guideline to maintain a healthy population structure.</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        {harvestAgeDistribution.males.length > 0 && <p className="text-sm font-medium text-center mb-1">Males</p>}
+                                        <ul className="space-y-1 text-sm">
+                                            {harvestAgeDistribution.males.map(item => (
+                                                <li key={item.ageClass} className="flex justify-between p-1 bg-blue-50 rounded">
+                                                    <span>{item.ageClass}</span>
+                                                    <span className="font-bold">{item.count}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        {harvestAgeDistribution.females.length > 0 && <p className="text-sm font-medium text-center mb-1">Females</p>}
+                                        <ul className="space-y-1 text-sm">
+                                            {harvestAgeDistribution.females.map(item => (
+                                                <li key={item.ageClass} className="flex justify-between p-1 bg-pink-50 rounded">
+                                                    <span>{item.ageClass}</span>
+                                                    <span className="font-bold">{item.count}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
