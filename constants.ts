@@ -1,6 +1,6 @@
 
 
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, HuntTrack } from './types';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 export const GU_CONSUMPTION_RATE = 1650; // kg DM/year, based on Blue Wildebeest (1 GU)
@@ -17,6 +17,38 @@ const getPastDate = (days: number) => {
   date.setDate(today.getDate() - days);
   return date.toISOString().split('T')[0];
 };
+
+export const INITIAL_RANCH_PROFILE: RanchProfile = {
+  id: 'RP001',
+  ranchId: 'RANCH01',
+  isPublic: true,
+  publicName: 'Game Rancher Pro Estates',
+  province: 'Limpopo',
+  shortDescription: 'A premier hunting and conservation destination.',
+  photoGalleryUrls: [],
+  speciesOffered: ['Kudu', 'Impala', 'Sable Antelope', 'Blue Wildebeest'],
+  contactInfo: {
+    email: 'contact@gamerancherpro.com',
+    website: 'www.gamerancherpro.com'
+  }
+};
+
+export const INITIAL_VERIFIED_PROFESSIONALS: VerifiedProfessional[] = [
+    { id: 'VP001', name: 'Dr. Annelize Van Der Merwe', credentials: 'SAVC #12345, Wildlife Veterinarian', isVerifiedProfessional: true }
+];
+
+export const INITIAL_ECOLOGICAL_RATINGS: EcologicalRating[] = [
+    {
+        id: 'ER001',
+        ranchId: 'RANCH01',
+        professionalId: 'VP001',
+        date: getPastDate(45),
+        habitatCondition: 4,
+        animalHealth: 5,
+        managementPractices: 4,
+        justificationNotes: 'Excellent animal health observed. Fencing and water management are good, but some early signs of bush encroachment in the western sector.'
+    }
+];
 
 export const INITIAL_PERMITS: Permit[] = [
   { id: 'P001', permitNumber: 'CITES-ZA-2023-115', type: 'CITES', issueDate: '2023-08-01', expiryDate: '2024-07-31', linkedSpecies: ['Sable Antelope'], notes: 'Export permit for 2 males.' },

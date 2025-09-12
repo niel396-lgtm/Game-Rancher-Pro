@@ -21,8 +21,8 @@ import { VeterinaryLog as VeterinaryLogView } from './components/VeterinaryLog';
 import { BioeconomicsReport } from './components/BioeconomicsReport';
 import { DocumentHub } from './components/DocumentHub';
 import { GameMeatProcessing as GameMeatProcessingView } from './components/GameMeatProcessing';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint, HuntTrack } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING, INITIAL_HUNT_TRACKS } from './constants';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING, INITIAL_HUNT_TRACKS, INITIAL_RANCH_PROFILE, INITIAL_VERIFIED_PROFESSIONALS, INITIAL_ECOLOGICAL_RATINGS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -61,6 +61,13 @@ const App: React.FC = () => {
   const [gameMeatProcessing, setGameMeatProcessing] = useState<GameMeatProcessing[]>(INITIAL_GAME_MEAT_PROCESSING);
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [huntTracks, setHuntTracks] = useState<HuntTrack[]>(INITIAL_HUNT_TRACKS);
+  const [ranchProfile, setRanchProfile] = useState<RanchProfile>(INITIAL_RANCH_PROFILE);
+  const [verifiedProfessionals, setVerifiedProfessionals] = useState<VerifiedProfessional[]>(INITIAL_VERIFIED_PROFESSIONALS);
+  const [ecologicalRatings, setEcologicalRatings] = useState<EcologicalRating[]>(INITIAL_ECOLOGICAL_RATINGS);
+  
+  // Simulate a logged-in verified professional
+  const [currentUser, setCurrentUser] = useState<VerifiedProfessional>(INITIAL_VERIFIED_PROFESSIONALS[0]);
+
 
   const handleManagementStyleChange = (style: ManagementStyle) => {
     setManagementStyle(style);
@@ -249,6 +256,11 @@ const App: React.FC = () => {
     setHuntTracks(prev => [newTrack, ...prev]);
   };
 
+  const addEcologicalRating = (rating: Omit<EcologicalRating, 'id'>) => {
+    const newRating = { ...rating, id: `ER${Date.now()}` };
+    setEcologicalRatings(prev => [newRating, ...prev].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -272,6 +284,9 @@ const App: React.FC = () => {
           veterinaryLogs={veterinaryLogs}
           documents={documents}
           professionalHunters={professionalHunters}
+          ecologicalRatings={ecologicalRatings}
+          currentUser={currentUser}
+          addEcologicalRating={addEcologicalRating}
           />;
       case View.Animals:
         return <AnimalManagement 
@@ -426,6 +441,9 @@ const App: React.FC = () => {
           veterinaryLogs={veterinaryLogs}
           documents={documents}
           professionalHunters={professionalHunters}
+          ecologicalRatings={ecologicalRatings}
+          currentUser={currentUser}
+          addEcologicalRating={addEcologicalRating}
           />;
     }
   };

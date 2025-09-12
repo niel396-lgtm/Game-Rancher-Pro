@@ -50,6 +50,25 @@ export interface ClientReview {
   date: string;
 }
 
+export interface VerifiedProfessional {
+  id: string;
+  name: string;
+  credentials: string; // e.g., "SAVC #12345" or "PhD Ecology, University of Pretoria"
+  isVerifiedProfessional: true;
+}
+
+export interface EcologicalRating {
+  id: string;
+  ranchId: string;
+  professionalId: string; // ID of the verified professional
+  date: string;
+  habitatCondition: number; // 1-5
+  animalHealth: number; // 1-5
+  managementPractices: number; // 1-5 (e.g., erosion control, genetic diversity)
+  justificationNotes?: string;
+}
+
+
 // Types for the mapping feature moved up to resolve reference error
 export type Coords = [number, number];
 export type CoordsPath = Coords[];

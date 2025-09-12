@@ -4,9 +4,10 @@ import { AnimalChart } from './AnimalChart';
 import { FinanceChart } from './FinanceChart';
 import { SexRatioChart } from './SexRatioChart';
 import { HerdQualityChart } from './HerdQualityChart';
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey, VeldAssessment, HealthProtocol, VeterinaryLog, OfficialDocument, ProfessionalHunter } from '../types';
-import { PopulationIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon } from './ui/Icons';
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Task, RainfallLog, Harvest, Permit, AnimalMeasurement, PopulationSurvey, VeldAssessment, HealthProtocol, VeterinaryLog, OfficialDocument, ProfessionalHunter, EcologicalRating, VerifiedProfessional } from '../types';
+import { PopulationIcon, HabitatIcon, InventoryIcon, FinanceIcon, IssueIcon, PlusIcon, TrashIcon, RainfallIcon, TrophyIcon, PermitIcon, StarIcon } from './ui/Icons';
 import { Modal } from './ui/Modal';
+import { EcologicalRatingForm } from './EcologicalRatingForm';
 
 interface DashboardProps {
     animals: Animal[];
@@ -28,6 +29,9 @@ interface DashboardProps {
     veterinaryLogs: VeterinaryLog[];
     documents: OfficialDocument[];
     professionalHunters: ProfessionalHunter[];
+    ecologicalRatings: EcologicalRating[];
+    currentUser?: VerifiedProfessional;
+    addEcologicalRating: (rating: Omit<EcologicalRating, 'id'>) => void;
 }
 
 const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; unit: string; }> = ({ icon, title, value, unit }) => (
@@ -44,9 +48,10 @@ const KpiCard: React.FC<{ icon: React.ReactNode; title: string; value: string; u
     </Card>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys, veldAssessments, healthProtocols, documents, professionalHunters }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, inventory, transactions, tasks, addTask, toggleTask, removeTask, harvests, rainfallLogs, addRainfallLog, permits, animalMeasurements, populationSurveys, veldAssessments, healthProtocols, documents, professionalHunters, ecologicalRatings, currentUser, addEcologicalRating }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   
   const [newRainfallDate, setNewRainfallDate] = useState(new Date().toISOString().split('T')[0]);
   const [newRainfallAmount, setNewRainfallAmount] = useState('');
@@ -162,6 +167,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
 
   }, [transactions, animals]);
 
+  const ecologicalHealth = useMemo(() => {
+    if (ecologicalRatings.length === 0) {
+      return { habitat: 0, health: 0, management: 0, count: 0 };
+    }
+    const totals = ecologicalRatings.reduce((acc, rating) => {
+        acc.habitat += rating.habitatCondition;
+        acc.health += rating.animalHealth;
+        acc.management += rating.managementPractices;
+        return acc;
+    }, { habitat: 0, health: 0, management: 0 });
+    
+    const count = ecologicalRatings.length;
+    return {
+        habitat: totals.habitat / count,
+        health: totals.health / count,
+        management: totals.management / count,
+        count: count
+    };
+  }, [ecologicalRatings]);
+
+  const handleRatingSubmit = (ratingData: Omit<EcologicalRating, 'id' | 'professionalId' | 'ranchId' | 'date'>) => {
+      if (!currentUser) return;
+      addEcologicalRating({
+          ...ratingData,
+          professionalId: currentUser.id,
+          ranchId: 'RANCH01',
+          date: new Date().toISOString().split('T')[0]
+      });
+  };
+
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     addTask(newTaskText);
@@ -255,6 +290,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
         </Card>
       </div>
       
+       <div className="mt-6">
+        <Card title="Ecological Health Rating">
+            <div className="text-center mb-4">
+                <p className="text-5xl font-bold text-brand-primary">{((ecologicalHealth.habitat + ecologicalHealth.health + ecologicalHealth.management) / 3).toFixed(1)} <span className="text-2xl text-gray-500">/ 5.0</span></p>
+                <p className="text-sm text-gray-500">Overall Professional Rating</p>
+            </div>
+            <div className="space-y-2 text-sm max-w-sm mx-auto">
+                <div className="flex justify-between items-center">
+                    <span>Habitat Condition</span>
+                    <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                            <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(ecologicalHealth.habitat) ? 'text-green-500' : 'text-gray-300'}`} />
+                        ))}
+                    </div>
+                </div>
+                <div className="flex justify-between items-center">
+                    <span>Animal Health</span>
+                    <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                            <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(ecologicalHealth.health) ? 'text-green-500' : 'text-gray-300'}`} />
+                        ))}
+                    </div>
+                </div>
+                <div className="flex justify-between items-center">
+                    <span>Management Practices</span>
+                    <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                            <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(ecologicalHealth.management) ? 'text-green-500' : 'text-gray-300'}`} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+            <p className="text-xs text-gray-500 text-center pt-2 border-t mt-4">Based on {ecologicalHealth.count} professional rating(s).</p>
+            {currentUser?.isVerifiedProfessional && (
+                <div className="flex justify-center mt-2">
+                    <button onClick={() => setIsRatingModalOpen(true)} className="w-full max-w-xs mt-2 px-4 py-2 bg-brand-secondary text-white font-semibold rounded-lg hover:bg-brand-dark transition-colors">
+                        Submit Rating
+                    </button>
+                </div>
+            )}
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
         <div className="lg:col-span-3">
           <Card title="Kudu Herd Quality (Age vs. Horn Length)">
@@ -376,6 +454,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ animals, habitats, invento
               </div>
           </form>
       </Modal>
+      
+      <EcologicalRatingForm 
+        isOpen={isRatingModalOpen}
+        onClose={() => setIsRatingModalOpen(false)}
+        onSubmit={handleRatingSubmit}
+      />
 
     </div>
   );
