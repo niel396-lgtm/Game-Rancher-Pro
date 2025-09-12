@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Animal, HabitatZone, Mortality, Harvest, Transaction, Client, Permit, ReproductiveEvent, AnimalMeasurement, ProfessionalHunter, Coords } from '../types';
@@ -122,12 +123,12 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
   const [isSciCalculatorOpen, setIsSciCalculatorOpen] = useState(false);
 
   const [newAnimal, setNewAnimal] = useState({
-      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], lsuEquivalent: 0.5, sireId: '', damId: '', category: 'Production' as Animal['category']
+      tagId: '', species: '', age: 0, sex: 'Female' as 'Male'|'Female', health: 'Good' as Animal['health'], conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder' as Animal['forageType'], guEquivalent: 0.2, buEquivalent: 0.2, sireId: '', damId: '', category: 'Production' as Animal['category']
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
-      setNewAnimal(prev => ({ ...prev, [name]: name === 'age' || name === 'conditionScore' ? parseInt(value, 10) || 0 : (name === 'lsuEquivalent' ? parseFloat(value) || 0 : value) }));
+      setNewAnimal(prev => ({ ...prev, [name]: name === 'age' || name === 'conditionScore' ? parseInt(value, 10) || 0 : (name === 'guEquivalent' || name === 'buEquivalent' ? parseFloat(value) || 0 : value) }));
   };
   
   const handleHarvestInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -141,16 +142,14 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
           alert('Please fill all required fields');
           return;
       }
-      const finalAnimal: Omit<Animal, 'id'> = {
-          ...newAnimal,
-          lsuConsumptionRate: newAnimal.lsuEquivalent * 3650,
-      };
-      if (!finalAnimal.sireId) delete finalAnimal.sireId;
-      if (!finalAnimal.damId) delete finalAnimal.damId;
       
-      addAnimal(finalAnimal);
+      const animalToAdd: Omit<Animal, 'id'> = { ...newAnimal };
+      if (!animalToAdd.sireId) delete animalToAdd.sireId;
+      if (!animalToAdd.damId) delete animalToAdd.damId;
+      
+      addAnimal(animalToAdd);
       setIsAddModalOpen(false);
-      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder', lsuEquivalent: 0.5, sireId: '', damId: '', category: 'Production' });
+      setNewAnimal({ tagId: '', species: '', age: 0, sex: 'Female', health: 'Good', conditionScore: 3, location: habitats[0]?.name || '', forageType: 'Mixed-Feeder', guEquivalent: 0.2, buEquivalent: 0.2, sireId: '', damId: '', category: 'Production' });
   };
   
   const handleOpenRemoveConfirmation = (animal: Animal) => {
@@ -235,8 +234,8 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
         conditionScore: newBirth.conditionScore,
         location: dam.location,
         forageType: dam.forageType,
-        lsuEquivalent: dam.lsuEquivalent,
-        lsuConsumptionRate: dam.lsuEquivalent * 3650,
+        guEquivalent: dam.guEquivalent,
+        buEquivalent: dam.buEquivalent,
         damId: dam.id,
         sireId: newBirth.sireId || undefined,
         category: 'Juvenile'
@@ -496,9 +495,13 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
                       <option>Mixed-Feeder</option> <option>Grazer</option> <option>Browser</option>
                   </select>
                 </div>
-                <div>
-                  <label htmlFor="lsuEquivalent" className="block text-sm font-medium text-gray-700">LSU Equivalent</label>
-                  <input type="number" step="0.01" name="lsuEquivalent" id="lsuEquivalent" value={newAnimal.lsuEquivalent} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" required />
+                 <div>
+                  <label htmlFor="guEquivalent" className="block text-sm font-medium text-gray-700">Grazer Unit (GU) Equivalent</label>
+                  <input type="number" step="0.01" name="guEquivalent" id="guEquivalent" value={newAnimal.guEquivalent || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                </div>
+                 <div>
+                  <label htmlFor="buEquivalent" className="block text-sm font-medium text-gray-700">Browser Unit (BU) Equivalent</label>
+                  <input type="number" step="0.01" name="buEquivalent" id="buEquivalent" value={newAnimal.buEquivalent || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
                 </div>
                 <div className="md:col-span-2">
                    <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>

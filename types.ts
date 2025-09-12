@@ -127,8 +127,8 @@ export interface Animal {
   location: string;
   tagId: string;
   forageType: 'Grazer' | 'Browser' | 'Mixed-Feeder';
-  lsuEquivalent: number; // e.g., Kudu = 0.7, Impala = 0.25
-  lsuConsumptionRate: number; // kg of dry matter consumed per year
+  guEquivalent?: number; // Grazer Unit Equivalent, benchmarked to Blue Wildebeest
+  buEquivalent?: number;  // Browser Unit Equivalent, benchmarked to Kudu
   sireId?: string; // ID of the father for genetic tracking
   damId?: string;  // ID of the mother for genetic tracking
   category: 'Breeding Stock' | 'Juvenile' | 'Trophy' | 'Production';

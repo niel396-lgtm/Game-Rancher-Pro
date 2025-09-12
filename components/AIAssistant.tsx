@@ -29,15 +29,11 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ animals, habitats, rai
   }, [messages]);
   
   const generateContextualPrompt = (userInput: string): string => {
+    // FIX: Replaced non-existent 'lsuEquivalent' with 'guEquivalent' and 'buEquivalent'
+    // and simplified the logic to correctly sum grazer and browser units.
     const stocking = animals.reduce((acc, animal) => {
-        if (animal.forageType === 'Grazer') {
-            acc.grazerLSU += animal.lsuEquivalent;
-        } else if (animal.forageType === 'Browser') {
-            acc.browserLSU += animal.lsuEquivalent;
-        } else if (animal.forageType === 'Mixed-Feeder') {
-            acc.grazerLSU += animal.lsuEquivalent * 0.5;
-            acc.browserLSU += animal.lsuEquivalent * 0.5;
-        }
+        acc.grazerLSU += animal.guEquivalent || 0;
+        acc.browserLSU += animal.buEquivalent || 0;
         return acc;
     }, { grazerLSU: 0, browserLSU: 0 });
 

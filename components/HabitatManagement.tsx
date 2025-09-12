@@ -1,10 +1,10 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { Modal } from './ui/Modal';
 import { HabitatZone, Animal, VeldAssessment, RainfallLog } from '../types';
 import { WaterIcon, ForageIcon, IssueIcon, VeldIcon, HistoryIcon, PlusIcon } from './ui/Icons';
+import { GU_CONSUMPTION_RATE, BU_CONSUMPTION_RATE } from '../constants';
 
 interface HabitatManagementProps {
   habitats: HabitatZone[];
@@ -36,13 +36,17 @@ const getStatusColor = (status: string, type: 'water' | 'forage' | 'veld') => {
 };
 
 const getVeldConditionFactor = (assessment: VeldAssessment | undefined): number => {
-  if (!assessment) return 1.0; // Default if no assessment exists
-  const totalScore = assessment.speciesComposition + assessment.basalCover; // Max score of 20
-  
-  if (totalScore >= 18) return 1.2; // Excellent
-  if (totalScore >= 14) return 1.0; // Good
-  if (totalScore >= 8) return 0.75; // Fair
-  return 0.5; // Poor
+    if (!assessment) return 1.0; // Default if no assessment exists
+    const totalScore = assessment.speciesComposition + assessment.basalCover; // Range from 2 to 20
+
+    // Piecewise linear function based on score thresholds
+    if (totalScore <= 8) {
+        // Linear scale from 0.5 (at score 2) to 0.75 (at score 8)
+        return 0.5 + (totalScore - 2) * (0.25 / 6);
+    } else {
+        // Linear scale from 0.75 (at score 8) to 1.2 (at score 20)
+        return 0.75 + (totalScore - 8) * (0.45 / 12);
+    }
 };
 
 
@@ -197,16 +201,12 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
           const actualAvailableBrowserForageKG = (availableForageKG * (1 - zone.grassToBrowseRatio)) * veldFactor;
 
           const currentDemands = animalsInZone.reduce((acc, animal) => {
-            const consumption = animal.lsuConsumptionRate; // This is annual consumption in KG
-            if (animal.forageType === 'Grazer') {
-              acc.grazerDemand += consumption;
-            } else if (animal.forageType === 'Browser') {
-              acc.browserDemand += consumption;
-            } else if (animal.forageType === 'Mixed-Feeder') {
-              // Assuming 50/50 split for mixed feeders
-              acc.grazerDemand += consumption * 0.5;
-              acc.browserDemand += consumption * 0.5;
-            }
+            const grazerConsumption = (animal.guEquivalent || 0) * GU_CONSUMPTION_RATE;
+            const browserConsumption = (animal.buEquivalent || 0) * BU_CONSUMPTION_RATE;
+            
+            acc.grazerDemand += grazerConsumption;
+            acc.browserDemand += browserConsumption;
+        
             return acc;
           }, { grazerDemand: 0, browserDemand: 0 });
 
@@ -277,7 +277,7 @@ export const HabitatManagement: React.FC<HabitatManagementProps> = ({ habitats, 
       <Modal isOpen={!!modalZone} onClose={handleCloseModal} title={`Manage Veld & Ecology for ${modalZone?.name}`}>
         <div className="space-y-6">
             {latestFPAssessment && (
-                <div>
+                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <h4 className="text-lg font-semibold text-brand-dark mb-2">Fixed-Point Photo Monitoring</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                         <div>
