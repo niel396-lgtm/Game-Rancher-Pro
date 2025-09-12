@@ -64,7 +64,7 @@ export const HerdQualityChart: React.FC<HerdQualityChartProps> = ({ animals, mea
           left: 20,
         }}
       >
-        <CartesianGrid />
+        
         <XAxis type="number" dataKey="age" name="Age" unit=" yrs" domain={['dataMin - 1', 'dataMax + 1']} />
         <YAxis type="number" dataKey="hornLength" name="Horn Length" unit=" in" />
         <ZAxis dataKey="tagId" name="Tag ID" />

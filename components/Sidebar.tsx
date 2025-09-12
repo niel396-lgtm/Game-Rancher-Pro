@@ -1,5 +1,3 @@
-
-
 import React, { useMemo } from 'react';
 import { View, ManagementStyle } from '../types';
 import { DashboardIcon, AnimalIcon, HabitatIcon, InventoryIcon, FinanceIcon, AIIcon, MapIcon, ClientIcon, PermitIcon, StudBookIcon, HarvestPlanningIcon, PopulationIcon, ReportIcon, PHIcon, HuntIcon, VeterinaryIcon, DocumentIcon, GameMeatIcon, BioeconomicsIcon, SearchIcon } from './ui/Icons';
@@ -19,44 +17,76 @@ const NavItem: React.FC<{
 }> = ({ icon, label, isActive, onClick }) => (
   <li
     onClick={onClick}
-    className={`flex items-center p-3 my-1 rounded-lg cursor-pointer transition-all duration-200 ${
+    className={`flex items-center my-1 rounded-r-lg cursor-pointer transition-all duration-200 py-3 pr-3 ${
       isActive
-        ? 'bg-brand-secondary text-white shadow-lg'
-        : 'text-brand-light hover:bg-brand-primary/50 hover:text-white'
+        ? 'bg-brand-primary/60 text-white border-l-4 border-brand-accent pl-2'
+        : 'text-brand-light hover:bg-brand-primary/50 hover:text-white pl-3'
     }`}
   >
     {icon}
-    <span className="ml-4 font-medium">{label}</span>
+    <span className="ml-4 font-medium text-sm">{label}</span>
   </li>
+);
+
+const NavGroup: React.FC<{ title: string }> = ({ title }) => (
+    <h3 className="px-3 mt-6 mb-1 text-xs font-semibold uppercase text-brand-light/60 tracking-wider">
+        {title}
+    </h3>
 );
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, managementStyle, setManagementStyle }) => {
   
-  const managementNavItems = useMemo(() => {
-    const allItems = [
-      { view: View.Dashboard, icon: <DashboardIcon /> },
-      { view: View.Animals, icon: <AnimalIcon />, style: 'Intensive' },
-      { view: View.VeterinaryLog, icon: <VeterinaryIcon />, style: 'Intensive' },
-      { view: View.StudBook, icon: <StudBookIcon />, style: 'Intensive' },
-      { view: View.PopulationSurveys, icon: <PopulationIcon />, style: 'Extensive' },
-      { view: View.BioeconomicsReport, icon: <BioeconomicsIcon />, style: 'Extensive' },
-      { view: View.HarvestPlanning, icon: <HarvestPlanningIcon /> },
-      { view: View.Clients, icon: <ClientIcon /> },
-      { view: View.PHManagement, icon: <PHIcon /> },
-      { view: View.HuntRegister, icon: <HuntIcon /> },
-      { view: View.Permits, icon: <PermitIcon /> },
-      { view: View.Documents, icon: <DocumentIcon /> },
-      { view: View.Habitat, icon: <HabitatIcon /> },
-      { view: View.RanchMap, icon: <MapIcon /> },
-      { view: View.Inventory, icon: <InventoryIcon /> },
-      { view: View.Finance, icon: <FinanceIcon /> },
-      { view: View.GameMeat, icon: <GameMeatIcon /> },
-      { view: View.AIAssistant, icon: <AIIcon /> },
-      { view: View.AnnualReport, icon: <ReportIcon /> },
-    ];
-    return allItems.filter(item => !item.style || item.style === managementStyle);
-  }, [managementStyle]);
+  const extensiveNavItems = [
+    { view: View.PopulationSurveys, icon: <PopulationIcon /> },
+    { view: View.BioeconomicsReport, icon: <BioeconomicsIcon /> },
+  ];
 
+  const intensiveNavItems = [
+      { view: View.Animals, icon: <AnimalIcon /> },
+      { view: View.VeterinaryLog, icon: <VeterinaryIcon /> },
+      { view: View.StudBook, icon: <StudBookIcon /> },
+  ];
+
+  const coreNavGroups = [
+      {
+          group: 'Core',
+          items: [
+              { view: View.Dashboard, icon: <DashboardIcon /> },
+          ]
+      },
+      {
+          group: 'Animal Science',
+          items: managementStyle === 'Intensive' ? intensiveNavItems : extensiveNavItems
+      },
+      {
+          group: 'Operations',
+          items: [
+              { view: View.HarvestPlanning, icon: <HarvestPlanningIcon /> },
+              { view: View.Habitat, icon: <HabitatIcon /> },
+              { view: View.RanchMap, icon: <MapIcon /> },
+              { view: View.GameMeat, icon: <GameMeatIcon /> },
+          ]
+      },
+      {
+          group: 'Business',
+          items: [
+              { view: View.Clients, icon: <ClientIcon /> },
+              { view: View.PHManagement, icon: <PHIcon /> },
+              { view: View.HuntRegister, icon: <HuntIcon /> },
+              { view: View.Permits, icon: <PermitIcon /> },
+              { view: View.Documents, icon: <DocumentIcon /> },
+              { view: View.Inventory, icon: <InventoryIcon /> },
+              { view: View.Finance, icon: <FinanceIcon /> },
+              { view: View.AnnualReport, icon: <ReportIcon /> },
+          ]
+      },
+       {
+          group: 'Tools',
+          items: [
+               { view: View.AIAssistant, icon: <AIIcon /> },
+          ]
+      }
+  ];
 
   return (
     <aside className="w-64 bg-brand-primary p-4 flex flex-col shadow-2xl">
@@ -86,19 +116,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, m
       
       <nav className="flex-grow overflow-y-auto">
         <ul>
-          {managementNavItems.map((item) => (
-            <NavItem
-              key={item.view}
-              icon={item.icon}
-              label={item.view}
-              isActive={currentView === item.view}
-              onClick={() => setCurrentView(item.view)}
-            />
-          ))}
+            {coreNavGroups.map(group => (
+                <React.Fragment key={group.group}>
+                    <NavGroup title={group.group} />
+                    {group.items.map((item) => (
+                         <NavItem
+                            key={item.view}
+                            icon={item.icon}
+                            label={item.view}
+                            isActive={currentView === item.view}
+                            onClick={() => setCurrentView(item.view)}
+                        />
+                    ))}
+                </React.Fragment>
+            ))}
         </ul>
 
          <div className="mt-4 pt-4 border-t border-brand-primary/20">
-            <h3 className="px-3 text-xs font-semibold uppercase text-brand-light/60 tracking-wider">Public Portal</h3>
+            <NavGroup title="Public Portal" />
             <ul>
                 <NavItem
                     key={View.RanchDiscovery}

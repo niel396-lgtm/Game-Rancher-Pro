@@ -48,12 +48,12 @@ export const BioeconomicsReport: React.FC<BioeconomicsReportProps> = ({ transact
         <div>
             <h2 className="text-3xl font-bold text-brand-dark mb-6">Bio-Economics Report</h2>
             <Card>
-                <p className="mb-6 text-gray-600">This report analyzes the financial performance of each species relative to its population size, providing insights into the economic efficiency of your wildlife assets.</p>
+                <p className="mb-6 text-gray-600 text-sm">This report analyzes the financial performance of each species relative to its population size, providing insights into the economic efficiency of your wildlife assets.</p>
 
                 <div className="h-96 mb-8">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={speciesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
+                            
                             <XAxis dataKey="name" />
                             <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
                             <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
@@ -69,25 +69,25 @@ export const BioeconomicsReport: React.FC<BioeconomicsReportProps> = ({ transact
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Species</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium uppercase">Est. Population</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium uppercase">Total Income</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium uppercase">Total Expense</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium uppercase">Net Value</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium uppercase">Value per Animal</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Species</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Est. Population</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Income</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Expense</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Net Value</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Value per Animal</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {speciesData.map(s => (
-                                <tr key={s.name} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium">{s.name}</td>
-                                    <td className="px-6 py-4 text-right">{s.population}</td>
-                                    <td className="px-6 py-4 text-right text-green-600">${s.income.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right text-red-600">${s.expense.toLocaleString()}</td>
-                                    <td className={`px-6 py-4 text-right font-semibold ${s.netValue >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                <tr key={s.name} className="odd:bg-gray-50 hover:bg-gray-100/75">
+                                    <td className="px-6 py-4 font-medium text-sm">{s.name}</td>
+                                    <td className="px-6 py-4 text-right text-sm">{s.population}</td>
+                                    <td className="px-6 py-4 text-right text-green-600 text-sm">${s.income.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right text-red-600 text-sm">${s.expense.toLocaleString()}</td>
+                                    <td className={`px-6 py-4 text-right font-semibold text-sm ${s.netValue >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                                         ${s.netValue.toLocaleString()}
                                     </td>
-                                    <td className={`px-6 py-4 text-right font-bold ${s.valuePerAnimal >= 0 ? 'text-blue-600' : 'text-yellow-600'}`}>
+                                    <td className={`px-6 py-4 text-right font-bold text-sm ${s.valuePerAnimal >= 0 ? 'text-blue-600' : 'text-yellow-600'}`}>
                                         ${s.valuePerAnimal.toFixed(2)}
                                     </td>
                                 </tr>
