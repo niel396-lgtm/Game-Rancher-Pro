@@ -4,7 +4,7 @@ import { Card } from './ui/Card';
 import { AIIcon } from './ui/Icons';
 import { Message, Animal, HabitatZone, RainfallLog } from '../types';
 import { getAIResponse } from '../services/geminiService';
-import { RANCH_AREA_HECTARES } from '../constants';
+import { RANCH_AREA_HECTARES, GU_CONSUMPTION_RATE, BU_CONSUMPTION_RATE } from '../constants';
 
 interface AIAssistantProps {
     animals: Animal[];
@@ -29,13 +29,12 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ animals, habitats, rai
   }, [messages]);
   
   const generateContextualPrompt = (userInput: string): string => {
-    // FIX: Replaced non-existent 'lsuEquivalent' with 'guEquivalent' and 'buEquivalent'
-    // and simplified the logic to correctly sum grazer and browser units.
-    const stocking = animals.reduce((acc, animal) => {
-        acc.grazerLSU += animal.guEquivalent || 0;
-        acc.browserLSU += animal.buEquivalent || 0;
+    // FIX: Aligned logic with HabitatManagement to calculate total forage demand instead of just summing LSU equivalents.
+    const totalForageDemand = animals.reduce((acc, animal) => {
+        acc.grazerDemand += (animal.guEquivalent || 0) * GU_CONSUMPTION_RATE;
+        acc.browserDemand += (animal.buEquivalent || 0) * BU_CONSUMPTION_RATE;
         return acc;
-    }, { grazerLSU: 0, browserLSU: 0 });
+    }, { grazerDemand: 0, browserDemand: 0 });
 
     const habitatSummary = habitats.map(h => `${h.name} (Veld Condition: ${h.veldCondition})`).join(', ');
 
@@ -64,7 +63,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ animals, habitats, rai
 Current Ranch Context:
 - Total Hectares: ${RANCH_AREA_HECTARES} ha
 - Habitat Zones: ${habitatSummary || 'N/A'}
-- Current Animal Stocking: ${stocking.grazerLSU.toFixed(1)} LSU Grazers, ${stocking.browserLSU.toFixed(1)} LSU Browsers.
+- Current Annual Forage Demand: ${totalForageDemand.grazerDemand.toLocaleString(undefined, {maximumFractionDigits: 0})} kg DM/year (Grazers), ${totalForageDemand.browserDemand.toLocaleString(undefined, {maximumFractionDigits: 0})} kg DM/year (Browsers).
 - Recent Rainfall (last 3 months): ${rainfallSummary || 'No recent data'}
 - Active Issues: ${activeIssues || 'None'}
 `;
