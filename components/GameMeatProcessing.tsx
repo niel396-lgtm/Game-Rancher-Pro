@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { Modal } from './ui/Modal';
@@ -204,31 +205,34 @@ export const GameMeatProcessing: React.FC<GameMeatProcessingProps> = ({ processi
                             </div>
                         </div>
 
-                        {localEntry.processedWeightKg && localEntry.processedWeightKg > 0 && (
-                            <div className="pt-4 border-t">
-                                <h4 className="text-lg font-semibold">Batch Products</h4>
-                                <p className="text-sm text-gray-500">Log the products created from this batch. These will be added to your inventory.</p>
-                                <div className="mt-2 text-right font-medium text-brand-dark">
-                                    {totalProductWeight.toFixed(2)} kg / {localEntry.processedWeightKg.toFixed(2)} kg used
-                                </div>
-                                <div className="space-y-2 mt-2">
-                                    {localEntry.products.map(p => (
-                                        <div key={p.name} className="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                            <span>{p.name}</span>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-semibold">{p.weightKg} kg</span>
-                                                <button onClick={() => handleRemoveProduct(p.name)} className="text-red-500"><TrashIcon className="w-4 h-4" /></button>
-                                            </div>
+                        <div className="pt-4 border-t">
+                            <h4 className="text-lg font-semibold">Batch Products</h4>
+                            <p className="text-sm text-gray-500 mb-2">
+                                Log the products derived from this carcass. These will be added to your main inventory.
+                            </p>
+                             <div className="space-y-2 mt-2">
+                                {localEntry.products.map(p => (
+                                    <div key={p.name} className="flex items-center justify-between bg-gray-100 p-2 rounded">
+                                        <span>{p.name}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold">{p.weightKg} kg</span>
+                                            <button onClick={() => handleRemoveProduct(p.name)} className="text-red-500"><TrashIcon className="w-4 h-4" /></button>
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="flex items-end gap-2 mt-2">
-                                    <div className="flex-grow"><label className="text-xs">Product Name</label><input type="text" value={newProduct.name} onChange={e => setNewProduct(p => ({...p, name: e.target.value}))} className="w-full p-1 border rounded" /></div>
-                                    <div className="w-24"><label className="text-xs">Weight (kg)</label><input type="number" step="0.1" value={newProduct.weightKg} onChange={e => setNewProduct(p => ({...p, weightKg: e.target.value}))} className="w-full p-1 border rounded" /></div>
-                                    <button type="button" onClick={handleAddProduct} className="px-3 py-1 bg-brand-secondary text-white rounded hover:bg-brand-dark"><PlusIcon className="w-5 h-5"/></button>
-                                </div>
+                                    </div>
+                                ))}
                             </div>
-                        )}
+                            <form onSubmit={(e) => { e.preventDefault(); handleAddProduct(); }} className="flex gap-2 items-end">
+                                <div className="flex-grow">
+                                    <label className="text-xs font-medium">Product Name</label>
+                                    <input type="text" placeholder="e.g., Kudu Biltong" value={newProduct.name} onChange={e => setNewProduct(p => ({...p, name: e.target.value}))} className="mt-1 block w-full text-sm rounded-md border-gray-300"/>
+                                </div>
+                                <div className="w-24">
+                                    <label className="text-xs font-medium">Weight (kg)</label>
+                                    <input type="number" step="0.1" placeholder="e.g., 15" value={newProduct.weightKg} onChange={e => setNewProduct(p => ({...p, weightKg: e.target.value}))} className="mt-1 block w-full text-sm rounded-md border-gray-300"/>
+                                </div>
+                                <button type="submit" className="px-3 py-2 bg-brand-secondary text-white rounded-md hover:bg-brand-dark">+</button>
+                            </form>
+                        </div>
 
                         <div className="pt-4 border-t">
                             <div className="flex justify-between items-center">
@@ -245,28 +249,15 @@ export const GameMeatProcessing: React.FC<GameMeatProcessingProps> = ({ processi
                             </ul>
                         </div>
                         
-                        {localEntry.processingBatchNumber && (
-                            <div className="pt-4 border-t">
-                                <h4 className="text-lg font-semibold">Traceability</h4>
-                                <div className="flex items-center gap-4 mt-2">
-                                    <img 
-                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(`https://example.com/trace/${localEntry.processingBatchNumber}`)}`} 
-                                        alt="Traceability QR Code"
-                                        className="w-32 h-32 border p-1"
-                                    />
-                                    <div>
-                                        <p className="text-sm text-gray-600">Scan this code to view public traceability information for this batch.</p>
-                                        <button
-                                            type="button"
-                                            onClick={() => onViewTraceability(localEntry.processingBatchNumber)}
-                                            className="mt-2 px-3 py-1 bg-brand-secondary text-white rounded-lg text-sm hover:bg-brand-dark"
-                                        >
-                                            Simulate Scan & View Page
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <div className="mt-4 pt-4 border-t text-center">
+                            <button
+                                type="button"
+                                onClick={() => alert(`SIMULATION: QR Code generated. Public traceability link for batch ${localEntry.processingBatchNumber} is now active.`)}
+                                className="px-4 py-2 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-dark"
+                            >
+                                Generate Traceability QR Code
+                            </button>
+                        </div>
                     </div>
                 </Modal>
             )}

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 const IconWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
@@ -204,5 +205,11 @@ export const BioeconomicsIcon: React.FC<{ className?: string }> = ({ className =
 export const SearchIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) => (
     <IconWrapper className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </IconWrapper>
+);
+
+export const CheckCircleIcon: React.FC<{className?: string}> = ({className='w-6 h-6'}) => (
+    <IconWrapper className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </IconWrapper>
 );

@@ -5,6 +5,8 @@
 
 
 
+
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -472,11 +474,26 @@ const App: React.FC = () => {
             hunts={hunts}
         />;
        case View.Traceability:
+        if (!traceabilityBatch) {
+            setCurrentView(View.GameMeat);
+            return null;
+        }
+        const batchInfo = gameMeatProcessing.find(p => p.processingBatchNumber === traceabilityBatch);
+        const ranchProfile = ranchProfiles.find(r => r.isPublic);
+
+        if (!batchInfo || !ranchProfile) {
+            return (
+                <div>
+                    <h2 className="text-2xl font-bold text-red-600">Error</h2>
+                    <p>Could not find traceability information for batch {traceabilityBatch}.</p>
+                    <button onClick={() => setCurrentView(View.GameMeat)} className="mt-4 px-4 py-2 bg-brand-primary text-white rounded">Go Back</button>
+                </div>
+            );
+        }
+
         return <TraceabilityPage
-          batchNumber={traceabilityBatch}
-          gameMeatProcessing={gameMeatProcessing}
-          harvests={harvests}
-          ranchProfiles={ranchProfiles}
+          batchInfo={batchInfo}
+          ranchProfile={ranchProfile}
           onBack={() => setCurrentView(View.GameMeat)}
         />
       default:

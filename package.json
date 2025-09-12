@@ -18,7 +18,8 @@
     "@react-leaflet/core": "2.1.0",
     "leaflet-draw": "1.0.4",
     "vite": "^7.1.5",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "url": "^0.11.4"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
