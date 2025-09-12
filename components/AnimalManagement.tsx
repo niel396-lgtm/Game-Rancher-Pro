@@ -104,7 +104,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     clientId: '', 
     photoUrl: '', 
     coordinates: null as Coords | null,
-    farmName: 'Game Ranch Pro Estates',
+    farmName: 'Game Rancher Pro Estates',
     farmOwner: 'GRP Management',
     clientSignature: '',
     phSignature: '',
@@ -161,7 +161,7 @@ export const AnimalManagement: React.FC<AnimalManagementProps> = ({ animals, hab
     setIsLogMortalityOpen(false);
     setIsLogHarvestOpen(false);
     setCauseOfDeath('');
-    setHarvestData({ professionalHunterId: '', locality: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null, farmName: 'Game Ranch Pro Estates', farmOwner: 'GRP Management', clientSignature: '', phSignature: '', witness: '' });
+    setHarvestData({ professionalHunterId: '', locality: '', method: 'Rifle', trophyMeasurements: '', hornLengthL: '', hornLengthR: '', tipToTipSpread: '', baseCircumferenceL: '', baseCircumferenceR: '', clientId: '', photoUrl: '', coordinates: null, farmName: 'Game Rancher Pro Estates', farmOwner: 'GRP Management', clientSignature: '', phSignature: '', witness: '' });
   };
 
   const handleLogMortalitySubmit = () => {
