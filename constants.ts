@@ -1,5 +1,6 @@
 
-import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing } from './types';
+
+import { Animal, HabitatZone, InventoryItem, Transaction, TransactionType, Landmark, LandmarkType, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, HuntTrack } from './types';
 
 export const RANCH_AREA_HECTARES = 5000;
 export const GU_CONSUMPTION_RATE = 1650; // kg DM/year, based on Blue Wildebeest (1 GU)
@@ -130,6 +131,7 @@ export const INITIAL_HARVESTS: Harvest[] = [
 // FIX: Define and export missing initial data arrays
 export const INITIAL_LANDMARKS: Landmark[] = [];
 export const INITIAL_BOUNDARIES: Boundary[] = [];
+export const INITIAL_HUNT_TRACKS: HuntTrack[] = [];
 export const INITIAL_RAINFALL_LOGS: RainfallLog[] = [
   { id: 'RL01', date: getPastDate(30), amount: 15 },
   { id: 'RL02', date: getPastDate(25), amount: 22 },

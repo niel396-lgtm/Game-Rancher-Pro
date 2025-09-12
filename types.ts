@@ -1,4 +1,5 @@
 
+
 export enum View {
   Dashboard = 'Dashboard',
   Animals = 'Animals',
@@ -50,7 +51,14 @@ export interface Boundary {
 }
 
 export enum WaypointCategory {
-  Sighting = 'Sighting',
+  'Animal Sighting (High Priority)' = 'Animal Sighting (High Priority)',
+  'Animal Sighting (Low Priority)' = 'Animal Sighting (Low Priority)',
+  'Fresh Spoor / Track' = 'Fresh Spoor / Track',
+  'Shot Location' = 'Shot Location',
+  'Blood Trail - First' = 'Blood Trail - First',
+  'Blood Trail - Last' = 'Blood Trail - Last',
+  'Harvest Location' = 'Harvest Location',
+  'Stand / Hide / Blind' = 'Stand / Hide / Blind',
   BrokenFence = 'Broken Fence',
   PoachingSign = 'Poaching Sign',
   WaterIssue = 'Water Issue',
@@ -65,6 +73,22 @@ export interface Waypoint {
   title: string;
   notes?: string;
   date: string;
+}
+
+export interface HuntTrack {
+  id: string;
+  name: string;
+  date: string;
+  path: CoordsPath;
+}
+
+export interface WeatherData {
+  temperature: number;
+  windSpeed: number;
+  windDirection: number; // degrees
+  pressure: number;
+  sunrise: string; // "HH:MM"
+  sunset: string; // "HH:MM"
 }
 
 

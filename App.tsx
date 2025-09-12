@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -20,8 +21,8 @@ import { VeterinaryLog as VeterinaryLogView } from './components/VeterinaryLog';
 import { BioeconomicsReport } from './components/BioeconomicsReport';
 import { DocumentHub } from './components/DocumentHub';
 import { GameMeatProcessing as GameMeatProcessingView } from './components/GameMeatProcessing';
-import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint } from './types';
-import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING } from './constants';
+import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint, HuntTrack } from './types';
+import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING, INITIAL_HUNT_TRACKS } from './constants';
 
 const deriveVeldCondition = (scores: { speciesComposition: number; basalCover: number; }): VeldAssessment['condition'] => {
     const totalScore = scores.speciesComposition + scores.basalCover;
@@ -59,6 +60,7 @@ const App: React.FC = () => {
   const [documents, setDocuments] = useState<OfficialDocument[]>(INITIAL_OFFICIAL_DOCUMENTS);
   const [gameMeatProcessing, setGameMeatProcessing] = useState<GameMeatProcessing[]>(INITIAL_GAME_MEAT_PROCESSING);
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
+  const [huntTracks, setHuntTracks] = useState<HuntTrack[]>(INITIAL_HUNT_TRACKS);
 
   const handleManagementStyleChange = (style: ManagementStyle) => {
     setManagementStyle(style);
@@ -242,6 +244,11 @@ const App: React.FC = () => {
     setWaypoints(prev => [...prev, newWaypoint]);
   };
 
+  const addHuntTrack = (track: Omit<HuntTrack, 'id'>) => {
+    const newTrack = { ...track, id: `HT${Date.now()}` };
+    setHuntTracks(prev => [newTrack, ...prev]);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.Dashboard:
@@ -387,6 +394,8 @@ const App: React.FC = () => {
           removeFeature={removeMapFeature}
           waypoints={waypoints}
           addWaypoint={addWaypoint}
+          huntTracks={huntTracks}
+          addHuntTrack={addHuntTrack}
         />;
       case View.AnnualReport:
         return <AnnualReport 
