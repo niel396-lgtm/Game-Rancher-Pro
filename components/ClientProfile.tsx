@@ -46,12 +46,10 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, harvests, 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {clientHarvests.map(harvest => (
                     <div key={harvest.id} className="rounded-lg overflow-hidden shadow-lg">
-                        {/* FIX: Replaced non-existent `harvest.hunter` property with `client.name`. */}
                         <img src={harvest.photoUrl} alt={`${harvest.species} harvested by ${client.name}`} className="w-full h-56 object-cover"/>
                         <div className="p-4 bg-white">
                             <p className="font-bold text-lg">{harvest.species}</p>
                             <p className="text-sm text-gray-600">Date: {harvest.date}</p>
-                            {/* FIX: Replaced non-existent `harvest.hunter` property with `client.name`. */}
                             <p className="text-sm text-gray-600">Hunter: {client.name}</p>
                             {harvest.trophyMeasurements && <p className="text-sm text-gray-600 mt-2"><em>{harvest.trophyMeasurements}</em></p>}
                         </div>
