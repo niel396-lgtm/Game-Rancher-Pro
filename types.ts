@@ -21,6 +21,7 @@ export enum View {
   HuntRegister = 'Hunt Register',
   AnnualReport = 'Annual Report',
   RanchDiscovery = 'Find a Ranch',
+  Traceability = 'Traceability',
 }
 
 export type ManagementStyle = 'Intensive' | 'Extensive';
@@ -233,10 +234,11 @@ export interface HabitatZone {
 export interface InventoryItem {
   id:string;
   name: string;
-  category: 'Feed' | 'Medicine' | 'Equipment' | 'Other';
+  category: 'Feed' | 'Medicine' | 'Equipment' | 'Other' | 'Game Meat';
   quantity: number;
   reorderLevel: number;
   supplier: string;
+  batchNumber?: string;
 }
 
 export enum TransactionType {
@@ -407,6 +409,12 @@ export interface GameMeatSale {
   pricePerKg: number;
   totalPrice: number;
   notes?: string;
+  processingBatchNumber: string; // Links sale to a specific processing event
+}
+
+export interface BatchProduct {
+  name: string;
+  weightKg: number;
 }
 
 export interface GameMeatProcessing {
@@ -421,4 +429,8 @@ export interface GameMeatProcessing {
   processedBy: string;
   status: 'Awaiting Processing' | 'In Process' | 'Processed' | 'Partially Sold' | 'Sold';
   sales: GameMeatSale[];
+  products: BatchProduct[];
+  processingBatchNumber: string; // e.g., "2025-09-12-KUDU-01"
+  abattoirName?: string;
+  healthInspectionCertUrl?: string; // Link to the vet's certificate
 }

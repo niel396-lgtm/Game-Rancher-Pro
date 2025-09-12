@@ -2,6 +2,9 @@
 
 
 
+
+
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -24,6 +27,7 @@ import { BioeconomicsReport } from './components/BioeconomicsReport';
 import { DocumentHub } from './components/DocumentHub';
 import { GameMeatProcessing as GameMeatProcessingView } from './components/GameMeatProcessing';
 import { RanchDiscovery } from './components/RanchDiscovery';
+import { TraceabilityPage } from './components/TraceabilityPage';
 import { View, Animal, HabitatZone, InventoryItem, Transaction, Landmark, Boundary, Task, Mortality, RainfallLog, VeldAssessment, Harvest, Client, Permit, ReproductiveEvent, AnimalMeasurement, PopulationSurvey, ManagementStyle, ProfessionalHunter, Hunt, VeterinaryLog, HealthProtocol, OfficialDocument, GameMeatProcessing, Waypoint, HuntTrack, RanchProfile, VerifiedProfessional, EcologicalRating, ClientReview, PHProfile } from './types';
 import { INITIAL_ANIMALS, INITIAL_HABITAT_ZONES, INITIAL_INVENTORY, INITIAL_TRANSACTIONS, INITIAL_LANDMARKS, INITIAL_BOUNDARIES, INITIAL_TASKS, INITIAL_MORTALITIES, INITIAL_RAINFALL_LOGS, INITIAL_VELD_ASSESSMENTS, INITIAL_HARVESTS, INITIAL_CLIENTS, INITIAL_PERMITS, INITIAL_REPRODUCTIVE_EVENTS, INITIAL_ANIMAL_MEASUREMENTS, INITIAL_POPULATION_SURVEYS, INITIAL_PROFESSIONAL_HUNTERS, INITIAL_HUNTS, INITIAL_VETERINARY_LOGS, INITIAL_HEALTH_PROTOCOLS, INITIAL_OFFICIAL_DOCUMENTS, INITIAL_GAME_MEAT_PROCESSING, INITIAL_HUNT_TRACKS, INITIAL_RANCH_PROFILES, INITIAL_VERIFIED_PROFESSIONALS, INITIAL_ECOLOGICAL_RATINGS, INITIAL_CLIENT_REVIEWS, INITIAL_PH_PROFILES } from './constants';
 
@@ -69,6 +73,8 @@ const App: React.FC = () => {
   const [verifiedProfessionals, setVerifiedProfessionals] = useState<VerifiedProfessional[]>(INITIAL_VERIFIED_PROFESSIONALS);
   const [ecologicalRatings, setEcologicalRatings] = useState<EcologicalRating[]>(INITIAL_ECOLOGICAL_RATINGS);
   const [clientReviews, setClientReviews] = useState<ClientReview[]>(INITIAL_CLIENT_REVIEWS);
+  const [traceabilityBatch, setTraceabilityBatch] = useState<string | null>(null);
+
   
   // Simulate a logged-in verified professional for rating submission feature
   const [currentUser, setCurrentUser] = useState<VerifiedProfessional>(INITIAL_VERIFIED_PROFESSIONALS[0]);
@@ -125,6 +131,26 @@ const App: React.FC = () => {
       removeAnimal(animal.id);
   };
   
+  const addGameMeatEntry = (harvest: Harvest) => {
+      const date = harvest.date;
+      // e.g., "2024-05-20-KUDU-1234"
+      const batchNumber = `${date}-${harvest.species.toUpperCase().substring(0, 4)}-${harvest.id.slice(-4)}`;
+      const newEntry: GameMeatProcessing = {
+          id: `GMP${Date.now()}`,
+          harvestId: harvest.id,
+          animalTagId: harvest.animalTagId,
+          species: harvest.species,
+          processingBatchNumber: batchNumber,
+          carcassWeightKg: 0, // To be filled in later
+          processingDate: date,
+          processedBy: '', // To be filled in later
+          status: 'Awaiting Processing',
+          sales: [],
+          products: [],
+      };
+      setGameMeatProcessing(prev => [newEntry, ...prev]);
+  };
+
   const logAnimalHarvest = (animal: Animal, harvestData: Omit<Harvest, 'id' | 'animalTagId' | 'species' | 'sex' | 'date' | 'location'>) => {
     const newHarvest: Harvest = {
         id: `H${Date.now()}`,
@@ -136,6 +162,7 @@ const App: React.FC = () => {
         ...harvestData,
     };
     setHarvests(prev => [newHarvest, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    addGameMeatEntry(newHarvest);
     removeAnimal(animal.id);
   };
 
@@ -232,23 +259,26 @@ const App: React.FC = () => {
     setDocuments(prev => [newDoc, ...prev].sort((a,b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()));
   };
 
-  const addGameMeatEntry = (harvest: Harvest) => {
-      const newEntry: GameMeatProcessing = {
-          id: `GMP${Date.now()}`,
-          harvestId: harvest.id,
-          animalTagId: harvest.animalTagId,
-          species: harvest.species,
-          carcassWeightKg: 0, // To be filled in later
-          processingDate: new Date().toISOString().split('T')[0],
-          processedBy: '', // To be filled in later
-          status: 'Awaiting Processing',
-          sales: [],
-      };
-      setGameMeatProcessing(prev => [newEntry, ...prev]);
-  };
-
   const updateGameMeatEntry = (updatedEntry: GameMeatProcessing) => {
+      // Update the processing entry itself
       setGameMeatProcessing(prev => prev.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry));
+
+      // Reconcile inventory based on the products in the updated entry
+      setInventory(prevInventory => {
+          const otherItems = prevInventory.filter(item => item.batchNumber !== updatedEntry.processingBatchNumber);
+          
+          const newItemsFromBatch: InventoryItem[] = updatedEntry.products.map((product, index) => ({
+              id: `INV-${updatedEntry.id}-${index}`, // Simple unique ID
+              name: `${updatedEntry.species} ${product.name} (Batch: ${updatedEntry.processingBatchNumber})`,
+              category: 'Game Meat',
+              quantity: product.weightKg,
+              reorderLevel: 5, // A sensible default
+              supplier: 'On-site Processing',
+              batchNumber: updatedEntry.processingBatchNumber,
+          }));
+          
+          return [...otherItems, ...newItemsFromBatch];
+      });
   };
 
   const addWaypoint = (waypoint: Omit<Waypoint, 'id'>) => {
@@ -264,6 +294,11 @@ const App: React.FC = () => {
   const addEcologicalRating = (rating: Omit<EcologicalRating, 'id'>) => {
     const newRating = { ...rating, id: `ER${Date.now()}` };
     setEcologicalRatings(prev => [newRating, ...prev].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  };
+  
+  const handleViewTraceability = (batchNumber: string) => {
+      setTraceabilityBatch(batchNumber);
+      setCurrentView(View.Traceability);
   };
 
   const renderView = () => {
@@ -392,6 +427,7 @@ const App: React.FC = () => {
           processingEntries={gameMeatProcessing}
           updateProcessingEntry={updateGameMeatEntry}
           addTransaction={addTransaction}
+          onViewTraceability={handleViewTraceability}
         />;
        case View.BioeconomicsReport:
         return <BioeconomicsReport
@@ -435,6 +471,14 @@ const App: React.FC = () => {
             professionalHunters={professionalHunters}
             hunts={hunts}
         />;
+       case View.Traceability:
+        return <TraceabilityPage
+          batchNumber={traceabilityBatch}
+          gameMeatProcessing={gameMeatProcessing}
+          harvests={harvests}
+          ranchProfiles={ranchProfiles}
+          onBack={() => setCurrentView(View.GameMeat)}
+        />
       default:
         return <Dashboard 
           animals={animals} 
