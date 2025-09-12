@@ -40,6 +40,16 @@ export interface RanchProfile {
   };
 }
 
+export interface ClientReview {
+  id: string;
+  huntId: string; // Verifies the review is from a real hunt
+  ranchId: string;
+  overallRating: number; // 1-5 stars
+  comment?: string;
+  isAnonymous: boolean; // Always true for public view
+  date: string;
+}
+
 // Types for the mapping feature moved up to resolve reference error
 export type Coords = [number, number];
 export type CoordsPath = Coords[];

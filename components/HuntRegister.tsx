@@ -140,6 +140,27 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
         setEditingHunt(updatedHunt);
     }
 
+    const handleStatusChange = (hunt: Hunt, newStatus: Hunt['status']) => {
+        // Check if status is changing TO 'Completed'
+        if (hunt.status !== 'Completed' && newStatus === 'Completed') {
+            const client = clients.find(c => c.id === hunt.clientId);
+            if (client && client.email) {
+                console.log(`SIMULATION: Sending one-time review request link to ${client.email} for hunt ID ${hunt.id}.`);
+                // UI feedback for the user
+                alert(`A review request has been sent to ${client.name} (${client.email}).`);
+            } else if (client) {
+                alert(`Could not send review request: Client ${client.name} does not have an email address on file.`);
+            }
+        }
+    
+        const updatedHunt = {
+            ...hunt,
+            status: newStatus,
+        };
+        updateHunt(updatedHunt);
+        setEditingHunt(updatedHunt); // Keep modal open with updated data
+    };
+
     const handleExportRegister = () => {
         const sortedHarvests = [...harvests].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
@@ -265,7 +286,7 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
             
              {/* Edit Hunt Checklist Modal */}
             {editingHunt && (
-                <Modal isOpen={!!editingHunt} onClose={() => setEditingHunt(null)} title={`Hunt Checklist for ${clientMap.get(editingHunt.clientId)}`}>
+                <Modal isOpen={!!editingHunt} onClose={() => setEditingHunt(null)} title={`Manage Hunt for ${clientMap.get(editingHunt.clientId)}`}>
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-brand-dark">Compliance Checklist</h3>
                          <div className="space-y-3">
@@ -288,6 +309,19 @@ export const HuntRegister: React.FC<HuntRegisterProps> = ({ hunts, clients, prof
                                 <span className="ml-3 text-gray-700">Provincial Hunting License Acquired</span>
                             </label>
                          </div>
+                         <div className="mt-4 pt-4 border-t">
+                            <label htmlFor="hunt-status" className="block text-lg font-semibold text-brand-dark mb-2">Hunt Status</label>
+                            <select
+                                id="hunt-status"
+                                value={editingHunt.status}
+                                onChange={(e) => handleStatusChange(editingHunt, e.target.value as Hunt['status'])}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-secondary focus:ring-brand-secondary sm:text-sm"
+                            >
+                                <option value="Planned">Planned</option>
+                                <option value="Active">Active</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
                     </div>
                 </Modal>
             )}
