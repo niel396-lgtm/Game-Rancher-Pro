@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Animal, Transaction, TransactionType, ReproductiveEvent, AnimalMeasurement } from '../types';
 import { Card } from './ui/Card';
 import { PlusIcon, StarIcon } from './ui/Icons';
@@ -99,6 +99,12 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
     const sire = animals.find(a => a.id === animal.sireId);
     const dam = animals.find(a => a.id === animal.damId);
 
+    const lifetimeInvestment = useMemo(() => {
+        return transactions
+            .filter(t => t.linkedAnimalId === animal.id && t.type === TransactionType.Expense)
+            .reduce((sum, t) => sum + t.amount, 0);
+    }, [transactions, animal.id]);
+
     const offspringEvents = reproductiveEvents.filter(e => e.damTagId === animal.tagId || e.sireTagId === animal.tagId)
         .sort((a, b) => new Date(b.birthDate).getTime() - new Date(a.birthDate).getTime());
         
@@ -155,11 +161,15 @@ export const AnimalProfile: React.FC<AnimalProfileProps> = ({ animal, onBack, tr
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
             <Card title="Primary Details">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <DetailItem label="Age" value={`${animal.age} years`} />
                     <DetailItem label="Sex" value={animal.sex} />
                     <DetailItem label="Category" value={animal.category} />
                     <DetailItem label="Current Location" value={animal.location} />
+                    <DetailItem label="Sire" value={sire ? sire.tagId : 'Unknown'} />
+                    <DetailItem label="Dam" value={dam ? dam.tagId : 'Unknown'} />
+                    <DetailItem label="Forage Type" value={animal.forageType} />
+                    <DetailItem label="Lifetime Investment" value={`$${lifetimeInvestment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
                 </div>
             </Card>
         </div>

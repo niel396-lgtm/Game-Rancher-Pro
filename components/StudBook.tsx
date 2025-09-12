@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { Animal, ReproductiveEvent, AnimalMeasurement } from '../types';
@@ -76,6 +77,8 @@ const getInbreedingColor = (coeff: number) => {
 export const StudBook: React.FC<StudBookProps> = ({ animals, reproductiveEvents, animalMeasurements }) => {
     const [selectedDamId, setSelectedDamId] = useState<string>('');
     const animalMap = useMemo(() => new Map(animals.map(a => [a.id, a])), [animals]);
+    const tagIdToAnimalMap = useMemo(() => new Map(animals.map(a => [a.tagId, a])), [animals]);
+
 
     const dams = useMemo(() => animals.filter(a => a.sex === 'Female'), [animals]);
 
@@ -117,6 +120,57 @@ export const StudBook: React.FC<StudBookProps> = ({ animals, reproductiveEvents,
         });
 
     }, [selectedDamId, animals, reproductiveEvents, animalMeasurements, animalMap]);
+
+    const intergenerationalIntervals = useMemo(() => {
+        const intervals: { [species: string]: { ages: number[] } } = {};
+        const today = new Date();
+
+        reproductiveEvents.forEach(event => {
+            const dam = tagIdToAnimalMap.get(event.damTagId);
+            const sire = event.sireTagId ? tagIdToAnimalMap.get(event.sireTagId) : undefined;
+
+            if (!dam) return;
+
+            const species = dam.species;
+            if (!intervals[species]) {
+                intervals[species] = { ages: [] };
+            }
+
+            const localEventDate = new Date(event.birthDate + 'T00:00:00');
+
+            const calculateAgeAtEvent = (parent: Animal) => {
+                const birthDateEstimate = new Date(today);
+                birthDateEstimate.setFullYear(today.getFullYear() - parent.age);
+                const ageInMillis = localEventDate.getTime() - birthDateEstimate.getTime();
+                return ageInMillis / (1000 * 3600 * 24 * 365.25);
+            };
+
+            const damAgeAtEvent = calculateAgeAtEvent(dam);
+            if (damAgeAtEvent > 0) {
+                 intervals[species].ages.push(damAgeAtEvent);
+            }
+
+            if (sire) {
+                const sireAgeAtEvent = calculateAgeAtEvent(sire);
+                if (sireAgeAtEvent > 0) {
+                    intervals[species].ages.push(sireAgeAtEvent);
+                }
+            }
+        });
+
+        const results: { species: string, interval: number }[] = [];
+        for (const species in intervals) {
+            if (intervals[species].ages.length > 0) {
+                const totalAge = intervals[species].ages.reduce((sum, age) => sum + age, 0);
+                results.push({
+                    species,
+                    interval: totalAge / intervals[species].ages.length
+                });
+            }
+        }
+
+        return results.sort((a, b) => a.species.localeCompare(b.species));
+    }, [animals, reproductiveEvents, tagIdToAnimalMap]);
 
     return (
         <div>
@@ -177,6 +231,28 @@ export const StudBook: React.FC<StudBookProps> = ({ animals, reproductiveEvents,
                     <div className="text-center py-12">
                         <p className="text-gray-500">Please select a dam from the dropdown to see breeding recommendations.</p>
                     </div>
+                )}
+            </Card>
+
+             <Card className="mt-6">
+                <h3 className="text-xl font-semibold text-brand-dark mb-4">
+                    Mean Inter-generational Interval
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                    The average age of parents when their offspring are born. A shorter interval can accelerate genetic progress but may increase inbreeding if not managed.
+                </p>
+                {intergenerationalIntervals.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {intergenerationalIntervals.map(item => (
+                            <div key={item.species} className="p-4 bg-gray-50 rounded-lg text-center">
+                                <p className="font-semibold text-brand-dark">{item.species}</p>
+                                <p className="text-2xl font-bold text-brand-primary">{item.interval.toFixed(2)}</p>
+                                <p className="text-sm text-gray-500">years</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-gray-500">Not enough reproductive data to calculate intervals.</p>
                 )}
             </Card>
         </div>
