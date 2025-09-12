@@ -24,6 +24,22 @@ export enum View {
 
 export type ManagementStyle = 'Intensive' | 'Extensive';
 
+export interface RanchProfile {
+  id: string;
+  ranchId: string; // Links to the internal ranch data
+  isPublic: boolean;
+  publicName: string;
+  province: 'Limpopo' | 'Free State' | 'Mpumalanga' | 'North West' | 'Gauteng' | 'KwaZulu-Natal' | 'Eastern Cape' | 'Northern Cape' | 'Western Cape';
+  shortDescription: string;
+  photoGalleryUrls: string[];
+  speciesOffered: string[]; // e.g., ["Kudu", "Impala", "Sable Antelope"]
+  contactInfo: {
+    phone?: string;
+    email?: string;
+    website?: string;
+  };
+}
+
 // Types for the mapping feature moved up to resolve reference error
 export type Coords = [number, number];
 export type CoordsPath = Coords[];
